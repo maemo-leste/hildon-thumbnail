@@ -1,0 +1,33 @@
+Source: osso-thumbnail
+Section: libs
+Priority: optional
+Maintainer: Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>
+Build-Depends: debhelper (>= 4.0.0), pkg-config, libosso-gnomevfs2-dev, libgtk2.0-dev, gtk-doc-tools, libosso-dev
+Standards-Version: 3.6.0
+
+Package: osso-thumbnail
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, osso-thumbnail0 (= ${Source-Version})
+Recommends: osso-thumbnailer-libid3 (>= 0.3.0)
+Description: Thumbnail library related programs.
+ Contains osso-thumb-gdk-pixbuf and osso-thumber-register programs.
+
+Package: osso-thumbnail0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: osso-thumbnail0 (<< 0.3.0), osso-thumbnail-libid3 (<< 0.3.0)
+Description: Thumbnail library.
+
+Package: osso-thumbnail0-dbg
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Thumbnail library with debug symbols.
+
+Package: osso-thumbnail-dev
+Section: devel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, osso-thumbnail0 (= ${Source-Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
+Description: Thumbnail library development files.

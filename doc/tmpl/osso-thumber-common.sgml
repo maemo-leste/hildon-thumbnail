@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+osso-thumber-common
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### USER_FUNCTION OssoThumberCreateThumb ##### -->
+<para>
+
+</para>
+
+@local_file: 
+@mime_type: 
+@width: 
+@height: 
+@flags: 
+@opt_keys: 
+@opt_values: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION osso_thumber_main ##### -->
+<para>
+
+</para>
+
+@argc_p: 
+@argv_p: 
+@create_thumb: 
+@Returns: 
+
+
+<!-- ##### FUNCTION osso_thumber_create_empty_pixbuf ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

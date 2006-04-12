@@ -1,0 +1,47 @@
+2005-10-24  Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* configure.ac: 0.3.10
+
+	* thumbs/thumber-gdk-pixbuf.c
+	N#20773, courtesy <marius.vollmer@nokia.com>
+	(main): increase saw threshold.
+	(create_thumb): improve logging. 
+	(oom_handler): log something, but don't abort
+	
+2005-10-12  Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* configure.ac: 0.3.9
+	
+2005-10-12  Luc Pionchon  <luc.pionchon@nokia.com>
+
+        N#20238 - Thumbnailer causes system crashes on large images
+	
+        * thumbs/thumber-gdk-pixbuf.c
+
+	(can_crop_file): Removed artificial resolution restriction, since
+	                 more precice memory monitoring can be used now.
+
+	(size_prepared): New function: enable jpeg downscaling.
+	
+	(create_thumb): Changed to use progressive loading to enable jpeg
+	                downscaling.
+
+	(oom_handler): New function: We stop the program if we consume too
+	               much memory
+	
+	(main): Set the process priority to be low and enable allocation
+	        watchdog.
+
+	* configure.ac : added libosso check 
+	
+2005-09-14  Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* configure.ac: release 0.3.8
+
+2005-09-09  Luc Pionchon  <luc.pionchon@nokia.com>
+
+	* thumbs-private.h (DEFAULT_MAX_PROCESSES): reduce number of
+	concurent thumbnailer processes to one. N#18831 (memory
+	consumption)
+
+

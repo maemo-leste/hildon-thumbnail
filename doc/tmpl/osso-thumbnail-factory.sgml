@@ -1,0 +1,190 @@
+<!-- ##### SECTION Title ##### -->
+osso-thumbnail-factory
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF OssoThumbnailFactoryHandle ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM OssoThumbnailFlags ##### -->
+<para>
+
+</para>
+
+@OSSO_THUMBNAIL_FLAG_CROP: 
+@OSSO_THUMBNAIL_FLAG_RECREATE: 
+
+<!-- ##### USER_FUNCTION OssoThumbnailFactoryFinishedCallback ##### -->
+<para>
+
+</para>
+
+@handle: 
+@user_data: 
+@thumbnail: 
+@error: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_load ##### -->
+<para>
+
+</para>
+
+@uri: 
+@mime_type: 
+@width: 
+@height: 
+@callback: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_load_custom ##### -->
+<para>
+
+</para>
+
+@uri: 
+@mime_type: 
+@width: 
+@height: 
+@callback: 
+@user_data: 
+@flags: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_cancel ##### -->
+<para>
+
+</para>
+
+@handle: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_move ##### -->
+<para>
+
+</para>
+
+@src_uri: 
+@dest_uri: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_copy ##### -->
+<para>
+
+</para>
+
+@src_uri: 
+@dest_uri: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_remove ##### -->
+<para>
+
+</para>
+
+@uri: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_move_front ##### -->
+<para>
+
+</para>
+
+@handle: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_move_front_all_from ##### -->
+<para>
+
+</para>
+
+@handle: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_wait ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_clean_cache ##### -->
+<para>
+
+</para>
+
+@max_size: 
+@min_mtime: 
+
+
+<!-- ##### FUNCTION osso_thumbnail_factory_set_debug ##### -->
+<para>
+
+</para>
+
+@debug: 
+
+
+<!-- ##### MACRO OSSO_THUMBNAIL_OPTION_PREFIX ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO OSSO_THUMBNAIL_APPLICATION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION osso_thumbnail_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO OSSO_THUMBNAIL_ERROR_DOMAIN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### ENUM OssoThumbnailError ##### -->
+<para>
+
+</para>
+
+@OSSO_THUMBNAIL_ERROR_ILLEGAL_SIZE: 
+@OSSO_THUMBNAIL_ERROR_NO_MIME_HANDLER: 
+@OSSO_THUMBNAIL_ERROR_NO_THUMB_DIR: 
+@OSSO_THUMBNAIL_ERROR_TEMP_FILE_FAILED: 
+@OSSO_THUMBNAIL_ERROR_SPAWN_FAILED: 
+@OSSO_THUMBNAIL_ERROR_CHILD_WATCH_FAILED: 
+@OSSO_THUMBNAIL_ERROR_PIXBUF_LOAD_FAILED: 
+@OSSO_THUMBNAIL_ERROR_NO_PIXBUF_OPTIONS: 
+@OSSO_THUMBNAIL_ERROR_THUMB_EXPIRED: 
+@OSSO_THUMBNAIL_ERROR_FAILURE_CACHED: 
+

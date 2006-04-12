@@ -1,0 +1,30 @@
+TODO:
+* Copyright boilerplate
+
+FIX:
+* Check for image too large, too small
+* Check for forbidden dirs (thumbnail dir, etc)
+* Make tester work in any directory
+
+Open questions:
+* Possible gnome-thumbnail gconf script interoperability?
+* Move mtime to client API side?
+* Forward mime type to thumber?
+* Race in fail files?
+* Race in thumbnail copy/rename/remove while create
+  Markku said filemanager would try to avoid races by removing those thumbs from queue
+* Do early unlink for more safety?
+
+DONE:
+* Thumbnailer configuration in gconf, Debian postinstall thumbnailer register scripts
+* Make debug spam configurable
+* Moving and copying support
+* Call callback on all errors
+* Remote thumbnail transfer to local
+* Failed thumbnail handling, cache
+* Priority change in queue (for scrolling)
+* ID3 handler
+* Update uri on move/copy/rename, refactor thumb save functionality to common
+* Cache cleaner
+* Remove GTK dep from autoconf, add gdk-pixbuf
+* add test image missing check
