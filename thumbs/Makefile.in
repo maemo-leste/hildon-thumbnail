@@ -163,10 +163,10 @@ bin_PROGRAMS = osso-thumb-gdk-pixbuf osso-thumber-register
 
 # osso-thumb-libid3
 osso_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c
-osso_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS)
+osso_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS) libossothumbnail.la
 
 osso_thumber_register_SOURCES = thumber-register.c
-osso_thumber_register_LDADD = $(PKG_LIBS)
+osso_thumber_register_LDADD = $(PKG_LIBS) libossothumbnail.la
 
 #osso_thumb_libid3_SOURCES = thumber-libid3.c thumber-common.c \
 #    thumbs-common.c
@@ -203,11 +203,11 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am_osso_thumb_gdk_pixbuf_OBJECTS = thumber-gdk-pixbuf.$(OBJEXT)
 osso_thumb_gdk_pixbuf_OBJECTS = $(am_osso_thumb_gdk_pixbuf_OBJECTS)
-osso_thumb_gdk_pixbuf_DEPENDENCIES =
+osso_thumb_gdk_pixbuf_DEPENDENCIES = libossothumbnail.la
 osso_thumb_gdk_pixbuf_LDFLAGS =
 am_osso_thumber_register_OBJECTS = thumber-register.$(OBJEXT)
 osso_thumber_register_OBJECTS = $(am_osso_thumber_register_OBJECTS)
-osso_thumber_register_DEPENDENCIES =
+osso_thumber_register_DEPENDENCIES = libossothumbnail.la
 osso_thumber_register_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -241,7 +241,7 @@ all: all-am
 .SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  thumbs/Makefile
+	  $(AUTOMAKE) --foreign  thumbs/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 libLTLIBRARIES_INSTALL = $(INSTALL)

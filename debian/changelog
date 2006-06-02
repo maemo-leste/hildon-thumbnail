@@ -1,3 +1,9 @@
+osso-thumbnail (0.6-2) unstable; urgency=low
+
+  * Added dummy INSTALL, NEWS, README and AUTHORS files.
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Fri, 02 Jun 2006 15:06:17 +0300
+
 osso-thumbnail (0.6-1) unstable; urgency=low
 
   * Removed *.la file dependencies because of building problems.
