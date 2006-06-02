@@ -11,10 +11,10 @@ bin_PROGRAMS = osso-thumb-gdk-pixbuf osso-thumber-register
 # osso-thumb-libid3
 
 osso_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c
-osso_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS)
+osso_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS) libossothumbnail.la
 
 osso_thumber_register_SOURCES = thumber-register.c
-osso_thumber_register_LDADD = $(PKG_LIBS)
+osso_thumber_register_LDADD = $(PKG_LIBS) libossothumbnail.la
 
 #osso_thumb_libid3_SOURCES = thumber-libid3.c thumber-common.c \
 #    thumbs-common.c
