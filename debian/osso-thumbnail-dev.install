@@ -1,4 +1,3 @@
-usr/lib/libossothumbnail.la
 usr/lib/libossothumbnail.so
 usr/include/osso-thumbnail/
 usr/lib/pkgconfig/osso-thumbnail.pc
