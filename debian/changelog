@@ -1,3 +1,9 @@
+osso-thumbnail (0.6-1) unstable; urgency=low
+
+  * Removed *.la file dependencies because of building problems.
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Fri, 02 Jun 2006 14:08:17 +0300
+
 osso-thumbnail (0.5-1) unstable; urgency=low
 
   * Applied Marius' cropping patch (N#20849).

@@ -1,5 +1,3 @@
-CFLAGS += -Wall -std=c99 -pedantic
-
 INCLUDES = -I$(srcdir)/../thumbs -I$(srcdir)/.. $(PKG_CFLAGS)
 
 bin_PROGRAMS = osso-thumbnail-tester
