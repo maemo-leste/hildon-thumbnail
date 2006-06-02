@@ -1,4 +1,4 @@
-SUBDIRS = thumbs tests doc
+SUBDIRS = thumbs tests
 
 EXTRA_DIST = debian/changelog debian/control debian/copyright debian/rules \
         debian/osso-thumbnail.install \

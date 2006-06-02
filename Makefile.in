@@ -149,7 +149,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = thumbs tests doc
+SUBDIRS = thumbs tests
 
 EXTRA_DIST = debian/changelog debian/control debian/copyright debian/rules \
         debian/osso-thumbnail.install \
@@ -175,11 +175,12 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	all-recursive install-data-recursive install-exec-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/configure COPYING \
-	COPYING.LIB ChangeLog Makefile.am TODO aclocal.m4 config.guess \
-	config.h.in config.sub config/config.guess config/config.sub \
-	config/depcomp config/install-sh config/ltmain.sh \
-	config/missing config/mkinstalldirs configure configure.ac \
+DIST_COMMON = README $(srcdir)/Makefile.in $(srcdir)/configure AUTHORS \
+	COPYING COPYING.LIB ChangeLog INSTALL Makefile.am NEWS TODO \
+	aclocal.m4 config.guess config.h.in config.sub \
+	config/config.guess config/config.sub config/depcomp \
+	config/install-sh config/ltmain.sh config/missing \
+	config/mkinstalldirs configure configure.ac \
 	osso-thumbnail.pc.in
 DIST_SUBDIRS = $(SUBDIRS)
 all: config.h
@@ -191,7 +192,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  Makefile
+	  $(AUTOMAKE) --gnu  Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)
 
