@@ -1,3 +1,10 @@
+osso-thumbnail (0.7-1) unstable; urgency=low
+
+  * Cleaned up some commented code and corrected comments.
+  * Added some missing const keywords (N#22811).
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Sat, 03 Jun 2006 13:47:09 +0300
+
 osso-thumbnail (0.6-2) unstable; urgency=low
 
   * Added dummy INSTALL, NEWS, README and AUTHORS files.

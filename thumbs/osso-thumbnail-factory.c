@@ -1,9 +1,9 @@
 /*
  * This file is part of osso-thumbnail package
  *
- * Copyright (C) 2005 Nokia Corporation.
+ * Copyright (C) 2005-2006 Nokia Corporation.
  *
- * Contact: Luc Pionchon <luc.pionchon@nokia.com>
+ * Contact: Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -52,7 +52,6 @@ typedef struct {
     GQueue *queue;
     GQueue *running_queue;
     
-    //GList *cursor;
     guint idle_id;
     guint gconf_notify_id;
 
@@ -76,7 +75,7 @@ typedef struct {
     gpointer user_data;
     gboolean canceled;
     
-    // Data for spawned process (when necessary)
+    /* Data for spawned process (when necessary) */
     guint thumb_width, thumb_height;
     gchar *temp_file;
     gchar *thumb_file;
@@ -107,11 +106,11 @@ static void watch_func(GPid pid, gint status, gpointer data);
 static void deregister_handlers();
 static void register_handlers();
 
-// Global data
+/* Global data */
 
 static ThumbsFactory *factory = NULL;
 
-static ThumbsDirInfo dir_info[] =
+static const ThumbsDirInfo dir_info[] =
 {
     { 80, 60, "osso" },
     { 128, 128, "normal" },
@@ -125,9 +124,7 @@ static gboolean show_debug = FALSE;
 
 #define NR_MP3_OPTIONS 5
 
-// Private functions
-
-// Utility functions
+/* Utility functions */
 
 static void thumb_item_free(ThumbsItem* item)
 {
@@ -189,7 +186,7 @@ static void md5_ascii_to_digest(gchar str[33], guchar digest[16])
 }
 */
 
-// Processing functions
+/* Processing functions */
 
 static gchar *get_thumb_path(char *dir)
 {
@@ -203,7 +200,7 @@ static gboolean get_size_info(guint width, guint height,
                               guint *thumb_width, guint *thumb_height,
                               gchar **dir)
 {
-    ThumbsDirInfo *info = dir_info;
+    const ThumbsDirInfo *info = dir_info;
 
     while(info->dir)  {
         if(width <= info->max_width && height <= info->max_height) {
@@ -246,7 +243,6 @@ static gboolean on_queue_change()
         return TRUE;
     } else {
         if(factory->idle_id) {
-            //g_idle_remove_by_data(factory);
             g_source_remove(factory->idle_id);
             factory->idle_id = FALSE;
         }
@@ -310,9 +306,10 @@ static gboolean load_final_thumb(ThumbsItem *item, GError **error)
     time_t mtime = 0, cur_mtime;
     GError *load_err = NULL;
 
-    // Can't use this since it discards pixbuf options which we needed
-    //pixbuf = gdk_pixbuf_new_from_file_at_size(file,
-    //  item->width, item->height, NULL);
+    /* Can't use this since it discards pixbuf options which we needed
+    pixbuf = gdk_pixbuf_new_from_file_at_size(file,
+    item->width, item->height, NULL);
+    */
 
     pixbuf = load_thumb_file(item->thumb_file, &mtime, &uri, &load_err);
 
@@ -331,7 +328,7 @@ static gboolean load_final_thumb(ThumbsItem *item, GError **error)
         return FALSE;
     }
 
-    // Only resize when thumbnail requested is smaller
+    /* Only resize when thumbnail requested is smaller */
     if(item->width < gdk_pixbuf_get_width(pixbuf) ||
         item->height < gdk_pixbuf_get_height(pixbuf)) {
 
@@ -391,9 +388,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     gint temp_fd;
     GPid pid;
 
-    //g_message("Processing thumb: %s", item->uri);
-
-    // Get thumbnail category
+    /* Get thumbnail category */
     if(!get_size_info(item->width, item->height,
         &item->thumb_width, &item->thumb_height, &dir)) {
         g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_ILLEGAL_SIZE,
@@ -402,7 +397,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
         return FALSE;
     }
 
-    // Get handler for MIME type
+    /* Get handler for MIME type */
     handler = get_mime_handler(item->mime_type);
     if(!handler) {
         g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_NO_MIME_HANDLER,
@@ -420,7 +415,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
         return FALSE;
     }
 
-    // Get thumbnail filenames
+    /* Get thumbnail filenames */
     md5_c_string(item->uri, ascii_digest);
 
     g_sprintf(thumb_filename, "%s.png", ascii_digest);
@@ -434,18 +429,18 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     g_free(thumb_dir);
 
     if(g_file_test(item->thumb_file, G_FILE_TEST_IS_REGULAR)) {
-        // Load thumb
+        /* Load thumb */
         if(show_debug)
             g_message("Loading thumb from cache: %s", item->uri);
 
         if(load_final_thumb(item, NULL)) {
-            // Loaded from cache successfully
+            /* Loaded from cache successfully */
             thumb_item_free(item);
 
             return TRUE;
         }
 
-        // Recreate when load failed
+        /* Recreate when load failed */
     }
 
     if(g_file_test(item->fail_file, G_FILE_TEST_IS_REGULAR)) {
@@ -483,7 +478,6 @@ static gint process_thumb(ThumbsItem *item, GError **error)
         return FALSE;
     }
 
-    // Go, horsey, go!
     factory->nprocesses++;
     
     g_queue_push_tail(factory->running_queue, item);
@@ -498,7 +492,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
  */
 static gboolean process_func(gpointer data)
 {
-    // Burst mode
+    /* Burst mode */
     while(factory_can_run()) {
         GError *error = NULL;
         ThumbsItem *item = g_queue_pop_head(factory->queue);
@@ -513,7 +507,7 @@ static gboolean process_func(gpointer data)
         on_queue_change();
     }
 
-    // on_queue_change() removes handler automagically, return TRUE
+    /* on_queue_change() removes handler automagically, return TRUE */
     return TRUE;
 }
 
@@ -543,7 +537,6 @@ static void watch_func(GPid pid, gint status, gpointer data)
                 load_final_thumb(item, NULL);
             }
         } else {
-            // Houston, we have a problem
             if(rename(item->temp_file, item->fail_file))
                 g_warning("Thumbnail fail rename failed: %s -> %s",
                     item->temp_file, item->fail_file);
@@ -552,12 +545,13 @@ static void watch_func(GPid pid, gint status, gpointer data)
         }
     }
 
-    // In case the rename failed
+    /* In case the rename failed */
     unlink(item->temp_file);
 
-    //if(!g_file_test(item->thumb_file, G_FILE_TEST_IS_REGULAR))
-    //    g_warning("Thumbnail file does not exists after finishing: %s",
-    //        item->thumb_file);
+    /* if(!g_file_test(item->thumb_file, G_FILE_TEST_IS_REGULAR))
+          g_warning("Thumbnail file does not exists after finishing: %s",
+            item->thumb_file);
+    */
 
     thumb_item_free(item);
 
@@ -646,10 +640,10 @@ static void register_pixbuf_formats()
 
 static void register_std_formats()
 {
-    //add_mime_handler("audio/mp3", get_handler_path("osso-thumb-libid3"));
+    /* add_mime_handler("audio/mp3", get_handler_path("osso-thumb-libid3")); */
 }
 
-// Configuration handling for GConf
+/* Configuration handling for GConf */
 
 static void load_mime_dir(GConfClient *client, const gchar *dirname)
 {
@@ -665,7 +659,7 @@ static void load_mime_dir(GConfClient *client, const gchar *dirname)
         return;
     }
 
-    // Get directory name part
+    /* Get directory name part */
     mime_type = strrchr(dirname, '/');
 
     if(mime_type) {
@@ -695,7 +689,7 @@ static void load_all_mime_dirs(GConfClient *client)
     mime_dirs = gconf_client_all_dirs(client, THUMBS_GCONF_DIR, NULL);
 
     if(!mime_dirs) {
-        //g_warning("No thumbnailers key in gconf registry");
+        /* g_warning("No thumbnailers key in gconf registry"); */
         return;
     }
 
@@ -713,7 +707,7 @@ static void load_all_mime_dirs(GConfClient *client)
 static void gconf_notify_func(GConfClient *client, guint cnxn_id,
                        GConfEntry *entry, gpointer user_data)
 {
-    // Do a complete reload of mime database
+    /* Do a complete reload of mime database */
     deregister_handlers();
 
     register_handlers();
@@ -727,7 +721,7 @@ static void register_gconf_formats()
 
     load_all_mime_dirs(client);
 
-    // Register update notifier if necessary
+    /* Register update notifier if necessary */
     if(!factory->gconf_notify_id) {
         factory->gconf_notify_id =
             gconf_client_notify_add(client, THUMBS_GCONF_DIR,
@@ -770,7 +764,7 @@ static void deregister_handlers()
  */
 static void init_thumb_dirs()
 {
-    ThumbsDirInfo *info = dir_info;
+    const ThumbsDirInfo *info = dir_info;
     int mode = 0700;
     gchar *fail_base;
 
@@ -781,12 +775,13 @@ static void init_thumb_dirs()
     fail_base = g_build_filename(factory->thumb_base_dir, "fail", NULL);
     mkdir(fail_base, mode);
 
-    factory->fail_dir = g_build_filename(fail_base, OSSO_THUMBNAIL_APPLICATION, NULL);
+    factory->fail_dir = g_build_filename(fail_base,
+                                         OSSO_THUMBNAIL_APPLICATION, NULL);
     mkdir(factory->fail_dir, mode);
 
     g_free(fail_base);
 
-    while(info->dir)  {
+    while (info->dir) {
         char *path = get_thumb_path(info->dir);
         mkdir(path, mode);
         g_free(path);
@@ -891,7 +886,6 @@ typedef void (*update_func)(const gchar *src_uri, const gchar *dest_uri,
 static void copy_update_op(const gchar *src_uri, const gchar *dest_uri,
                            gchar *src_file, gchar *dest_file)
 {
-    //link(src_file, dest_file);
     unlink(dest_file);
 
     update_thumb(src_file, dest_file, dest_uri, get_uri_mtime(dest_uri));
@@ -904,14 +898,12 @@ static void move_update_op(const gchar *src_uri, const gchar *dest_uri,
 
     update_thumb(src_file, dest_file, dest_uri, get_uri_mtime(dest_uri));
 
-    //g_message("unlink %s", src_file);
     unlink(src_file);
 }
 
 static void remove_update_op(const gchar *src_uri, const gchar *dest_uri,
                              gchar *src_file, gchar *dest_file)
 {
-    //g_message("unlink %s", src_file);
     unlink(src_file);
 }
 
@@ -932,9 +924,6 @@ static void run_cache_update_dir(gchar *dir,
         dest_file = g_build_filename(dir, dest_name, NULL);
     }
 
-    //g_message("update %s (%s -> %s)", dir, src_uri, dest_uri);
-    //g_message("update_file (%s -> %s)",  src_file, dest_file);
-
     func(src_uri, dest_uri, src_file, dest_file);
 
     g_free(src_file);
@@ -953,7 +942,7 @@ static void run_cache_update(const gchar *src_uri, const gchar *dest_uri,
     gchar *src_name, *dest_name = NULL;
     gchar src_digest[33], dest_digest[33];
 
-    ThumbsDirInfo *info = dir_info;
+    const ThumbsDirInfo *info = dir_info;
 
     md5_c_string(src_uri, src_digest);
     src_name = g_strconcat(src_digest, ".png", NULL);
@@ -983,7 +972,7 @@ static void run_cache_update(const gchar *src_uri, const gchar *dest_uri,
     }
 }
 
-// Cache cleaning functions
+/* Cache cleaning functions */
 
 typedef struct {
     gchar *file;
@@ -995,7 +984,7 @@ static gint cache_file_compare(gconstpointer a, gconstpointer b)
     ThumbsCacheFile *f1 = *(ThumbsCacheFile**)a,
             *f2 = *(ThumbsCacheFile**)b;
 
-    // Sort in descending order
+    /* Sort in descending order */
     if(f2->mtime == f1->mtime) {
         return 0;
     } else if(f2->mtime < f1->mtime) {
@@ -1041,12 +1030,12 @@ static void read_cache_dir(gchar *path, GPtrArray *files)
     }
 }
 
-// Public functions
+/* Public functions */
 
 void osso_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 {
     GPtrArray *files;
-    ThumbsDirInfo *info = dir_info;
+    const ThumbsDirInfo *info = dir_info;
     int i, size = 0;
     gboolean deleting = FALSE;
 
@@ -1076,9 +1065,6 @@ void osso_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
         if((max_size >= 0 && size >= max_size) || item->mtime < min_mtime) {
             deleting = TRUE;
         }
-
-        //g_message("Traversing %d,%s, deleting %d, size %d", item->mtime,
-        //        item->file, deleting, size);
 
         if(deleting) {
             unlink(item->file);
@@ -1163,15 +1149,16 @@ void osso_thumbnail_factory_cancel(OssoThumbnailFactoryHandle handle)
 
         on_queue_change();
     } else {    
-        // Not found in work queue,  maybe it is running?
+        /* Not found in work queue,  maybe it is running? */
         lst = g_queue_find(factory->running_queue, item);
         
-        // Yes, the handle is valid
+        /* Yes, the handle is valid */
         if(lst) {
             item->canceled = TRUE;
-            // Item will be freed by process notify func
+            /* Item will be freed by process notify func */
         } else {
-            g_warning("Thumbnail cancel on handle that doesn't exist in queue: %08X", (unsigned int)handle);
+            g_warning("Thumbnail cancel on handle that doesn't"
+                      " exist in queue: %08X", (unsigned int)handle);
         }
     }
 }
@@ -1181,7 +1168,6 @@ void osso_thumbnail_factory_wait()
     thumbs_init();
 
     while(factory_is_running()) {
-        //process_func(factory);
         g_main_context_iteration(NULL, TRUE);
     }
 }
@@ -1245,7 +1231,7 @@ void osso_thumbnail_factory_move_front_all_from(OssoThumbnailFactoryHandle handl
 
     while((list = g_queue_pop_head_link(factory->queue))) {
         if(list == target) {
-            // Undo pop
+            /* Undo pop */
             g_queue_push_head_link(factory->queue, list);
             break;
         } else {
