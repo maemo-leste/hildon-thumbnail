@@ -1,3 +1,10 @@
+osso-thumbnail (0.7-2) unstable; urgency=low
+
+  * Changed licenses to LGPL 2.1 (exactly) throughout.
+  * Fixes: NB#41670.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 28 Sep 2006 12:27:52 +0300
+
 osso-thumbnail (0.7-1) unstable; urgency=low
 
   * Cleaned up some commented code and corrected comments.
