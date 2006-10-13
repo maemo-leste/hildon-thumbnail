@@ -200,23 +200,19 @@ cleanup:
     return NULL;
 }
 
-static void oom_handler(size_t current_sz, size_t max_sz,void *context)
-{
-  /* Just log something, but don't abort.
-  */
-  ULOG_ERR ("Out of memory");
-}
-
 int main(int argc, char **argv)
 {
     int result;
 
     setpriority(PRIO_PROCESS, getpid(), 10);
-    result = osso_mem_saw_enable(15*1024*1024, 4*1024, oom_handler, NULL);
+    result = osso_mem_saw_enable(4 << 20, 64, NULL, NULL);
     if (result != 0)
       ULOG_ERR ("can't install memory watchdog: code %d\n", result);
-    result = osso_thumber_main(&argc, &argv, create_thumb);
-    osso_mem_saw_disable();
+    else
+      {
+	result = osso_thumber_main(&argc, &argv, create_thumb);
+	osso_mem_saw_disable();
+      }
 
     return result;
 }
