@@ -1,3 +1,11 @@
+2006-10-13  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 0.8-1.
+	
+	* thumbs/thumber-gdk-pixbuf.c (main): Reduce memory threshold to 4
+	Megs and watchblock to 64 bytes.  Fail if memory watchdog can not
+	be installed. (N40789) Thanks to Leonid Moiseichuk!
+
 2005-10-24  Luc Pionchon  <luc.pionchon@nokia.com>
 
 	* configure.ac: 0.3.10

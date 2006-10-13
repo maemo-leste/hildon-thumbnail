@@ -1,6 +1,6 @@
 AC_INIT(Makefile.am)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(osso-thumbnail, 0.4)
+AM_INIT_AUTOMAKE(osso-thumbnail, 0.8)
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
