@@ -62,7 +62,7 @@ ifneq "$(wildcard /usr/share/misc/config.guess)" ""
 	cp -f /usr/share/misc/config.guess config.guess
 endif
 
-
+	rm -rf debian/build
 	dh_clean 
 
 install: build
@@ -73,11 +73,6 @@ install: build
 
 # Add here commands to install the package into debian/build
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/build
-
-        # for the -dbg package
-	-rm -rf $(CURDIR)/debian/build/usr/lib/debug
-	-mkdir -p $(CURDIR)/debian/build/usr/lib/debug
-	-cp -vd $(CURDIR)/debian/build/usr/lib/lib*.so* $(CURDIR)/debian/build/usr/lib/debug
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -102,7 +97,7 @@ binary-arch: build install
 #	dh_installinfo
 	dh_installman
 	dh_link
-	dh_strip --dbg-package="osso-thumbnail0-dbg"
+	dh_strip --dbg-package="osso-thumbnail0"
 	dh_compress
 	dh_fixperms
 #	dh_perl

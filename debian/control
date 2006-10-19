@@ -21,10 +21,10 @@ Conflicts: osso-thumbnail0 (<< 0.3.0), osso-thumbnail-libid3 (<< 0.3.0)
 Description: Thumbnail library.
 
 Package: osso-thumbnail0-dbg
-Section: libs
+Section: devel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Thumbnail library with debug symbols.
+Depends: osso-thumbnail0 (= ${Source-Version})
+Description: Debug symbols for osso-thumbnail0
 
 Package: osso-thumbnail-dev
 Section: devel

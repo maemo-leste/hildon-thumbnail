@@ -1,3 +1,9 @@
+osso-thumbnail (0.8-2) unstable; urgency=low
+
+  * Only put debugging symbols into -dbg package.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 19 Oct 2006 15:04:31 +0300
+
 osso-thumbnail (0.8-1) unstable; urgency=low
 
   * Changed licenses to LGPL 2.1 (exactly) throughout.
