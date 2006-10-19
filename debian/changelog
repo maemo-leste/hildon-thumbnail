@@ -1,6 +1,7 @@
 osso-thumbnail (0.8-2) unstable; urgency=low
 
-  * Only put debugging symbols into -dbg package.
+  * Only put debugging symbols into -dbg package. 
+  * Fixes: NB#N40543.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 19 Oct 2006 15:04:31 +0300
 
