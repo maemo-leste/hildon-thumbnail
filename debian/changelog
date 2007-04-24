@@ -1,3 +1,9 @@
+hildon-thumbnail (0.9) unstable; urgency=low
+
+  * Folded into the Hildon family.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 24 Apr 2007 19:49:33 +0300
+
 osso-thumbnail (0.8-2) unstable; urgency=low
 
   * Only put debugging symbols into -dbg package. 

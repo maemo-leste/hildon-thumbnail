@@ -7,5 +7,5 @@ Name: @PACKAGE@
 Description: LGPL-licensed thumbs library stuff
 Requires: @PKG_CHECK@
 Version: @VERSION@
-Libs: -L${libdir} -lossothumbnail
+Libs: -L${libdir} -lhildonthumbnail
 Cflags: -I${includedir}/@PACKAGE@

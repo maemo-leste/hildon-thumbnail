@@ -21,8 +21,8 @@
  *
  */
 
-#include "osso-thumbnail-factory.h"
-#include "osso-thumber-common.h"
+#include "hildon-thumbnail-factory.h"
+#include "hildon-thumber-common.h"
 #include "thumbs-private.h"
 
 #include <stdio.h>
@@ -37,21 +37,21 @@
 
 #include <libgnomevfs/gnome-vfs.h>
 
-GdkPixbuf* osso_thumber_create_empty_pixbuf()
+GdkPixbuf* hildon_thumber_create_empty_pixbuf()
 {
     return create_empty_pixbuf();
 }
 
-int osso_thumber_main(
+int hildon_thumber_main(
     int *argc_p, char ***argv_p,
-    OssoThumberCreateThumb create_thumb
+    HildonThumberCreateThumb create_thumb
 )
 {
     int argc;
     char **argv;
 
     guint width, height;
-    OssoThumbnailFlags flags;
+    HildonThumbnailFlags flags;
     gchar *uri, *file, *mime_type, *local_file;
     //gchar *fail_file, *final_file;
 
@@ -68,7 +68,7 @@ int osso_thumber_main(
     argv = *argv_p;
 
     if(argc != 6+1) {
-        printf("Usage: osso-thumb-gdk-pixbuf"
+        printf("Usage: hildon-thumb-gdk-pixbuf"
                " source_uri mime_type dest_file flags thumb_width thumb_height\n");
 
         g_warning("Thumber invalid arguments");

@@ -22,8 +22,8 @@
   */
 
 #include "config.h"
-#include "osso-thumbnail-factory.h"
-#include "osso-thumber-common.h"
+#include "hildon-thumbnail-factory.h"
+#include "hildon-thumber-common.h"
 
 #include <osso-mem.h>
 #include <osso-log.h>
@@ -142,10 +142,10 @@ static void size_prepared(GdkPixbufLoader *loader,
 }
 
 GdkPixbuf *create_thumb(const gchar *local_file, const gchar *mime_type,
-    guint width, guint height, OssoThumbnailFlags flags,
+    guint width, guint height, HildonThumbnailFlags flags,
     gchar ***opt_keys, gchar ***opt_values, GError **error)
 {
-    if((flags & OSSO_THUMBNAIL_FLAG_CROP)) {
+    if((flags & HILDON_THUMBNAIL_FLAG_CROP)) {
        GdkPixbuf *pixbuf, *result = NULL;
        GdkPixbufLoader *loader;
        guchar buffer[2048];
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
       ULOG_ERR ("can't install memory watchdog: code %d\n", result);
     else
       {
-	result = osso_thumber_main(&argc, &argv, create_thumb);
+	result = hildon_thumber_main(&argc, &argv, create_thumb);
 	osso_mem_saw_disable();
       }
 

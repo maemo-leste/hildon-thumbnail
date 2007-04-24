@@ -1,6 +1,6 @@
 AC_INIT(Makefile.am)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(osso-thumbnail, 0.8)
+AM_INIT_AUTOMAKE(hildon-thumbnail, 0.8)
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
@@ -141,4 +141,4 @@ AC_OUTPUT(Makefile \
           tests/Makefile \
           thumbs/Makefile \
 	  doc/Makefile \
-          osso-thumbnail.pc)
+          hildon-thumbnail.pc)

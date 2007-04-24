@@ -1,33 +1,37 @@
-Source: osso-thumbnail
+Source: hildon-thumbnail
 Section: libs
 Priority: optional
-Maintainer: Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>
+Maintainer: Marius Vollmer <marius.vollmer@nokia.com>
 Build-Depends: debhelper (>= 4.0.0), pkg-config, libosso-gnomevfs2-dev, libgtk2.0-dev, gtk-doc-tools, libosso-dev
 Standards-Version: 3.6.0
 
-Package: osso-thumbnail
+Package: hildon-thumbnail
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, osso-thumbnail0 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version})
 Recommends: osso-thumbnailer-libid3 (>= 0.3.0)
+Conflicts: osso-thumbnail
+Replaces: osso-thumbnail
+Provides: osso-thumbnail
 Description: Thumbnail library related programs.
- Contains osso-thumb-gdk-pixbuf and osso-thumber-register programs.
+ Contains hildon-thumb-gdk-pixbuf and hildon-thumber-register programs.
 
-Package: osso-thumbnail0
+Package: libhildon-thumbnail0
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Conflicts: osso-thumbnail0 (<< 0.3.0), osso-thumbnail-libid3 (<< 0.3.0)
+Conflicts: osso-thumbnail0, osso-thumbnail-libid3 (<< 0.3.0)
+Replaces: osso-thumbnail0
 Description: Thumbnail library.
 
-Package: osso-thumbnail0-dbg
+Package: libhildon-thumbnail0-dbg
 Section: devel
 Architecture: any
-Depends: osso-thumbnail0 (= ${Source-Version})
-Description: Debug symbols for osso-thumbnail0
+Depends: libhildon-thumbnail0 (= ${Source-Version})
+Description: Debug symbols for libhildon-thumbnail0
 
-Package: osso-thumbnail-dev
+Package: libhildon-thumbnail-dev
 Section: devel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, osso-thumbnail0 (= ${Source-Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
-Description: Thumbnail library development files.
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
+Description: libhildon-thumbnail0 development files.

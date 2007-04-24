@@ -21,7 +21,7 @@
  *
  */
 
-#include "osso-thumbnail-factory.h"
+#include "hildon-thumbnail-factory.h"
 #include "thumbs-private.h"
 
 #include <stdio.h>

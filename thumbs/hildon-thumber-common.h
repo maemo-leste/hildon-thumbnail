@@ -1,5 +1,5 @@
 /*
- * This file is part of osso-thumbnail package
+ * This file is part of hildon-thumbnail package
  *
  * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
  *
@@ -27,7 +27,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 /**
- * OssoThumberCreateThumb:
+ * HildonThumberCreateThumb:
  * @local_file: File to create thumbnail from
  * @width: Required thumbnail width
  * @height: Required thumbnail height
@@ -43,13 +43,13 @@
  * Function called by the main function to create a thumbnail for the given file.
  * Returns: %NULL if thumbnail can't be created, pixbuf with thumbnail otherwise.
  */
-typedef GdkPixbuf * (*OssoThumberCreateThumb)(const gchar *local_file, 
+typedef GdkPixbuf * (*HildonThumberCreateThumb)(const gchar *local_file, 
     const gchar *mime_type,
-    guint width, guint height, OssoThumbnailFlags flags,
+    guint width, guint height, HildonThumbnailFlags flags,
     gchar ***opt_keys, gchar ***opt_values, GError **error);
 
 /**
- * osso_thumber_main:
+ * hildon_thumber_main:
  * @argc_p: Pointer to argc
  * @argv_p: Pointer to argv
  * @create_thumb: Function to create thumbnail for specified local file,
@@ -59,15 +59,15 @@ typedef GdkPixbuf * (*OssoThumberCreateThumb)(const gchar *local_file,
  * Passed a function that does the thumbnailing work. Error handling etc. is provided
  * automatically by this function
  */
-int osso_thumber_main(
-    int *argc_p, char ***argv_p, OssoThumberCreateThumb create_thumb
+int hildon_thumber_main(
+    int *argc_p, char ***argv_p, HildonThumberCreateThumb create_thumb
 );
 
 /**
- * osso_thumber_create_empty_pixbuf:
+ * hildon_thumber_create_empty_pixbuf:
  *
  * Returns: An empty pixbuf for saving metadata only, eg. for MP3 files
  */
-GdkPixbuf* osso_thumber_create_empty_pixbuf();
+GdkPixbuf* hildon_thumber_create_empty_pixbuf();
 
 #endif

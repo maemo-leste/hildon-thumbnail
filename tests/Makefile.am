@@ -1,8 +1,8 @@
 INCLUDES = -I$(srcdir)/../thumbs -I$(srcdir)/.. $(PKG_CFLAGS)
 
-bin_PROGRAMS = osso-thumbnail-tester
+bin_PROGRAMS = hildon-thumbnail-tester
 
-osso_thumbnail_tester_SOURCES = tests.c
-osso_thumbnail_tester_LDADD = $(top_builddir)/thumbs/libossothumbnail.la $(PKG_LIBS)
+hildon_thumbnail_tester_SOURCES = tests.c
+hildon_thumbnail_tester_LDADD = $(top_builddir)/thumbs/libhildonthumbnail.la $(PKG_LIBS)
 
 EXTRA_DIST = $(wildcard $(srcdir)/images/*)

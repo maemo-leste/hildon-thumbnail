@@ -7,33 +7,29 @@ INCLUDES = $(PKG_CFLAGS) -DLOCALEDIR=\"$(localedir)\" \
     -I$(srcdir)/..
 
 # Binaries
-bin_PROGRAMS = osso-thumb-gdk-pixbuf osso-thumber-register
-# osso-thumb-libid3
+bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
 
-osso_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c
-osso_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS) libossothumbnail.la
+hildon_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c
+hildon_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS) libhildonthumbnail.la
 
-osso_thumber_register_SOURCES = thumber-register.c
-osso_thumber_register_LDADD = $(PKG_LIBS) libossothumbnail.la
-
-#osso_thumb_libid3_SOURCES = thumber-libid3.c thumber-common.c \
-#    thumbs-common.c
-#osso_thumb_libid3_LDADD = $(PKG_LIBS)  \
-#    $(top_builddir)/libid3/lib/libid3.la
+hildon_thumber_register_SOURCES = thumber-register.c
+hildon_thumber_register_LDADD = $(PKG_LIBS) libhildonthumbnail.la
 
 # Library
-lib_LTLIBRARIES = libossothumbnail.la
+lib_LTLIBRARIES = libhildonthumbnail.la
 
-libossothumbnail_la_LIBADD = $(PKG_LIBS)
-libossothumbnail_la_LDFLAGS = -version-info 0:3:0
-libossothumbnail_la_SOURCES = \
-    osso-thumbnail-factory.c osso-thumbnail-factory.h thumbs-common.c thumbs-private.h \
+libhildonthumbnail_la_LIBADD = $(PKG_LIBS)
+libhildonthumbnail_la_LDFLAGS = -version-info 0:3:0
+libhildonthumbnail_la_SOURCES = \
+    hildon-thumbnail-factory.c hildon-thumbnail-factory.h thumbs-common.c thumbs-private.h \
     thumber-common.c \
     md5.c md5.h
 
-libossothumbnaildir=$(includedir)/osso-thumbnail
-libossothumbnail_HEADERS = osso-thumbnail-factory.h osso-thumber-common.h
+libhildonthumbnaildir=$(includedir)/hildon-thumbnail
+libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h
 
-#libossothumbnailincludeinstdir=$(includedir)/ossothumbnail
-#libossothumbnailincludeinst_DATA = \
-#        osso-thumbnail-factory.h
+install-exec-local:
+	rm -f $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf
+	ln -s hildon-thumb-gdk-pixbuf $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf
+	rm -f $(DESTDIR)$(bindir)/osso-thumber-register
+	ln -s hildon-thumber-register $(DESTDIR)$(bindir)/osso-thumber-register

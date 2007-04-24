@@ -21,7 +21,7 @@
  *
  */
 
-#include "osso-thumbnail-factory.h"
+#include "hildon-thumbnail-factory.h"
 #include "thumbs-private.h"
 
 #include <sys/stat.h>
@@ -130,7 +130,7 @@ gboolean save_thumb_file_meta(GdkPixbuf *pixbuf, gchar *file, time_t mtime,
     const char *default_values[] = {
         uri,
         mtime_str,
-        OSSO_THUMBNAIL_APPLICATION "-" VERSION,
+        HILDON_THUMBNAIL_APPLICATION "-" VERSION,
         NULL
     };
 

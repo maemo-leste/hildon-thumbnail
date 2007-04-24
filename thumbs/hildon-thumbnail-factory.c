@@ -1,5 +1,5 @@
 /*
- * This file is part of osso-thumbnail package
+ * This file is part of hildon-thumbnail package
  *
  * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
  *
@@ -21,7 +21,7 @@
  *
  */
 
-#include "osso-thumbnail-factory.h"
+#include "hildon-thumbnail-factory.h"
 #include "thumbs-private.h"
 
 #include "md5.h"
@@ -69,8 +69,8 @@ typedef struct {
     gchar *uri;
     gchar *mime_type;
     guint width, height;
-    OssoThumbnailFlags flags;
-    OssoThumbnailFactoryFinishedCallback callback;
+    HildonThumbnailFlags flags;
+    HildonThumbnailFactoryFinishedCallback callback;
     gpointer user_data;
     gboolean canceled;
     
@@ -97,7 +97,7 @@ typedef struct {
 
 /** Public <-> private handle conversion macros */
 #define THUMBS_ITEM(handle) (ThumbsItem*)(handle)
-#define THUMBS_HANDLE(item) (OssoThumbnailFactoryHandle)(item)
+#define THUMBS_HANDLE(item) (HildonThumbnailFactoryHandle)(item)
 
 static gboolean process_func(gpointer data);
 static void watch_func(GPid pid, gint status, gpointer data);
@@ -266,7 +266,7 @@ static GdkPixbuf* load_thumb_file(gchar *file, time_t *mtime, const gchar **uri,
     pixbuf = gdk_pixbuf_new_from_file(file, NULL);
 
     if(!pixbuf) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_PIXBUF_LOAD_FAILED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_PIXBUF_LOAD_FAILED,
                     "Pixbuf loading failed for: %s", file);
 
         return NULL;
@@ -276,7 +276,7 @@ static GdkPixbuf* load_thumb_file(gchar *file, time_t *mtime, const gchar **uri,
     mtime_str = gdk_pixbuf_get_option(pixbuf, MTIME_OPTION);
 
     if(!uri_str || !mtime_str) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_NO_PIXBUF_OPTIONS,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_NO_PIXBUF_OPTIONS,
                     "Thumbnail does not contain URI or MTime tags: %s",
                     file);
         gdk_pixbuf_unref(pixbuf);
@@ -321,7 +321,7 @@ static gboolean load_final_thumb(ThumbsItem *item, GError **error)
     cur_mtime = get_uri_mtime(uri);
 
     if(mtime != cur_mtime || strcmp(uri, item->uri) != 0) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_THUMB_EXPIRED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_THUMB_EXPIRED,
                     "Thumbnail expired for: %s", uri);
         gdk_pixbuf_unref(pixbuf);
         return FALSE;
@@ -390,7 +390,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     /* Get thumbnail category */
     if(!get_size_info(item->width, item->height,
         &item->thumb_width, &item->thumb_height, &dir)) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_ILLEGAL_SIZE,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_ILLEGAL_SIZE,
                     "Illegal thumbnail size: (%d, %d)",
                     item->width, item->height);
         return FALSE;
@@ -399,7 +399,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     /* Get handler for MIME type */
     handler = get_mime_handler(item->mime_type);
     if(!handler) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_NO_MIME_HANDLER,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_NO_MIME_HANDLER,
                     "No handler for mime type: %s", item->mime_type);
         return FALSE;
     }
@@ -407,7 +407,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     thumb_dir = get_thumb_path(dir);
 
     if(!g_file_test(thumb_dir, G_FILE_TEST_IS_DIR)) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_NO_THUMB_DIR,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_NO_THUMB_DIR,
                     "Thumbnail path not a directory: %s", thumb_dir);
 
         g_free(thumb_dir);
@@ -443,7 +443,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     }
 
     if(g_file_test(item->fail_file, G_FILE_TEST_IS_REGULAR)) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_FAILURE_CACHED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_FAILURE_CACHED,
                     "Cache indicates failure for: %s", item->uri);
 
         return FALSE;
@@ -452,7 +452,7 @@ static gint process_thumb(ThumbsItem *item, GError **error)
     temp_fd = g_mkstemp(item->temp_file);
 
     if(temp_fd == -1) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_TEMP_FILE_FAILED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_TEMP_FILE_FAILED,
                     "Temporary file creation failed: %s", item->temp_file);
 
         return FALSE;
@@ -464,14 +464,14 @@ static gint process_thumb(ThumbsItem *item, GError **error)
         g_message("Invoking thumbnailer: %s %s", item->uri, item->temp_file);
 
     if(!(pid = spawn_handler(handler, item))) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_SPAWN_FAILED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_SPAWN_FAILED,
                     "Spawning process failed: %s", handler->cmd);
 
         return FALSE;
     }
 
     if(!g_child_watch_add(pid, watch_func, item)) {
-        g_set_error(error, app_quark, OSSO_THUMBNAIL_ERROR_CHILD_WATCH_FAILED,
+        g_set_error(error, app_quark, HILDON_THUMBNAIL_ERROR_CHILD_WATCH_FAILED,
                     "Child watch failed for pid: %d", pid);
 
         return FALSE;
@@ -611,7 +611,7 @@ static void register_pixbuf_formats()
     GSList *formats, *format;
 
     if(!pixbuf_cmd) {
-        if(!(pixbuf_cmd = get_handler_path("osso-thumb-gdk-pixbuf"))) {
+        if(!(pixbuf_cmd = get_handler_path("hildon-thumb-gdk-pixbuf"))) {
             return;
         }
     }
@@ -639,7 +639,7 @@ static void register_pixbuf_formats()
 
 static void register_std_formats()
 {
-    /* add_mime_handler("audio/mp3", get_handler_path("osso-thumb-libid3")); */
+    /* add_mime_handler("audio/mp3", get_handler_path("hildon-thumb-libid3")); */
 }
 
 /* Configuration handling for GConf */
@@ -775,7 +775,7 @@ static void init_thumb_dirs()
     mkdir(fail_base, mode);
 
     factory->fail_dir = g_build_filename(fail_base,
-                                         OSSO_THUMBNAIL_APPLICATION, NULL);
+                                         HILDON_THUMBNAIL_APPLICATION, NULL);
     mkdir(factory->fail_dir, mode);
 
     g_free(fail_base);
@@ -792,7 +792,7 @@ static void init_thumb_dirs()
 static gboolean thumbs_init()
 {
     if(!app_quark) {
-        app_quark = g_quark_from_static_string(OSSO_THUMBNAIL_APPLICATION);
+        app_quark = g_quark_from_static_string(HILDON_THUMBNAIL_APPLICATION);
     }
 
     if(!factory) {
@@ -1031,7 +1031,7 @@ static void read_cache_dir(gchar *path, GPtrArray *files)
 
 /* Public functions */
 
-void osso_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
+void hildon_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 {
     GPtrArray *files;
     const ThumbsDirInfo *info = dir_info;
@@ -1075,7 +1075,7 @@ void osso_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
     g_ptr_array_free(files, TRUE);
 }
 
-GQuark osso_thumbnail_error_quark()
+GQuark hildon_thumbnail_error_quark()
 {
     thumbs_init();
 
@@ -1083,11 +1083,11 @@ GQuark osso_thumbnail_error_quark()
 }
 
 
-OssoThumbnailFactoryHandle osso_thumbnail_factory_load_custom(
+HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
             const gchar *uri, const gchar *mime_type,
             guint width, guint height,
-            OssoThumbnailFactoryFinishedCallback callback,
-            gpointer user_data, OssoThumbnailFlags flags, ...)
+            HildonThumbnailFactoryFinishedCallback callback,
+            gpointer user_data, HildonThumbnailFlags flags, ...)
 {
 
     ThumbsItem *item;
@@ -1118,17 +1118,17 @@ OssoThumbnailFactoryHandle osso_thumbnail_factory_load_custom(
     return THUMBS_HANDLE(item);
 }
 
-OssoThumbnailFactoryHandle osso_thumbnail_factory_load(
+HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
             const gchar *uri, const gchar *mime_type,
             guint width, guint height,
-            OssoThumbnailFactoryFinishedCallback callback,
+            HildonThumbnailFactoryFinishedCallback callback,
             gpointer user_data)
 {
-    return osso_thumbnail_factory_load_custom(uri, mime_type, width, height,
-        callback, user_data, OSSO_THUMBNAIL_FLAG_CROP, -1);
+    return hildon_thumbnail_factory_load_custom(uri, mime_type, width, height,
+        callback, user_data, HILDON_THUMBNAIL_FLAG_CROP, -1);
 }
 
-void osso_thumbnail_factory_cancel(OssoThumbnailFactoryHandle handle)
+void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
 {
     ThumbsItem *item;
     GList *lst;
@@ -1162,7 +1162,7 @@ void osso_thumbnail_factory_cancel(OssoThumbnailFactoryHandle handle)
     }
 }
 
-void osso_thumbnail_factory_wait()
+void hildon_thumbnail_factory_wait()
 {
     thumbs_init();
 
@@ -1171,7 +1171,7 @@ void osso_thumbnail_factory_wait()
     }
 }
 
-void osso_thumbnail_factory_move(const gchar *src_uri, const gchar *dest_uri)
+void hildon_thumbnail_factory_move(const gchar *src_uri, const gchar *dest_uri)
 {
     g_return_if_fail(src_uri && dest_uri && strcmp(src_uri, dest_uri));
 
@@ -1180,7 +1180,7 @@ void osso_thumbnail_factory_move(const gchar *src_uri, const gchar *dest_uri)
     run_cache_update(src_uri, dest_uri, move_update_op);
 }
 
-void osso_thumbnail_factory_copy(const gchar *src_uri, const gchar *dest_uri)
+void hildon_thumbnail_factory_copy(const gchar *src_uri, const gchar *dest_uri)
 {
     g_return_if_fail(src_uri && dest_uri && strcmp(src_uri, dest_uri));
 
@@ -1189,7 +1189,7 @@ void osso_thumbnail_factory_copy(const gchar *src_uri, const gchar *dest_uri)
     run_cache_update(src_uri, dest_uri, copy_update_op);
 }
 
-void osso_thumbnail_factory_remove(const gchar *uri)
+void hildon_thumbnail_factory_remove(const gchar *uri)
 {
     g_return_if_fail(uri);
 
@@ -1198,7 +1198,7 @@ void osso_thumbnail_factory_remove(const gchar *uri)
     run_cache_update(uri, NULL, remove_update_op);
 }
 
-void osso_thumbnail_factory_move_front(OssoThumbnailFactoryHandle handle)
+void hildon_thumbnail_factory_move_front(HildonThumbnailFactoryHandle handle)
 {
     GList *list;
 
@@ -1214,7 +1214,7 @@ void osso_thumbnail_factory_move_front(OssoThumbnailFactoryHandle handle)
     }
 }
 
-void osso_thumbnail_factory_move_front_all_from(OssoThumbnailFactoryHandle handle)
+void hildon_thumbnail_factory_move_front_all_from(HildonThumbnailFactoryHandle handle)
 {
     GList *list, *target;
 
@@ -1239,7 +1239,7 @@ void osso_thumbnail_factory_move_front_all_from(OssoThumbnailFactoryHandle handl
     }
 }
 
-void osso_thumbnail_factory_set_debug(gboolean debug)
+void hildon_thumbnail_factory_set_debug(gboolean debug)
 {
     thumbs_init();
 
