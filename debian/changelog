@@ -1,3 +1,10 @@
+hildon-thumbnail (0.10) unstable; urgency=low
+
+  * Don't let libhildon-thumbnail0 conflict with osso-thumbnail0.  This is
+    not necessary and complicates the transition.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 24 Apr 2007 21:36:26 +0300
+
 hildon-thumbnail (0.9) unstable; urgency=low
 
   * Folded into the Hildon family.
