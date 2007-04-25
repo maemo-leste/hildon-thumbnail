@@ -1798,7 +1798,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=hildon-thumbnail
- VERSION=0.8
+ VERSION=0.11
 
 
 cat >>confdefs.h <<_ACEOF

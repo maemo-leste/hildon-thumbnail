@@ -10,11 +10,16 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version})
 Recommends: osso-thumbnailer-libid3 (>= 0.3.0)
-Conflicts: osso-thumbnail
-Replaces: osso-thumbnail
-Provides: osso-thumbnail
+Conflicts: osso-thumbnail (<< 0.11)
+Replaces: osso-thumbnail (<< 0.11)
 Description: Thumbnail library related programs.
  Contains hildon-thumb-gdk-pixbuf and hildon-thumber-register programs.
+
+Package: osso-thumbnail
+Section: libs
+Architecture: any
+Depends: hildon-thumbnail
+Description: Transitional package for hildon-thumbnail
 
 Package: libhildon-thumbnail0
 Section: libs
