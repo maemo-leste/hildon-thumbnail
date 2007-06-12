@@ -82,6 +82,8 @@ int hildon_thumber_main(
     width = atoi(argv[5]);
     height = atoi(argv[6]);
 
+    if (!g_thread_supported ())
+      g_thread_init (NULL);
     g_type_init();
 
     gnome_vfs_init();

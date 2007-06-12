@@ -1,3 +1,8 @@
+2007-06-12  Tommi Komulainen  <tommi.komulainen@nokia.com>
+
+	* thumbs/thumber-common.c (hildon_thumber_main): Call g_thread_init()
+	before g_type_init() or gnome_vfs_init() to avoid GSlice problems.
+
 2006-10-13  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 0.8-1.
