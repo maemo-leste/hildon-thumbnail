@@ -1,3 +1,10 @@
+hildon-thumbnail (0.13-2) unstable; urgency=low
+
+  * Make hildon-thumbnail again depend on libhildon-thumbnail0 (=
+    ${Source-Version}) since hildon-thumber-register uses thumbs-private.h
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 13 Aug 2007 17:28:43 +0300
+
 hildon-thumbnail (0.13-1) unstable; urgency=low
 
   * Fixed some lintian warnings. Fixes: NB#44044

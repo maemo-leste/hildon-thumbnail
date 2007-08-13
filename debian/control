@@ -8,7 +8,7 @@ Standards-Version: 3.6.0
 Package: hildon-thumbnail
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version})
 Recommends: osso-thumbnailer-libid3 (>= 0.3.0)
 Conflicts: osso-thumbnail (<< 0.11)
 Replaces: osso-thumbnail (<< 0.11)
