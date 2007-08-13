@@ -1,7 +1,11 @@
-2007-06-12  Tommi Komulainen  <tommi.komulainen@nokia.com>
+2007-08-10  Kimmo Hämäläinen  <kimmo.hamalainen@nokia.com>
 
-	* thumbs/thumber-common.c (hildon_thumber_main): Call g_thread_init()
-	before g_type_init() or gnome_vfs_init() to avoid GSlice problems.
+	Applied a modified patch from Daniil Ivanov:
+	* thumbs/thumber-gdk-pixbuf.c (create_thumb): Read four bytes at a
+	time instead of one.
+	(thumbnailer_oom_func): New.
+	(main): Register thumbnailer_oom_func as the OOM callback. Add Glib
+	thread initialisation. Fixes: NB#63712
 
 2006-10-13  Marius Vollmer  <marius.vollmer@nokia.com>
 
@@ -27,9 +31,9 @@
 	
 2005-10-12  Luc Pionchon  <luc.pionchon@nokia.com>
 
-        N#20238 - Thumbnailer causes system crashes on large images
+	N#20238 - Thumbnailer causes system crashes on large images
 	
-        * thumbs/thumber-gdk-pixbuf.c
+	* thumbs/thumber-gdk-pixbuf.c
 
 	(can_crop_file): Removed artificial resolution restriction, since
 	                 more precice memory monitoring can be used now.

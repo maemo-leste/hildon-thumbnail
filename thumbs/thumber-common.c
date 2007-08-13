@@ -53,7 +53,6 @@ int hildon_thumber_main(
     guint width, height;
     HildonThumbnailFlags flags;
     gchar *uri, *file, *mime_type, *local_file;
-    //gchar *fail_file, *final_file;
 
     time_t mtime = 0;
     GdkPixbuf *pixbuf;
@@ -61,7 +60,6 @@ int hildon_thumber_main(
     GError *error = NULL;
     int status = 0;
 
-    //const char *meta;
     gchar **keys = NULL, **values = NULL;
 
     argc = *argc_p;
@@ -82,8 +80,6 @@ int hildon_thumber_main(
     width = atoi(argv[5]);
     height = atoi(argv[6]);
 
-    if (!g_thread_supported ())
-      g_thread_init (NULL);
     g_type_init();
 
     gnome_vfs_init();
@@ -96,14 +92,7 @@ int hildon_thumber_main(
 
     local_file = gnome_vfs_get_local_path_from_uri(uri);
 
-    //if(gnome_vfs_uri_is_local(vfs_uri)) {
     if(local_file && strlen(local_file)) {
-        /*
-        if(!local_file || strlen(local_file) == 0) {
-            g_warning("Failed to get local file for uri: %s", uri);
-            return 4;
-        }
-        */
         mtime = get_file_mtime(local_file);
     } else {
         gchar *file_uri;
@@ -130,8 +119,6 @@ int hildon_thumber_main(
 
     gnome_vfs_uri_unref(vfs_uri);
 
-    //g_message("thumber from %s to %s", local_file, file);
-
     pixbuf = create_thumb(local_file, mime_type,
         width, height, flags, &keys, &values, &error);
 
@@ -150,8 +137,6 @@ int hildon_thumber_main(
 
     if(keys) g_strfreev(keys);
     if(values) g_strfreev(values);
-
-    //g_message("Saved %s to %s", uri, final_file);
 
     gdk_pixbuf_unref(pixbuf);
 

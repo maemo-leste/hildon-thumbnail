@@ -1,3 +1,24 @@
+hildon-thumbnail (0.13-1) unstable; urgency=low
+
+  * Fixed some lintian warnings. Fixes: NB#44044
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Fri, 10 Aug 2007 16:19:45 +0300
+
+hildon-thumbnail (0.13) unstable; urgency=low
+
+  * Added Glib thread initialisation. Fixes: NB#62806
+  * Now OOM handler simply exits because the thumbnailer was still jamming
+    sometimes with Daniil's patch. Fixes: NB#63712
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Fri, 10 Aug 2007 15:13:11 +0300
+
+hildon-thumbnail (0.12) unstable; urgency=low
+
+  * Applied patch to use Libosso saw functions.
+  * Read four bytes at a time, instead of one byte, in thumber-gdk-pixbuf.
+
+ -- Kimmo Hämäläinen <kimmo.hamalainen@nokia.com>  Fri, 10 Aug 2007 14:28:59 +0300
+
 hildon-thumbnail (0.11) unstable; urgency=low
 
   * Use a real osso-thumbnail transitional package instead of a Provides

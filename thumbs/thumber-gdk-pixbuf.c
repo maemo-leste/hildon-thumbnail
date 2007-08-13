@@ -1,7 +1,7 @@
  /*
   * This file is part of osso-thumbnail package
   *
-  * Copyright (C) 2005, 2006 Nokia Corporation.  All rights reserved.
+  * Copyright (C) 2005-2007 Nokia Corporation.  All rights reserved.
   *
   * Contact: Marius Vollmer <marius.vollmer@nokia.com>
   *
@@ -28,6 +28,7 @@
 #include <osso-mem.h>
 #include <osso-log.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/resource.h>
 #include <stdio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -72,8 +73,6 @@ GdkPixbuf *crop_resize(GdkPixbuf *src, int width, int height) {
             v = b;
         }
 
-        //printf("na=%f, nb=%f, nx=%d, ny=%d, u=%d, v=%d\n", na, nb, nx, ny, u, v);
-
         if(a * y < b * x) {
             nb = (double)a * v / u;
             // Center
@@ -90,13 +89,6 @@ GdkPixbuf *crop_resize(GdkPixbuf *src, int width, int height) {
 
     offx = -offx * scax;
     offy = -offy * scay;
-
-    /*
-    printf("(%d, %d) -> (%d, %d) => (%f, %f) -> (%d, %d)\n",
-        a, b, x, y, na, nb, nx, ny);
-    printf("offx=%f, offy=%f, scax=%f, scay=%f\n",
-        offx, offy, scax, scay);
-    */
 
     dest = gdk_pixbuf_new(gdk_pixbuf_get_colorspace(src),
         gdk_pixbuf_get_has_alpha(src), gdk_pixbuf_get_bits_per_sample(src),
@@ -141,6 +133,8 @@ static void size_prepared(GdkPixbufLoader *loader,
   }
 }
 
+#define BLK 4
+
 GdkPixbuf *create_thumb(const gchar *local_file, const gchar *mime_type,
     guint width, guint height, HildonThumbnailFlags flags,
     gchar ***opt_keys, gchar ***opt_values, GError **error)
@@ -148,36 +142,59 @@ GdkPixbuf *create_thumb(const gchar *local_file, const gchar *mime_type,
     if((flags & HILDON_THUMBNAIL_FLAG_CROP)) {
        GdkPixbuf *pixbuf, *result = NULL;
        GdkPixbufLoader *loader;
-       guchar buffer[2048];
+       guchar buffer[2048]; /* size must be dividable by BLK */
        FILE *f; 
-       size_t bytes_read;
+       size_t items_read = sizeof(buffer) / BLK;
        size_t desired_max_area;
 
        f = fopen(local_file, "r");
        if (!f) return NULL;
-     
+
        desired_max_area = (width * height * 4) - 1;
        loader = gdk_pixbuf_loader_new ();
        g_signal_connect(loader, "size-prepared", G_CALLBACK(size_prepared),
                         GINT_TO_POINTER(desired_max_area));
 
-       do
+       while (items_read >= sizeof(buffer) / BLK)
        {
-         bytes_read = fread(buffer, 1, sizeof(buffer), f);
-         if (!gdk_pixbuf_loader_write(loader, buffer, bytes_read, error))
+         long pos;
+         int nbytes;
+
+         /* read BLK bytes at a time as much as possible */
+         if ((pos = ftell(f)) == -1)
+         {
+           gdk_pixbuf_loader_close(loader, NULL);
+           goto cleanup;
+         }
+         items_read = fread(buffer, BLK, sizeof(buffer) / BLK, f);
+
+         if (items_read < sizeof(buffer) / BLK)
+         {
+           /* read again one byte at a time */
+           if (fseek(f, pos, SEEK_SET) == -1)
+           {
+             gdk_pixbuf_loader_close(loader, NULL);
+             goto cleanup;
+           }
+           nbytes = fread(buffer, 1, sizeof(buffer), f);
+         }
+         else
+           nbytes = items_read * BLK;
+
+         if (!gdk_pixbuf_loader_write(loader, buffer, nbytes, error))
          { /* We have to call close before unreffing */
            gdk_pixbuf_loader_close(loader, NULL);
            goto cleanup;
          }
-       } while (bytes_read >= sizeof(buffer));
+       }
 
        if (!gdk_pixbuf_loader_close(loader, error))
          goto cleanup;
-       
+
        /* Loader owns reference to this pixbuf */
        pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
 
-       if(pixbuf)
+       if (pixbuf)
          result = crop_resize(pixbuf, width, height);
 cleanup:
        fclose(f);
@@ -191,13 +208,20 @@ cleanup:
        pixbuf = gdk_pixbuf_new_from_file_at_size (local_file, width, height, 
 	 					  &error);
        if (error) {
- 	   ULOG_ERR ("can't create thumb: %s", error->message);
+ 	   ULOG_ERR_F("can't create thumb: %s", error->message);
 	   g_error_free (error);
        }
        return pixbuf;
     }
-    
+
     return NULL;
+}
+
+static void
+thumbnailer_oom_func (size_t cur, size_t max, void *data)
+{
+    ULOG_DEBUG_F("OOM: %u of %u!", cur, max);
+    exit(1);
 }
 
 int main(int argc, char **argv)
@@ -205,9 +229,10 @@ int main(int argc, char **argv)
     int result;
 
     setpriority(PRIO_PROCESS, getpid(), 10);
-    result = osso_mem_saw_enable(4 << 20, 64, NULL, NULL);
+    g_thread_init(NULL);
+    result = osso_mem_saw_enable(4 << 20, 64, thumbnailer_oom_func, NULL);
     if (result != 0)
-      ULOG_ERR ("can't install memory watchdog: code %d\n", result);
+      ULOG_ERR_F("osso_mem_saw_enable failed with error %d", result);
     else
       {
 	result = hildon_thumber_main(&argc, &argv, create_thumb);
