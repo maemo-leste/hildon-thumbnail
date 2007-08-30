@@ -220,8 +220,11 @@ cleanup:
 static void
 thumbnailer_oom_func (size_t cur, size_t max, void *data)
 {
-    ULOG_DEBUG_F("OOM: %u of %u!", cur, max);
-    exit(1);
+  /* We can't do much here other than exit.  Even printing might
+     allocate memory which would put us into a loop.
+  */
+
+  exit(1);
 }
 
 int main(int argc, char **argv)
