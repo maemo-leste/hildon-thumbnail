@@ -1,3 +1,11 @@
+2007-08-30  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 0.14
+	
+	* thumbs/thumber-gdk-pixbuf.c (thumbnailer_oom_func): Do not
+	output debugging message.  Doing so might call malloc which would
+	result in a loop (N63712).  Thanks Leonid!
+
 2007-08-10  Kimmo Hämäläinen  <kimmo.hamalainen@nokia.com>
 
 	Applied a modified patch from Daniil Ivanov:

@@ -1,6 +1,6 @@
 AC_INIT(Makefile.am)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(hildon-thumbnail, 0.13)
+AM_INIT_AUTOMAKE(hildon-thumbnail, 0.14)
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
