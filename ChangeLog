@@ -1,5 +1,7 @@
 2007-10-09  Marius Vollmer  <marius.vollmer@nokia.com>
 
+	Released 2.0.0
+	
 	* thumbs/hildon-thumbnail-factory.c (register_pixbuf_formats):
 	Duplicate pixbuf_cmd before storing it away and free the original
 	at the end.  This gets the memory handling right when there is
