@@ -624,7 +624,7 @@ static void register_pixbuf_formats()
         mime_types = mime_type = gdk_pixbuf_format_get_mime_types(format->data);
 
         while(*mime_type != NULL) {
-            add_mime_handler(*mime_type, pixbuf_cmd);
+	    add_mime_handler(*mime_type, g_strdup (pixbuf_cmd));
 
             mime_type++;
         }
@@ -634,6 +634,7 @@ static void register_pixbuf_formats()
         format = format->next;
     }
 
+    g_free (pixbuf_cmd);
     g_slist_free(formats);
 }
 

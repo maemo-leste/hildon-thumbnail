@@ -1,3 +1,10 @@
+2007-10-09  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* thumbs/hildon-thumbnail-factory.c (register_pixbuf_formats):
+	Duplicate pixbuf_cmd before storing it away and free the original
+	at the end.  This gets the memory handling right when there is
+	more than one mime_type (M2083).  Thanks to Jiri Benc!
+
 2007-08-30  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 0.14
