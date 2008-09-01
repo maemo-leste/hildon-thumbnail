@@ -18,7 +18,49 @@ AC_SUBST(CFLAGS)
 
 # --- Libraries ---
 
-GLIB_CHECK="glib-2.0 >= 2.4.0"
+# N
+PKG_CHECK_MODULES(DBUS, dbus-1 dbus-glib-1)
+AC_SUBST(DBUS_CFLAGS)
+AC_SUBST(DBUS_LIBS)
+
+# Check we have the DBUS binding tool we need
+AC_PATH_PROG(DBUSBINDINGTOOL, dbus-binding-tool)
+if test -z $DBUSBINDINGTOOL; then
+   AC_MSG_ERROR([Could not find 'dbus-binding-tool'])
+fi
+
+GLIB_GENMARSHAL=`$PKG_CONFIG glib-2.0 --variable=glib_genmarshal`
+AC_SUBST(GLIB_GENMARSHAL)
+
+# Check for gmodule 2.0
+PKG_CHECK_MODULES(GMODULE, gmodule-2.0)
+AC_SUBST(GMODULE_CFLAGS)
+AC_SUBST(GMODULE_LIBS)
+
+
+####################################################################
+# DBus Service
+####################################################################
+
+dnl DBus services dir
+AC_ARG_WITH([session_bus_services_dir],
+            AS_HELP_STRING([--with-session-bus-services-dir],
+                           [Path to DBus services directory]))
+
+if test "x$with_session_bus_services_dir" = "x" ; then
+   services_dir="`pkg-config --variable session_bus_services_dir dbus-1`"
+else
+   services_dir="$with_session_bus_services_dir"
+fi
+
+DBUS_SERVICES_DIR="$services_dir"
+AC_SUBST(DBUS_SERVICES_DIR)
+
+
+
+# N
+
+GLIB_CHECK="glib-2.0 >= 2.4.0 gthread-2.0"
 PKG_CHECK_MODULES(GLIB, $GLIB_CHECK)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
@@ -138,7 +180,7 @@ AC_SUBST(HTML_DIR)
 # --- Output ---
 
 AC_OUTPUT(Makefile \
-          tests/Makefile \
+	  daemon/Makefile \
+	  daemon/plugins/Makefile \
           thumbs/Makefile \
-	  doc/Makefile \
           hildon-thumbnail.pc)

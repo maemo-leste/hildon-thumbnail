@@ -1,10 +1,10 @@
 # TODO: remove THUMBER_DIR flag, use something better
 # TODO: move common stuff to library?
 
-CFLAGS += -Wall -std=c99 -pedantic '-DTHUMBER_DIR="$(shell pwd)"' '-DBIN_DIR="$(bindir)"'
+AM_CFLAGS = -Wall -std=c99 -pedantic '-DTHUMBER_DIR="$(top_srcdir)"' '-DBIN_DIR="$(bindir)"'
 
 INCLUDES = $(PKG_CFLAGS) -DLOCALEDIR=\"$(localedir)\" \
-    -I$(srcdir)/..
+    -I$(top_srcdir)
 
 # Binaries
 bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
