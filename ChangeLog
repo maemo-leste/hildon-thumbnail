@@ -1,5 +1,20 @@
 2008-09-01  Philip Van Hoof  <philip@codeminded.be>
 
+	daemon/hildon-thumbnail-daemon.c
+	daemon/plugins/image-png.xml
+	daemon/plugins/default.c
+	daemon/plugins/default.h
+	daemon/generic.h
+	daemon/Makefile.am
+	daemon/generic.xml
+	daemon/generic.c
+	daemon/org.freedesktop.Thumbnailer.service.in
+	daemon/org.freedesktop.thumbnailer.service.in: Installed a
+	org.freedesktop.thumbnailer.generic, according to changed
+	specifications
+
+2008-09-01  Philip Van Hoof  <philip@codeminded.be>
+
 	* Removed generated files from the repository
 	* Created daemon subdirectory, unfinished
 	* Cleanups here and there

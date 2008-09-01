@@ -27,6 +27,8 @@
 
 #include "hildon-thumbnail-plugin.h"
 
+#include "generic.h"
+
 int 
 main (int argc, char **argv) 
 {
@@ -52,6 +54,8 @@ main (int argc, char **argv)
 		 * dropped, and removed ones get removed (and therefore must
 		 * shut down) */
 
+		generic_do_init (connection, &error);
+
 		module = hildon_thumbnail_plugin_load ("default");
 		hildon_thumbnail_plugin_do_init (module, connection, &error);
 
@@ -59,6 +63,8 @@ main (int argc, char **argv)
 		g_main_loop_run (main_loop);
 
 		hildon_thumbnail_plugin_do_stop (module);
+
+		generic_do_stop ();
 
 		g_main_loop_unref (main_loop);
 	}

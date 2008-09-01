@@ -6,33 +6,22 @@
 #include "image-png-glue.h"
 #include "hildon-thumbnail-plugin.h"
 
-typedef struct ImagePng ImagePng;
-typedef struct ImagePngClass ImagePngClass;
-
-struct ImagePng {
-	GObject parent;
-};
-
-struct ImagePngClass {
-	GObjectClass parent;
-};
-
-#define DEFAULT_PNG_SERVICE      "org.freedesktop.Thumbnailer.image-png"
-#define DEFAULT_PNG_PATH         "/org/freedesktop/Thumbnailer/image-png"
-#define DEFAULT_PNG_INTERFACE    "org.freedesktop.Thumbnailer.image-png"
+#define DEFAULT_PNG_SERVICE      "org.freedesktop.thumbnailer.image-png"
+#define DEFAULT_PNG_PATH         "/org/freedesktop/thumbnailer/image-png"
+#define DEFAULT_PNG_INTERFACE    "org.freedesktop.thumbnailer.image-png"
 
 void
-image_png_create (GObject *object, GStrv urls, DBusGMethodInvocation *context)
+image_png_create (ImagePng *object, GStrv urls, DBusGMethodInvocation *context)
 {
 }
 
 void
-image_png_move (GObject *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
+image_png_move (ImagePng *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
 }
 
 void
-image_png_delete (GObject *object, GStrv urls, DBusGMethodInvocation *context)
+image_png_delete (ImagePng *object, GStrv urls, DBusGMethodInvocation *context)
 {
 }
 
