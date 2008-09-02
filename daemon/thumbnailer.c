@@ -39,7 +39,6 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
-	g_print ("reg:%s\n", mime_type);
 	g_hash_table_insert (priv->plugins, 
 			     g_strdup (mime_type), 
 			     plugin);
