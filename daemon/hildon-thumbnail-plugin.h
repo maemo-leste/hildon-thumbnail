@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 GModule * hildon_thumbnail_plugin_load    (const gchar *module_name);
 void      hildon_thumbnail_plugin_do_init (GModule *module, 
 					   DBusGConnection *connection, 
+					   DBusGProxy *manager,
 					   GError **error);
 void      hildon_thumbnail_plugin_do_stop (GModule *module);
 

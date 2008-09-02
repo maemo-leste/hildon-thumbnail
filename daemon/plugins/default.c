@@ -8,13 +8,14 @@
 
 G_DEFINE_TYPE (ImagePng, image_png, G_TYPE_OBJECT)
 
-#define DEFAULT_PNG_SERVICE      "org.freedesktop.thumbnailer.image-png"
-#define DEFAULT_PNG_PATH         "/org/freedesktop/thumbnailer/image-png"
-#define DEFAULT_PNG_INTERFACE    "org.freedesktop.thumbnailer.image-png"
+#define DEFAULT_PNG_SERVICE      "org.freedesktop.thumbnailer"
+#define DEFAULT_PNG_PATH         "/org/freedesktop/thumbnailer/png"
+#define DEFAULT_PNG_INTERFACE    "org.freedesktop.thumbnailer"
 
 void
 image_png_create (ImagePng *object, GStrv urls, DBusGMethodInvocation *context)
 {
+	g_print ("CREATE PNG\n");
 }
 
 static void
@@ -35,7 +36,7 @@ hildon_thumbnail_plugin_stop (void)
 
 
 void 
-hildon_thumbnail_plugin_init (DBusGConnection *connection, GError **error)
+hildon_thumbnail_plugin_init (DBusGConnection *connection, DBusGProxy *manager, GError **error)
 {
 	guint result;
 	DBusGProxy *proxy;
@@ -59,4 +60,8 @@ hildon_thumbnail_plugin_init (DBusGConnection *connection, GError **error)
 					     DEFAULT_PNG_PATH, 
 					     object);
 
+	g_print ("Do reg: image/png\n");
+	dbus_g_proxy_call (manager, "Register", error,
+			   G_TYPE_STRING,
+			   "image/png");
 }

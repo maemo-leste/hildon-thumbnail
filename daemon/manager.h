@@ -1,6 +1,10 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
+#define MANAGER_SERVICE      "org.freedesktop.thumbnailer.manager"
+#define MANAGER_PATH         "/org/freedesktop/thumbnailer/manager"
+#define MANAGER_INTERFACE    "org.freedesktop.thumbnailer.manager"
+
 #define TYPE_MANAGER             (manager_get_type())
 #define MANAGER(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_MANAGER, Manager))
 #define MANAGER_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), TYPE_MANAGER, ManagerClass))

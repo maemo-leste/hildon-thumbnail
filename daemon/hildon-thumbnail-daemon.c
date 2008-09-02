@@ -51,6 +51,7 @@ main (int argc, char **argv)
 		GMainLoop *main_loop;
 		GError *error = NULL;
 		Manager *manager;
+		DBusGProxy *manager_proxy;
 
 		/* TODO: dynamically load plugins, and detect when new ones get
 		 * dropped, and removed ones get removed (and therefore must
@@ -60,7 +61,18 @@ main (int argc, char **argv)
 		thumbnailer_do_init (connection, manager, &error);
 
 		module = hildon_thumbnail_plugin_load ("default");
-		hildon_thumbnail_plugin_do_init (module, connection, &error);
+
+		manager_proxy = dbus_g_proxy_new_for_name (connection, 
+					   MANAGER_SERVICE,
+					   MANAGER_PATH,
+					   MANAGER_INTERFACE);
+
+		hildon_thumbnail_plugin_do_init (module, 
+						 connection, 
+						 manager_proxy,
+						 &error);
+
+		g_object_unref (manager_proxy);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (main_loop);

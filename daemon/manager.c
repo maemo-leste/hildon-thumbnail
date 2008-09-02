@@ -5,10 +5,6 @@
 #include "manager.h"
 #include "manager-glue.h"
 
-#define MANAGER_SERVICE      "org.freedesktop.thumbnailer.manager"
-#define MANAGER_PATH         "/org/freedesktop/thumbnailer/manager"
-#define MANAGER_INTERFACE    "org.freedesktop.thumbnailer.manager"
-
 
 #define MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_MANAGER, ManagerPrivate))
 
@@ -86,6 +82,10 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	g_hash_table_insert (priv->handlers, 
 			     mime_type,
 			     mime_proxy);
+
+	g_print ("Register: %s\n", sender);
+
+	g_free (sender);
 
 	g_signal_connect (mime_proxy, "destroy",
 			  G_CALLBACK (service_gone),

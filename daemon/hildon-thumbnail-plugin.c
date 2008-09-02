@@ -29,15 +29,15 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 	return module;
 }
 
-typedef void (*InitFunc) (DBusGConnection *connection, GError **error);
+typedef void (*InitFunc) (DBusGConnection *connection,  DBusGProxy *manager, GError **error);
 
 void
-hildon_thumbnail_plugin_do_init (GModule *module, DBusGConnection *connection, GError **error)
+hildon_thumbnail_plugin_do_init (GModule *module, DBusGConnection *connection, DBusGProxy *manager, GError **error)
 {
 	InitFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
-		(func) (connection, error);
+		(func) (connection, manager, error);
 	}
 }
 

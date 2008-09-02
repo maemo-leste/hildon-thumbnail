@@ -5,11 +5,6 @@
 #include "thumbnailer.h"
 #include "thumbnailer-glue.h"
 
-#define THUMBNAILER_SERVICE      "org.freedesktop.thumbnailer"
-#define THUMBNAILER_PATH         "/org/freedesktop/thumbnailer"
-#define THUMBNAILER_INTERFACE    "org.freedesktop.thumbnailer"
-
-
 #define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
 
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
