@@ -1,6 +1,12 @@
 #include <glib.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_GIO
 #include <gio/gio.h>
+#endif
 
 #include <dbus/dbus-glib-bindings.h>
 
@@ -105,10 +111,12 @@ on_plugin_finished (const GStrv thumb_urls, GError *error, DBusGMethodInvocation
 static gchar *
 get_mime_type (const gchar *path)
 {
+	gchar *content_type;
+
+#ifdef HAVE_GIO
 	GFileInfo *info;
 	GFile *file;
 	GError *error = NULL;
-	gchar *content_type;
 
 	file = g_file_new_for_path (path);
 	info = g_file_query_info (file,
@@ -131,6 +139,9 @@ get_mime_type (const gchar *path)
 	if (!content_type) {
 		return g_strdup ("unknown");
 	}
+#else
+	content_type = gnome_vfs_get_mime_type_from_uri (path);
+#endif
 
 	return content_type;
 }

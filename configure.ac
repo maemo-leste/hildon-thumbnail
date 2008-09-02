@@ -60,10 +60,20 @@ AC_SUBST(DBUS_SERVICES_DIR)
 
 # N
 
-GLIB_CHECK="gio-2.0 glib-2.0 >= 2.4.0 gthread-2.0"
+PKG_CHECK_MODULES(GIO, gio-2.0, [have_gio=yes], [have_gio=no])
+
+if test x$have_gio == "xyes"; then
+AC_DEFINE(HAVE_GIO, 1, [GIO available in glib])
+fi
+
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+
+GLIB_CHECK="glib-2.0 >= 2.4.0 gthread-2.0"
 PKG_CHECK_MODULES(GLIB, $GLIB_CHECK)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
+
 
 GNOMEVFS_CHECK="gnome-vfs-2.0 >= 2.4.0"
 PKG_CHECK_MODULES(GNOMEVFS, $GNOMEVFS_CHECK)

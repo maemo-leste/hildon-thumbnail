@@ -4,6 +4,8 @@ INCLUDES = \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GNOMEVFS_CFLAGS) \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
 
@@ -25,7 +27,9 @@ hildon_thumbnailerd_SOURCES = \
 hildon_thumbnailerd_LDADD = \
 	$(DBUS_LIBS) \
 	$(GLIB_LIBS) \
-	$(GMODULE_LIBS)
+	$(GMODULE_LIBS) \
+	$(GIO_LIBS) \
+	$(GNOMEVFS_LIBS)
 
 # Services
 org.freedesktop.thumbnailer_servicedir = $(DBUS_SERVICES_DIR)
