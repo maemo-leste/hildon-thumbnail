@@ -1,5 +1,12 @@
 2008-09-02  Philip Van Hoof  <philip@codeminded.be>
 
+	daemon/thumbnailer.h
+	daemon/manager.h
+	daemon/thumbnailer.c
+	daemon/manager.c: Bugfix, DBusGConnection is not a GObject
+
+2008-09-02  Philip Van Hoof  <philip@codeminded.be>
+
 	daemon/hildon-thumbnail-daemon.c
 	daemon/plugins/image-png.xml
 	daemon/plugins/default.c

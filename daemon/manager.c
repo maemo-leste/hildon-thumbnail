@@ -10,10 +10,6 @@
 #define MANAGER_INTERFACE    "org.freedesktop.thumbnailer.manager"
 
 
-#define TYPE_MANAGER             (manager_get_type())
-#define MANAGER(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_MANAGER, Manager))
-#define MANAGER_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), TYPE_MANAGER, ManagerClass))
-#define MANAGER_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_MANAGER, ManagerClass))
 #define MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_MANAGER, ManagerPrivate))
 
 G_DEFINE_TYPE (Manager, manager, G_TYPE_OBJECT)
@@ -122,9 +118,7 @@ static void
 manager_set_connection (Manager *object, DBusGConnection *connection)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-	if (priv->connection)
-		g_object_unref (priv->connection);
-	priv->connection = g_object_ref (connection);
+	priv->connection = connection;
 }
 
 static void 
@@ -150,7 +144,7 @@ manager_set_property (GObject      *object,
 		break;
 	case PROP_CONNECTION:
 		manager_set_connection (MANAGER (object),
-					g_value_get_object (value));
+					g_value_get_pointer (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -173,7 +167,7 @@ manager_get_property (GObject    *object,
 		g_value_set_object (value, priv->proxy);
 		break;
 	case PROP_CONNECTION:
-		g_value_set_object (value, priv->connection);
+		g_value_set_pointer (value, priv->connection);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -200,10 +194,9 @@ manager_class_init (ManagerClass *klass)
 
 	g_object_class_install_property (object_class,
 					 PROP_CONNECTION,
-					 g_param_spec_object ("connection",
-							      "DBus connection",
-							      "DBus connection",
-							      DBUS_TYPE_G_CONNECTION,
+					 g_param_spec_pointer ("connection",
+							       "DBus connection",
+							       "DBus connection",
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
 

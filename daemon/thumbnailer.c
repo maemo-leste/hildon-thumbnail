@@ -10,10 +10,6 @@
 #define THUMBNAILER_INTERFACE    "org.freedesktop.thumbnailer"
 
 
-#define TYPE_THUMBNAILER             (thumbnailer_get_type())
-#define THUMBNAILER(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_THUMBNAILER, Thumbnailer))
-#define THUMBNAILER_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), TYPE_THUMBNAILER, ThumbnailerClass))
-#define THUMBNAILER_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_THUMBNAILER, ThumbnailerClass))
 #define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
 
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
@@ -63,9 +59,7 @@ static void
 thumbnailer_set_connection (Thumbnailer *object, DBusGConnection *connection)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
-	if (priv->connection)
-		g_object_unref (priv->connection);
-	priv->connection = g_object_ref (connection);
+	priv->connection = connection;
 }
 
 static void 
@@ -100,7 +94,7 @@ thumbnailer_set_property (GObject      *object,
 		break;
 	case PROP_CONNECTION:
 		thumbnailer_set_connection (THUMBNAILER (object),
-					    g_value_get_object (value));
+					    g_value_get_pointer (value));
 		break;
 	case PROP_MANAGER:
 		thumbnailer_set_manager (THUMBNAILER (object),
@@ -127,7 +121,7 @@ thumbnailer_get_property (GObject    *object,
 		g_value_set_object (value, priv->proxy);
 		break;
 	case PROP_CONNECTION:
-		g_value_set_object (value, priv->connection);
+		g_value_set_pointer (value, priv->connection);
 		break;
 	case PROP_MANAGER:
 		g_value_set_object (value, priv->manager);
@@ -157,19 +151,18 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 
 	g_object_class_install_property (object_class,
 					 PROP_CONNECTION,
-					 g_param_spec_object ("connection",
-							      "DBus connection",
-							      "DBus connection",
-							      DBUS_TYPE_G_CONNECTION,
-							      G_PARAM_READWRITE |
-							      G_PARAM_CONSTRUCT));
+					 g_param_spec_pointer ("connection",
+							       "DBus connection",
+							       "DBus connection",
+							       G_PARAM_READWRITE |
+							       G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class,
 					 PROP_MANAGER,
 					 g_param_spec_object ("manager",
 							      "Manager",
 							      "Manager",
-							      DBUS_TYPE_G_PROXY,
+							      TYPE_MANAGER,
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
 
