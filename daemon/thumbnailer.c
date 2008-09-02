@@ -27,6 +27,7 @@ typedef struct {
 	DBusGConnection *connection;
 	Manager *manager;
 	GHashTable *plugins;
+	GThreadPool *pool;
 } ThumbnailerPrivate;
 
 enum {
@@ -112,18 +113,59 @@ cleanup_hash (gpointer key, gpointer value, gpointer user_data)
 		g_list_free (value);
 }
 
+typedef struct {
+	Thumbnailer *object;
+	GStrv urls;
+	DBusGMethodInvocation *context;
+	guint num;
+} WorkTask;
+
+
+static gint 
+pool_sort_compare (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	WorkTask *task_a = (WorkTask *) a;
+	WorkTask *task_b = (WorkTask *) b;
+
+	/* This makes pool a LIFO */
+
+	return task_b->num - task_a->num;
+}
+
 void
 thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+	WorkTask *task = g_slice_new (WorkTask);
+	guint urls_size = g_strv_length (urls), i = 0;
+	static gint num = 0;
+
+	task->num = num++;
+	task->object = g_object_ref (object);
+	task->urls = (GStrv) g_malloc0 (sizeof (gchar *) * (urls_size + 1));
+
+	while (urls[i] != NULL) {
+		task->urls[i] = g_strdup (urls[i]);
+		i++;
+	}
+
+	task->urls[i] = NULL;
+	task->context = context;
+
+	g_thread_pool_push (priv->pool, task, NULL);
+}
+
+static void 
+do_the_work (WorkTask *task, gpointer user_data)
+{
 	GHashTable *hash = g_hash_table_new (g_str_hash, g_str_equal);
 	guint i = 0;
 	GHashTableIter iter;
 	gpointer key, value;
 	gboolean had_error = FALSE;
-
-	// TODO: dispatch this to an asynchronous handler that deals with items
-	// in a LIFO way. For example a GThreadPool
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
+	GStrv urls = task->urls;
+	DBusGMethodInvocation *context = task->context;
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
@@ -143,7 +185,7 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		i = 0;
 
 		while (copy) {
-			urlss[i] = copy->data;
+			urlss[i] = g_strdup ((gchar *) copy->data);
 			i++;
 			copy = g_list_next (copy);
 		}
@@ -204,6 +246,13 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 
 	g_hash_table_unref (hash);
 
+	/* task->context will always be returned by now */
+
+	g_object_unref (task->object);
+	g_strfreev (task->urls);
+	g_slice_free (WorkTask, task);
+
+	return;
 }
 
 void
@@ -221,10 +270,13 @@ thumbnailer_finalize (GObject *object)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+	g_thread_pool_free (priv->pool, TRUE, TRUE);
+
 	g_object_unref (priv->manager);
 	g_object_unref (priv->proxy);
 	g_object_unref (priv->connection);
 	g_hash_table_unref (priv->plugins);
+
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
 }
@@ -351,6 +403,13 @@ thumbnailer_init (Thumbnailer *object)
 	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       (GDestroyNotify) g_free,
 					       NULL);
+
+	priv->pool = g_thread_pool_new ((GFunc) do_the_work, 
+					NULL, 1, TRUE, NULL);
+
+	g_thread_pool_set_sort_function (priv->pool, 
+					 pool_sort_compare, NULL);
+
 }
 
 

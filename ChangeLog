@@ -1,5 +1,9 @@
 2008-09-02  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/thumbnailer.c: Made the threadpool a LIFO
+
+2008-09-02  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/hildon-thumbnail-daemon.c
 	* daemon/thumbnailer.h
