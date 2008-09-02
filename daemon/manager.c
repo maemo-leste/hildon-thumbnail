@@ -26,27 +26,16 @@ enum {
 	PROP_CONNECTION
 };
 
-GHashTable* 
-manager_get_handlers (Manager *object)
+DBusGProxy*
+manager_get_handler (Manager *object, const gchar *mime_type)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-	return g_hash_table_ref (priv->handlers);
+	DBusGProxy *proxy = g_hash_table_lookup (priv->handlers, mime_type);
+	if (proxy)
+		g_object_ref (proxy);
+	return proxy;
 }
 
-/*
-static void
-on_proxy_name_owner_changed (DBusGProxy *proxy,
-			     const gchar *name_owner,
-			     const gchar *name_lost,
-			     const gchar *name_aquired,
-			     Manager *object)
-{
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-
-	if (name_lost && strlen (name_lost) > 0)
-		g_hash_table_remove (priv->handlers, name_lost);
-}
-*/
 
 static gboolean 
 do_remove_or_not (gpointer key, gpointer value, gpointer user_data)
@@ -83,23 +72,11 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 			     mime_type,
 			     mime_proxy);
 
-	g_print ("Register: %s\n", sender);
-
 	g_free (sender);
 
 	g_signal_connect (mime_proxy, "destroy",
 			  G_CALLBACK (service_gone),
 			  object);
-/*
-	dbus_g_proxy_add_signal (mime_proxy, "NameOwnerChanged",
-				 G_TYPE_STRING, G_TYPE_STRING,
-				 G_TYPE_STRING, G_TYPE_INVALID);
-
-	dbus_g_proxy_connect_signal (mime_proxy, "NameOwnerChanged", 
-				     G_CALLBACK (on_proxy_name_owner_changed), 
-				     object,
-				     NULL);
-*/
 }
 
 static void

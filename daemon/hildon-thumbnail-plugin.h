@@ -29,14 +29,22 @@
 #include <gmodule.h>
 #include <dbus/dbus-glib-bindings.h>
 
+#include "thumbnailer.h"
+
 G_BEGIN_DECLS
 
-GModule * hildon_thumbnail_plugin_load    (const gchar *module_name);
-void      hildon_thumbnail_plugin_do_init (GModule *module, 
-					   DBusGConnection *connection, 
-					   DBusGProxy *manager,
-					   GError **error);
-void      hildon_thumbnail_plugin_do_stop (GModule *module);
+typedef void (*create_cb) (GStrv thumb_paths, GError *error, gpointer user_data);
+
+GModule * hildon_thumbnail_plugin_load      (const gchar *module_name);
+
+void      hildon_thumbnail_plugin_do_init   (GModule *module, 
+					     Thumbnailer *thumbnailer, 
+					     GError **error);
+void      hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, 
+					     create_cb callback, 
+					     gpointer user_data);
+void      hildon_thumbnail_plugin_do_stop   (GModule *module,
+					     Thumbnailer *thumbnailer);
 
 G_END_DECLS
 

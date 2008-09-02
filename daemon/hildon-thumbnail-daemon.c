@@ -51,6 +51,7 @@ main (int argc, char **argv)
 		GMainLoop *main_loop;
 		GError *error = NULL;
 		Manager *manager;
+		Thumbnailer *thumbnailer;
 		DBusGProxy *manager_proxy;
 
 		/* TODO: dynamically load plugins, and detect when new ones get
@@ -58,7 +59,7 @@ main (int argc, char **argv)
 		 * shut down) */
 
 		manager_do_init (connection, &manager, &error);
-		thumbnailer_do_init (connection, manager, &error);
+		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
 
 		module = hildon_thumbnail_plugin_load ("default");
 
@@ -68,16 +69,13 @@ main (int argc, char **argv)
 					   MANAGER_INTERFACE);
 
 		hildon_thumbnail_plugin_do_init (module, 
-						 connection, 
-						 manager_proxy,
+						 thumbnailer,
 						 &error);
-
-		g_object_unref (manager_proxy);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (main_loop);
 
-		hildon_thumbnail_plugin_do_stop (module);
+		hildon_thumbnail_plugin_do_stop (module, thumbnailer);
 
 		manager_do_stop ();
 		thumbnailer_do_stop ();

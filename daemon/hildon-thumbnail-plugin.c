@@ -29,26 +29,58 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 	return module;
 }
 
-typedef void (*InitFunc) (DBusGConnection *connection,  DBusGProxy *manager, GError **error);
+typedef void (*InitFunc) (GError **error);
+typedef GStrv (*SupportedFunc) (void);
 
 void
-hildon_thumbnail_plugin_do_init (GModule *module, DBusGConnection *connection, DBusGProxy *manager, GError **error)
+hildon_thumbnail_plugin_do_init (GModule *module, Thumbnailer *thumbnailer, GError **error)
 {
 	InitFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
-		(func) (connection, manager, error);
+		GStrv supported = NULL;
+		SupportedFunc supported_func;
+
+		if (g_module_symbol (module, "hildon_thumbnail_plugin_supported", (gpointer *) &supported_func)) {
+			guint i = 0;
+
+			supported = (supported_func) ();
+
+			if (supported) {
+				while (supported[i] != NULL) {
+
+					thumbnailer_register_plugin (thumbnailer, 
+								     supported[i], 
+								     module);
+					i++;
+				}
+			}
+
+			(func) (error);
+		}
+	}
+}
+
+typedef void (*CreateFunc) (GStrv uris, create_cb callback, gpointer user_data);
+
+void 
+hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, create_cb callback, gpointer user_data)
+{
+	CreateFunc func;
+	if (g_module_symbol (module, "hildon_thumbnail_plugin_create", (gpointer *) &func)) {
+		(func) (uris, callback, user_data);
 	}
 }
 
 typedef void (*StopFunc) (void);
 
 void
-hildon_thumbnail_plugin_do_stop (GModule *module)
+hildon_thumbnail_plugin_do_stop (GModule *module, Thumbnailer *thumbnailer)
 {
 	StopFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_stop", (gpointer *) &func)) {
+		thumbnailer_unregister_plugin (thumbnailer, module);
 		(func) ();
 	}
 }

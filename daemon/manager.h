@@ -24,7 +24,7 @@ struct ManagerClass {
 GType manager_get_type (void);
 
 void manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *context);
-GHashTable* manager_get_handlers (Manager *object);
+DBusGProxy* manager_get_handler (Manager *object, const gchar *mime_type);
 
 void manager_do_stop (void);
 void manager_do_init (DBusGConnection *connection, Manager **manager, GError **error);

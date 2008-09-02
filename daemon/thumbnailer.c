@@ -1,9 +1,14 @@
 #include <glib.h>
+
+#include <gio/gio.h>
+
 #include <dbus/dbus-glib-bindings.h>
 
 #include "manager.h"
 #include "thumbnailer.h"
 #include "thumbnailer-glue.h"
+#include "hildon-thumbnail-plugin.h"
+#include "dbus-utils.h"
 
 #define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
 
@@ -13,6 +18,7 @@ typedef struct {
 	DBusGProxy *proxy;
 	DBusGConnection *connection;
 	Manager *manager;
+	GHashTable *plugins;
 } ThumbnailerPrivate;
 
 enum {
@@ -23,9 +29,179 @@ enum {
 };
 
 
+void 
+thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin)
+{
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
+	g_print ("reg:%s\n", mime_type);
+	g_hash_table_insert (priv->plugins, 
+			     g_strdup (mime_type), 
+			     plugin);
+}
+
+static gboolean 
+do_delete_or_not (gpointer key, gpointer value, gpointer user_data)
+{
+	if (value == user_data)
+		return TRUE;
+	return FALSE;
+}
+
+void 
+thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
+{
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
+	g_hash_table_foreach_remove (priv->plugins, 
+				     do_delete_or_not, 
+				     plugin);
+}
+
+typedef struct {
+	DBusGProxy *proxy;
+	DBusGMethodInvocation *context;
+} ProxyCallInfo;
+
+
+static void
+on_create_finished (DBusGProxy *proxy, DBusGProxyCall *call_id, ProxyCallInfo *info)
+{
+	GError *error = NULL;
+	GStrv thumb_urls = NULL;
+
+	dbus_g_proxy_end_call (proxy, call_id, 
+			       &error,
+			       G_TYPE_STRV,
+			       &thumb_urls);
+
+	if (error) {
+		dbus_g_method_return_error (info->context, error);
+		g_clear_error (&error);
+	} else
+		dbus_g_method_return (info->context, thumb_urls);
+
+	g_strfreev (thumb_urls);
+}
+
+static void 
+on_create_destroy (ProxyCallInfo *info)
+{
+	g_object_unref (info->proxy);
+	g_slice_free (ProxyCallInfo, info);
+}
+
+static void
+on_plugin_finished (const GStrv thumb_urls, GError *error, DBusGMethodInvocation *context)
+{
+	if (error) {
+		dbus_g_method_return_error (context, error);
+		g_clear_error (&error);
+	} else
+		dbus_g_method_return (context, thumb_urls);
+}
+
+
+static gchar *
+get_mime_type (const gchar *path)
+{
+	GFileInfo *info;
+	GFile *file;
+	GError *error = NULL;
+	gchar *content_type;
+
+	file = g_file_new_for_path (path);
+	info = g_file_query_info (file,
+				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+				  G_FILE_QUERY_INFO_NONE,
+				  NULL, &error);
+
+	if (error) {
+		g_warning ("Error guessing mimetype for '%s': %s\n", path, error->message);
+		g_error_free (error);
+
+		return g_strdup ("unknown");
+	}
+
+	content_type = g_strdup (g_file_info_get_content_type (info));
+
+	g_object_unref (info);
+	g_object_unref (file);
+
+	if (!content_type) {
+		return g_strdup ("unknown");
+	}
+
+	return content_type;
+}
+
 void
 thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+	GHashTable *hash = g_hash_table_new (g_str_hash, g_str_equal);
+	guint i = 0;
+	GHashTableIter iter;
+	gpointer key, value;
+
+	while (urls[i] != NULL) {
+		GList *urls_for_mime;
+		gchar *mime_type = get_mime_type (urls[i]);
+		urls_for_mime = g_hash_table_lookup (hash, mime_type);
+		urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
+		g_hash_table_replace (hash, mime_type, urls_for_mime);
+	}
+
+	g_hash_table_iter_init (&iter, hash);
+
+	while (g_hash_table_iter_next (&iter, &key, &value)) {
+		GList *urlm = value, *copy = urlm;
+		GStrv urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
+		DBusGProxy *proxy;
+
+		i = 0;
+
+		while (copy) {
+			urlss[i] = copy->data;
+			i++;
+			copy = g_list_next (copy);
+		}
+
+		g_list_free (urlm);
+
+		proxy = manager_get_handler (priv->manager, key);
+
+		if (proxy) {
+			ProxyCallInfo *info = g_slice_new (ProxyCallInfo);
+
+			info->context = context;
+			info->proxy = proxy;
+
+			dbus_g_proxy_begin_call (proxy, "Create",
+						 (DBusGProxyCallNotify) on_create_finished, 
+						 info,
+						 (GDestroyNotify) on_create_destroy,
+						 G_TYPE_STRV,
+						 urlss);
+			
+		} else {
+			GModule *module = g_hash_table_lookup (priv->plugins, key);
+			if (module) {
+				hildon_thumbnail_plugin_do_create (module, urlss, 
+								   (create_cb) on_plugin_finished, 
+								   context);
+			} else {
+				GError *error = NULL;
+				g_set_error (&error,
+					     DBUS_ERROR, 0,
+					     "No handler");
+				dbus_g_method_return_error (context, error);
+				g_clear_error (&error);
+			}
+		}
+	}
+
+	g_hash_table_unref (hash);
 }
 
 void
@@ -46,6 +222,7 @@ thumbnailer_finalize (GObject *object)
 	g_object_unref (priv->manager);
 	g_object_unref (priv->proxy);
 	g_object_unref (priv->connection);
+	g_hash_table_unref (priv->plugins);
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
 }
@@ -167,7 +344,11 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 static void
 thumbnailer_init (Thumbnailer *object)
 {
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       (GDestroyNotify) g_free,
+					       NULL);
 }
 
 
@@ -179,7 +360,7 @@ thumbnailer_do_stop (void)
 
 
 void 
-thumbnailer_do_init (DBusGConnection *connection, Manager *manager, GError **error)
+thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer **thumbnailer, GError **error)
 {
 	guint result;
 	DBusGProxy *proxy;
@@ -203,6 +384,10 @@ thumbnailer_do_init (DBusGConnection *connection, Manager *manager, GError **err
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_thumbnailer_object_info);
 
-	dbus_g_connection_register_g_object (connection, THUMBNAILER_PATH, object);
+	dbus_g_connection_register_g_object (connection, 
+					     THUMBNAILER_PATH, 
+					     object);
+
+	*thumbnailer = THUMBNAILER (object);
 
 }

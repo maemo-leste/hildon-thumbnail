@@ -1,6 +1,8 @@
 #ifndef __THUMBNAILER_H__
 #define __THUMBNAILER_H__
 
+#include <gmodule.h>
+
 #include "manager.h"
 
 #define THUMBNAILER_SERVICE      "org.freedesktop.thumbnailer"
@@ -29,7 +31,10 @@ void thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation 
 void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
 
+void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin);
+void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
+
 void thumbnailer_do_stop (void);
-void thumbnailer_do_init (DBusGConnection *connection, Manager *manager, GError **error);
+void thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer **thumbnailer, GError **error);
 
 #endif

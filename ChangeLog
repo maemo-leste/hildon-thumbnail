@@ -1,41 +1,56 @@
 2008-09-02  Philip Van Hoof  <philip@codeminded.be>
 
-	daemon/thumbnailer.h
-	daemon/manager.h
-	daemon/thumbnailer.c
-	daemon/manager.c: Bugfix, DBusGConnection is not a GObject
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/default.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/hildon-thumbnail-plugin.c
+	* configure.ac: More infrastructure and initial architecture work
 
 2008-09-02  Philip Van Hoof  <philip@codeminded.be>
 
-	daemon/hildon-thumbnail-daemon.c
-	daemon/plugins/image-png.xml
-	daemon/plugins/default.c
-	daemon/dbus-utils.h
-	daemon/thumbnailer.c
-	daemon/manager.c
-	daemon/generic.c
-	daemon/thumbnailer.h
-	daemon/manager.h
-	daemon/generic.h
-	daemon/manager.xml
-	daemon/thumbnailer.xml
-	daemon/Makefile.am
-	daemon/generic.xml
-	daemon/dbus-utils.c: Some major refactoring and setting up of initial
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c: Bugfix, DBusGConnection is not a GObject
+
+2008-09-02  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/dbus-utils.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/generic.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/generic.h
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml
+	* daemon/Makefile.am
+	* daemon/generic.xml
+	* daemon/dbus-utils.c: Some major refactoring and setting up of initial
 	infrastructure
 
 2008-09-01  Philip Van Hoof  <philip@codeminded.be>
 
-	daemon/hildon-thumbnail-daemon.c
-	daemon/plugins/image-png.xml
-	daemon/plugins/default.c
-	daemon/plugins/default.h
-	daemon/generic.h
-	daemon/Makefile.am
-	daemon/generic.xml
-	daemon/generic.c
-	daemon/org.freedesktop.Thumbnailer.service.in
-	daemon/org.freedesktop.thumbnailer.service.in: Installed a
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/plugins/default.h
+	* daemon/generic.h
+	* daemon/Makefile.am
+	* daemon/generic.xml
+	* daemon/generic.c
+	* daemon/org.freedesktop.Thumbnailer.service.in
+	* daemon/org.freedesktop.thumbnailer.service.in: Installed a
 	org.freedesktop.thumbnailer.generic, according to changed
 	specifications
 
