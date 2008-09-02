@@ -17,6 +17,11 @@ hildon_thumbnail_plugin_supported (void)
 void
 hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 {
+	guint i = 0;
+	while (uris[i] != NULL) {
+		g_print ("%s\n", uris[i]);
+		i++;
+	}
 	return;
 }
 

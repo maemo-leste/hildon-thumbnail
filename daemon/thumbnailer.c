@@ -173,6 +173,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		urls_for_mime = g_hash_table_lookup (hash, mime_type);
 		urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
 		g_hash_table_replace (hash, mime_type, urls_for_mime);
+		i++;
 	}
 
 	g_hash_table_iter_init (&iter, hash);
