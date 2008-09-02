@@ -226,16 +226,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 					break;
 				}
 
-			} else {
-				GError *error = NULL;
-				had_error = TRUE;
-				g_set_error (&error, DBUS_ERROR, 0,
-					     "No handler for %s", (gchar*) key);
-				dbus_g_method_return_error (context, error);
-				g_clear_error (&error);
-				g_strfreev (urlss);
-				break;
-			}
+			} else
+				g_message ("No handler for %s", (gchar*) key);
 		}
 
 		g_strfreev (urlss);
