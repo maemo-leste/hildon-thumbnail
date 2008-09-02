@@ -18,6 +18,7 @@ gchar* dbus_g_method_get_sender (DBusGMethodInvocation *context);
 typedef struct {
 	DBusGConnection *connection;
 	GHashTable *handlers;
+	GMutex *mutex;
 } ManagerPrivate;
 
 enum {
@@ -29,9 +30,14 @@ DBusGProxy*
 manager_get_handler (Manager *object, const gchar *mime_type)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-	DBusGProxy *proxy = g_hash_table_lookup (priv->handlers, mime_type);
+	DBusGProxy *proxy;
+
+	g_mutex_lock (priv->mutex);
+	proxy = g_hash_table_lookup (priv->handlers, mime_type);
 	if (proxy)
 		g_object_ref (proxy);
+	g_mutex_unlock (priv->mutex);
+
 	return proxy;
 }
 
@@ -50,10 +56,13 @@ service_gone (DBusGProxy *proxy,
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
+	g_mutex_lock (priv->mutex);
+
 	g_hash_table_foreach_remove (priv->handlers, 
 				     do_remove_or_not,
 				     proxy);
 
+	g_mutex_unlock (priv->mutex);
 }
 
 void
@@ -64,6 +73,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	gchar *sender;
 
 	dbus_async_return_if_fail (mime_type != NULL, context);
+
+	g_mutex_lock (priv->mutex);
 
 	sender = dbus_g_method_get_sender (context);
 
@@ -80,6 +91,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	g_signal_connect (mime_proxy, "destroy",
 			  G_CALLBACK (service_gone),
 			  object);
+
+	g_mutex_unlock (priv->mutex);
 }
 
 static void
@@ -88,6 +101,7 @@ manager_finalize (GObject *object)
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
 	g_hash_table_unref (priv->handlers);
+	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (manager_parent_class)->finalize (object);
 }
@@ -160,7 +174,8 @@ static void
 manager_init (Manager *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-	
+
+	priv->mutex = g_mutex_new ();
 	priv->handlers = g_hash_table_new_full (g_str_hash, g_str_equal,
 						(GDestroyNotify) g_free, 
 						(GDestroyNotify) g_object_unref);
