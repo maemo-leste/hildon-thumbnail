@@ -157,6 +157,9 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	GHashTableIter iter;
 	gpointer key, value;
 
+	// TODO: dispatch this to an asynchronous handler that deals with items
+	// in a LIFO way
+
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
 		gchar *mime_type = get_mime_type (urls[i]);
