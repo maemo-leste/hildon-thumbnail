@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <node name="/">
-  <interface name="org.freedesktop.thumbnailer.image-png">  
-    <method name="Create">
+  <interface name="org.freedesktop.thumbnailer.manager">  
+    <method name="Register">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
-      <arg type="as" name="uris" direction="in" />
+      <arg type="s" name="mime_type" direction="in" />
     </method>
   </interface>
 </node>

@@ -27,7 +27,8 @@
 
 #include "hildon-thumbnail-plugin.h"
 
-#include "generic.h"
+#include "thumbnailer.h"
+#include "manager.h"
 
 int 
 main (int argc, char **argv) 
@@ -49,12 +50,14 @@ main (int argc, char **argv)
 	else {
 		GMainLoop *main_loop;
 		GError *error = NULL;
+		Manager *manager;
 
 		/* TODO: dynamically load plugins, and detect when new ones get
 		 * dropped, and removed ones get removed (and therefore must
 		 * shut down) */
 
-		generic_do_init (connection, &error);
+		manager_do_init (connection, &manager, &error);
+		thumbnailer_do_init (connection, manager, &error);
 
 		module = hildon_thumbnail_plugin_load ("default");
 		hildon_thumbnail_plugin_do_init (module, connection, &error);
@@ -64,7 +67,8 @@ main (int argc, char **argv)
 
 		hildon_thumbnail_plugin_do_stop (module);
 
-		generic_do_stop ();
+		manager_do_stop ();
+		thumbnailer_do_stop ();
 
 		g_main_loop_unref (main_loop);
 	}

@@ -4,7 +4,7 @@ INCLUDES = \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
-        -DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
+	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
 
 libexec_PROGRAMS = hildon-thumbnailerd
@@ -15,8 +15,12 @@ hildon_thumbnailerd_SOURCES = \
 	$(include_HEADERS) \
 	hildon-thumbnail-plugin.c \
 	hildon-thumbnail-daemon.c \
-	generic.c \
-	generic.h
+	thumbnailer.c \
+	thumbnailer.h \
+	manager.c \
+	manager.h \
+	dbus-utils.h \
+	dbus-utils.c
 
 hildon_thumbnailerd_LDADD = \
 	$(DBUS_LIBS) \
@@ -33,9 +37,9 @@ org.freedesktop.thumbnailer_service_DATA = org.freedesktop.thumbnailer.service
 %-glue.h: $(top_srcdir)/daemon/%.xml
 	$(DBUSBINDINGTOOL) --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $^
 
-BUILT_SOURCES = generic-glue.h
+BUILT_SOURCES = manager-glue.h thumbnailer-glue.h
 configdir = $(datadir)/hildon-thumbnail
-config_DATA = generic.xml
+config_DATA = manager.xml thumbnailer.xml
 
 EXTRA_DIST = $(BUILT_SOURCES) $(config_DATA) \
 	$(org.freedesktop.thumbnailer_service_DATA)

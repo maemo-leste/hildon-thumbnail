@@ -6,6 +6,8 @@
 #include "image-png-glue.h"
 #include "hildon-thumbnail-plugin.h"
 
+G_DEFINE_TYPE (ImagePng, image_png, G_TYPE_OBJECT)
+
 #define DEFAULT_PNG_SERVICE      "org.freedesktop.thumbnailer.image-png"
 #define DEFAULT_PNG_PATH         "/org/freedesktop/thumbnailer/image-png"
 #define DEFAULT_PNG_INTERFACE    "org.freedesktop.thumbnailer.image-png"
@@ -14,17 +16,6 @@ void
 image_png_create (ImagePng *object, GStrv urls, DBusGMethodInvocation *context)
 {
 }
-
-void
-image_png_move (ImagePng *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
-{
-}
-
-void
-image_png_delete (ImagePng *object, GStrv urls, DBusGMethodInvocation *context)
-{
-}
-
 
 static void
 image_png_class_init (ImagePngClass *klass)
@@ -36,8 +27,6 @@ image_png_init (ImagePng *object)
 {
 }
 
-
-G_DEFINE_TYPE(ImagePng, image_png, G_TYPE_OBJECT)
 
 void 
 hildon_thumbnail_plugin_stop (void)
@@ -63,7 +52,11 @@ hildon_thumbnail_plugin_init (DBusGConnection *connection, GError **error)
 
 	object = g_object_new (image_png_get_type (), NULL);
 
-	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), &dbus_glib_image_png_object_info);
-	dbus_g_connection_register_g_object (connection, DEFAULT_PNG_PATH, object);
+	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
+					 &dbus_glib_image_png_object_info);
+
+	dbus_g_connection_register_g_object (connection, 
+					     DEFAULT_PNG_PATH, 
+					     object);
 
 }
