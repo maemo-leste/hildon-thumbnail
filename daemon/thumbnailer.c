@@ -155,6 +155,14 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	g_thread_pool_push (priv->pool, task, NULL);
 }
 
+/* This is the threadpool's function. This means that everything we do is 
+ * asynchronous wrt to the mainloop (we aren't blocking it).
+ * 
+ * Thanks to the pool_sort_compare sorter is this pool a LIFO, which means that
+ * new requests get a certain priority over older requests. Note that we are not
+ * canceling currently running requests. Also note that the thread count of the 
+ * pool is set to one. We could increase this number to add some parallelism */
+
 static void 
 do_the_work (WorkTask *task, gpointer user_data)
 {
@@ -167,6 +175,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 	gpointer key, value;
 	gboolean had_error = FALSE;
 
+	/* We split the request into groups that all have the same mime-type */
+
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
 		gchar *mime_type = get_mime_type (urls[i]);
@@ -178,7 +188,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	g_hash_table_iter_init (&iter, hash);
 
+	/* Foreach of those groups */
+
 	while (g_hash_table_iter_next (&iter, &key, &value) && !had_error) {
+
 		GList *urlm = value, *copy = urlm;
 		GStrv urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
 		DBusGProxy *proxy;
@@ -186,13 +199,16 @@ do_the_work (WorkTask *task, gpointer user_data)
 		i = 0;
 
 		while (copy) {
-			urlss[i] = g_strdup ((gchar *) copy->data);
+			urlss [i] = g_strdup ((gchar *) copy->data);
 			i++;
 			copy = g_list_next (copy);
 		}
 
 		g_list_free (urlm);
 		g_hash_table_iter_remove (&iter);
+
+		/* If we have a third party thumbnailer for this mime-type, we
+		 * proxy the call */
 
 		proxy = manager_get_handler (priv->manager, key);
 		if (proxy) {
@@ -212,6 +228,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 				break;
 			}
 
+		/* If not if we have a plugin that can handle it, we let the 
+		 * plugin have a go at it */
+
 		} else {
 			GModule *module = g_hash_table_lookup (priv->plugins, key);
 			if (module) {
@@ -226,6 +245,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 					g_strfreev (urlss);
 					break;
 				}
+
+			/* And if even that is not the case, we are very sorry */
 
 			} else
 				g_message ("No handler for %s", (gchar*) key);
@@ -399,12 +420,13 @@ thumbnailer_init (Thumbnailer *object)
 					       (GDestroyNotify) g_free,
 					       NULL);
 
-	priv->pool = g_thread_pool_new ((GFunc) do_the_work, 
-					NULL, 1, TRUE, NULL);
+	/* We could increase the amount of threads to add some parallelism */
 
-	g_thread_pool_set_sort_function (priv->pool, 
-					 pool_sort_compare, NULL);
+	priv->pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
 
+	/* This sort function makes the pool a LIFO */
+
+	g_thread_pool_set_sort_function (priv->pool, pool_sort_compare, NULL);
 }
 
 
@@ -445,5 +467,4 @@ thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer 
 					     object);
 
 	*thumbnailer = THUMBNAILER (object);
-
 }
