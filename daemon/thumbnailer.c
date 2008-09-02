@@ -218,7 +218,7 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 			}
 		}
 
-		strfreev (urlss);
+		g_strfreev (urlss);
 	}
 
 	g_hash_table_unref (hash);
