@@ -190,6 +190,8 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 			info->context = context;
 			info->proxy = proxy;
 
+			// This shouldn't return per group (it will in the callback)
+
 			dbus_g_proxy_begin_call (proxy, "Create",
 						 (DBusGProxyCallNotify) on_create_finished, 
 						 info,
@@ -200,10 +202,13 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		} else {
 			GModule *module = g_hash_table_lookup (priv->plugins, key);
 			if (module) {
+				// This shouldn't return per group (it will in the callback)
+
 				hildon_thumbnail_plugin_do_create (module, urlss, 
 								   (create_cb) on_plugin_finished, 
 								   context);
 			} else {
+				// This shouldn't return per group
 				GError *error = NULL;
 				g_set_error (&error,
 					     DBUS_ERROR, 0,
@@ -212,6 +217,8 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 				g_clear_error (&error);
 			}
 		}
+
+		strfreev (urls);
 	}
 
 	g_hash_table_unref (hash);
