@@ -61,14 +61,14 @@ hildon_thumbnail_plugin_do_init (GModule *module, Thumbnailer *thumbnailer, GErr
 	}
 }
 
-typedef void (*CreateFunc) (GStrv uris, create_cb callback, gpointer user_data);
+typedef void (*CreateFunc) (GStrv uris, GError **error);
 
 void 
-hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, create_cb callback, gpointer user_data)
+hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, GError **error)
 {
 	CreateFunc func;
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_create", (gpointer *) &func)) {
-		(func) (uris, callback, user_data);
+		(func) (uris, error);
 	}
 }
 

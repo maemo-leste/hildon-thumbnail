@@ -40,9 +40,9 @@ GModule * hildon_thumbnail_plugin_load      (const gchar *module_name);
 void      hildon_thumbnail_plugin_do_init   (GModule *module, 
 					     Thumbnailer *thumbnailer, 
 					     GError **error);
-void      hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, 
-					     create_cb callback, 
-					     gpointer user_data);
+void      hildon_thumbnail_plugin_do_create (GModule *module, 
+					     GStrv uris, 
+					     GError **error);
 void      hildon_thumbnail_plugin_do_stop   (GModule *module,
 					     Thumbnailer *thumbnailer);
 

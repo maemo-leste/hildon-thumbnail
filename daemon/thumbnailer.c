@@ -66,49 +66,6 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 				     plugin);
 }
 
-typedef struct {
-	DBusGProxy *proxy;
-	DBusGMethodInvocation *context;
-} ProxyCallInfo;
-
-
-static void
-on_create_finished (DBusGProxy *proxy, DBusGProxyCall *call_id, ProxyCallInfo *info)
-{
-	GError *error = NULL;
-	GStrv thumb_urls = NULL;
-
-	dbus_g_proxy_end_call (proxy, call_id, 
-			       &error,
-			       G_TYPE_STRV,
-			       &thumb_urls);
-
-	if (error) {
-		dbus_g_method_return_error (info->context, error);
-		g_clear_error (&error);
-	} else
-		dbus_g_method_return (info->context, thumb_urls);
-
-	g_strfreev (thumb_urls);
-}
-
-static void 
-on_create_destroy (ProxyCallInfo *info)
-{
-	g_object_unref (info->proxy);
-	g_slice_free (ProxyCallInfo, info);
-}
-
-static void
-on_plugin_finished (const GStrv thumb_urls, GError *error, DBusGMethodInvocation *context)
-{
-	if (error) {
-		dbus_g_method_return_error (context, error);
-		g_clear_error (&error);
-	} else
-		dbus_g_method_return (context, thumb_urls);
-}
-
 
 static gchar *
 get_mime_type (const gchar *path)
@@ -148,6 +105,13 @@ get_mime_type (const gchar *path)
 	return content_type;
 }
 
+static void
+cleanup_hash (gpointer key, gpointer value, gpointer user_data)
+{
+	if (value)
+		g_list_free (value);
+}
+
 void
 thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
@@ -156,9 +120,10 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	guint i = 0;
 	GHashTableIter iter;
 	gpointer key, value;
+	gboolean had_error = FALSE;
 
 	// TODO: dispatch this to an asynchronous handler that deals with items
-	// in a LIFO way
+	// in a LIFO way. For example a GThreadPool
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
@@ -170,7 +135,7 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 
 	g_hash_table_iter_init (&iter, hash);
 
-	while (g_hash_table_iter_next (&iter, &key, &value)) {
+	while (g_hash_table_iter_next (&iter, &key, &value) && !had_error) {
 		GList *urlm = value, *copy = urlm;
 		GStrv urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
 		DBusGProxy *proxy;
@@ -184,47 +149,61 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		}
 
 		g_list_free (urlm);
+		g_hash_table_iter_remove (&iter);
 
 		proxy = manager_get_handler (priv->manager, key);
-
 		if (proxy) {
-			ProxyCallInfo *info = g_slice_new (ProxyCallInfo);
+			GError *error = NULL;
+			dbus_g_proxy_call (proxy, "Create", &error, 
+					   G_TYPE_STRV, urlss,
+					   G_TYPE_INVALID, 
+					   G_TYPE_INVALID);
 
-			info->context = context;
-			info->proxy = proxy;
+			if (error) {
+				had_error = TRUE;
+				dbus_g_method_return_error (context, error);
+				g_clear_error (&error);
+				g_strfreev (urlss);
+				break;
+			}
 
-			// This shouldn't return per group (it will in the callback)
-
-			dbus_g_proxy_begin_call (proxy, "Create",
-						 (DBusGProxyCallNotify) on_create_finished, 
-						 info,
-						 (GDestroyNotify) on_create_destroy,
-						 G_TYPE_STRV,
-						 urlss);
-			
 		} else {
 			GModule *module = g_hash_table_lookup (priv->plugins, key);
 			if (module) {
-				// This shouldn't return per group (it will in the callback)
-
-				hildon_thumbnail_plugin_do_create (module, urlss, 
-								   (create_cb) on_plugin_finished, 
-								   context);
-			} else {
-				// This shouldn't return per group
 				GError *error = NULL;
-				g_set_error (&error,
-					     DBUS_ERROR, 0,
-					     "No handler");
+
+				hildon_thumbnail_plugin_do_create (module, urlss, &error);
+
+				if (error) {
+					had_error = TRUE;
+					dbus_g_method_return_error (context, error);
+					g_clear_error (&error);
+					g_strfreev (urlss);
+					break;
+				}
+
+			} else {
+				GError *error = NULL;
+				had_error = TRUE;
+				g_set_error (&error, DBUS_ERROR, 0,
+					     "No handler for %s", (gchar*) key);
 				dbus_g_method_return_error (context, error);
 				g_clear_error (&error);
+				g_strfreev (urlss);
+				break;
 			}
 		}
 
 		g_strfreev (urlss);
 	}
 
+	if (!had_error)
+		dbus_g_method_return (context);
+	else
+		g_hash_table_foreach (hash, cleanup_hash, NULL);
+
 	g_hash_table_unref (hash);
+
 }
 
 void
