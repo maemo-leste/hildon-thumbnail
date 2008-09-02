@@ -15,14 +15,12 @@ gchar* dbus_g_method_get_sender (DBusGMethodInvocation *context);
 #endif
 
 typedef struct {
-	DBusGProxy *proxy;
 	DBusGConnection *connection;
 	GHashTable *handlers;
 } ManagerPrivate;
 
 enum {
 	PROP_0,
-	PROP_PROXY,
 	PROP_CONNECTION
 };
 
@@ -85,8 +83,6 @@ manager_finalize (GObject *object)
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
 	g_hash_table_unref (priv->handlers);
-	g_object_unref (priv->proxy);
-	g_object_unref (priv->connection);
 
 	G_OBJECT_CLASS (manager_parent_class)->finalize (object);
 }
@@ -98,15 +94,6 @@ manager_set_connection (Manager *object, DBusGConnection *connection)
 	priv->connection = connection;
 }
 
-static void 
-manager_set_proxy (Manager *object, DBusGProxy *proxy)
-{
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-
-	if (priv->proxy)
-		g_object_unref (priv->proxy);
-	priv->proxy = g_object_ref (proxy);
-}
 
 static void
 manager_set_property (GObject      *object,
@@ -115,10 +102,6 @@ manager_set_property (GObject      *object,
 		      GParamSpec   *pspec)
 {
 	switch (prop_id) {
-	case PROP_PROXY:
-		manager_set_proxy (MANAGER (object),
-				   g_value_get_object (value));
-		break;
 	case PROP_CONNECTION:
 		manager_set_connection (MANAGER (object),
 					g_value_get_pointer (value));
@@ -140,9 +123,6 @@ manager_get_property (GObject    *object,
 	priv = MANAGER_GET_PRIVATE (object);
 
 	switch (prop_id) {
-	case PROP_PROXY:
-		g_value_set_object (value, priv->proxy);
-		break;
 	case PROP_CONNECTION:
 		g_value_set_pointer (value, priv->connection);
 		break;
@@ -159,15 +139,6 @@ manager_class_init (ManagerClass *klass)
 	object_class->finalize = manager_finalize;
 	object_class->set_property = manager_set_property;
 	object_class->get_property = manager_get_property;
-
-	g_object_class_install_property (object_class,
-					 PROP_PROXY,
-					 g_param_spec_object ("proxy",
-							      "DBus proxy",
-							      "DBus proxy",
-							      DBUS_TYPE_G_PROXY,
-							      G_PARAM_READWRITE |
-							      G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class,
 					 PROP_CONNECTION,
@@ -191,13 +162,10 @@ manager_init (Manager *object)
 
 }
 
-
-
 void 
 manager_do_stop (void)
 {
 }
-
 
 void 
 manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
@@ -216,7 +184,6 @@ manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
 					   &result, error);
 
 	object = g_object_new (TYPE_MANAGER, 
-			       "proxy", proxy, 
 			       "connection", connection,
 			       NULL);
 

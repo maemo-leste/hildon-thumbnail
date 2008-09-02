@@ -23,8 +23,6 @@
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
 
 typedef struct {
-	DBusGProxy *proxy;
-	DBusGConnection *connection;
 	Manager *manager;
 	GHashTable *plugins;
 	GThreadPool *pool;
@@ -32,8 +30,6 @@ typedef struct {
 
 enum {
 	PROP_0,
-	PROP_PROXY,
-	PROP_CONNECTION,
 	PROP_MANAGER
 };
 
@@ -289,19 +285,10 @@ thumbnailer_finalize (GObject *object)
 	g_thread_pool_free (priv->pool, TRUE, TRUE);
 
 	g_object_unref (priv->manager);
-	g_object_unref (priv->proxy);
-	g_object_unref (priv->connection);
 	g_hash_table_unref (priv->plugins);
 
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
-}
-
-static void 
-thumbnailer_set_connection (Thumbnailer *object, DBusGConnection *connection)
-{
-	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
-	priv->connection = connection;
 }
 
 static void 
@@ -313,16 +300,6 @@ thumbnailer_set_manager (Thumbnailer *object, Manager *manager)
 	priv->manager = g_object_ref (manager);
 }
 
-static void 
-thumbnailer_set_proxy (Thumbnailer *object, DBusGProxy *proxy)
-{
-	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
-
-	if (priv->proxy)
-		g_object_unref (priv->proxy);
-	priv->proxy = g_object_ref (proxy);
-}
-
 static void
 thumbnailer_set_property (GObject      *object,
 		      guint         prop_id,
@@ -330,14 +307,6 @@ thumbnailer_set_property (GObject      *object,
 		      GParamSpec   *pspec)
 {
 	switch (prop_id) {
-	case PROP_PROXY:
-		thumbnailer_set_proxy (THUMBNAILER (object),
-				   g_value_get_object (value));
-		break;
-	case PROP_CONNECTION:
-		thumbnailer_set_connection (THUMBNAILER (object),
-					    g_value_get_pointer (value));
-		break;
 	case PROP_MANAGER:
 		thumbnailer_set_manager (THUMBNAILER (object),
 					 g_value_get_object (value));
@@ -359,12 +328,6 @@ thumbnailer_get_property (GObject    *object,
 	priv = THUMBNAILER_GET_PRIVATE (object);
 
 	switch (prop_id) {
-	case PROP_PROXY:
-		g_value_set_object (value, priv->proxy);
-		break;
-	case PROP_CONNECTION:
-		g_value_set_pointer (value, priv->connection);
-		break;
 	case PROP_MANAGER:
 		g_value_set_object (value, priv->manager);
 		break;
@@ -381,23 +344,6 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 	object_class->finalize = thumbnailer_finalize;
 	object_class->set_property = thumbnailer_set_property;
 	object_class->get_property = thumbnailer_get_property;
-
-	g_object_class_install_property (object_class,
-					 PROP_PROXY,
-					 g_param_spec_object ("proxy",
-							      "DBus proxy",
-							      "DBus proxy",
-							      DBUS_TYPE_G_PROXY,
-							      G_PARAM_READWRITE |
-							      G_PARAM_CONSTRUCT));
-
-	g_object_class_install_property (object_class,
-					 PROP_CONNECTION,
-					 g_param_spec_pointer ("connection",
-							       "DBus connection",
-							       "DBus connection",
-							       G_PARAM_READWRITE |
-							       G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class,
 					 PROP_MANAGER,
@@ -454,8 +400,6 @@ thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer 
 					   &result, error);
 
 	object = g_object_new (TYPE_THUMBNAILER, 
-			       "proxy", proxy, 
-			       "connection", connection,
 			       "manager", manager,
 			       NULL);
 
