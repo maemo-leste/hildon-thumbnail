@@ -135,6 +135,8 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	guint urls_size = g_strv_length (urls), i = 0;
 	static guint num = 0;
 
+	dbus_async_return_if_fail (urls != NULL, context);
+
 	task->num = num++;
 	task->object = g_object_ref (object);
 	task->urls = (GStrv) g_malloc0 (sizeof (gchar *) * (urls_size + 1));
@@ -269,11 +271,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 void
 thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
+	dbus_async_return_if_fail (from_urls != NULL, context);
+	dbus_async_return_if_fail (to_urls != NULL, context);
 }
 
 void
 thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
+	dbus_async_return_if_fail (urls != NULL, context);
 }
 
 static void

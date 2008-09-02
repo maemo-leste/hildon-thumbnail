@@ -4,7 +4,7 @@
 
 #include "manager.h"
 #include "manager-glue.h"
-
+#include "dbus-utils.h"
 
 #define MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_MANAGER, ManagerPrivate))
 
@@ -60,7 +60,11 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
-	gchar *sender = dbus_g_method_get_sender (context);
+	gchar *sender;
+
+	dbus_async_return_if_fail (mime_type != NULL, context);
+
+	sender = dbus_g_method_get_sender (context);
 
 	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, sender, 
 						MANAGER_PATH,

@@ -12,7 +12,7 @@
 			g_set_error (&error,				\
 				     DBUS_ERROR,			\
 				     0,					\
-				     _("Assertion `%s' failed"),	\
+				     "Assertion `%s' failed",		\
 				     #expr);				\
 									\
 			dbus_g_method_return_error (context, error);	\
