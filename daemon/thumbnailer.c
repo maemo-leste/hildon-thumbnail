@@ -201,6 +201,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 					   G_TYPE_INVALID, 
 					   G_TYPE_INVALID);
 
+			g_object_unref (proxy);
+
 			if (error) {
 				had_error = TRUE;
 				dbus_g_method_return_error (context, error);
