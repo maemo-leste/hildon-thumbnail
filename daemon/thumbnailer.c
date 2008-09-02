@@ -133,7 +133,7 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	WorkTask *task = g_slice_new (WorkTask);
 	guint urls_size = g_strv_length (urls), i = 0;
-	static gint num = 0;
+	static guint num = 0;
 
 	task->num = num++;
 	task->object = g_object_ref (object);
