@@ -6,6 +6,8 @@
 
 #ifdef HAVE_GIO
 #include <gio/gio.h>
+#else
+#include <libgnomevfs/gnome-vfs.h>
 #endif
 
 #include <dbus/dbus-glib-bindings.h>
