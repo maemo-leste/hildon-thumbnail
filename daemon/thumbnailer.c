@@ -170,7 +170,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 	gpointer key, value;
 	gboolean had_error = FALSE;
 
-	/* We split the request into groups that all have the same mime-type */
+	/* We split the request into groups that have items with the same mime-type */
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
