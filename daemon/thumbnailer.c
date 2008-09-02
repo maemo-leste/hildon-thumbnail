@@ -158,14 +158,14 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 static void 
 do_the_work (WorkTask *task, gpointer user_data)
 {
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
 	GHashTable *hash = g_hash_table_new (g_str_hash, g_str_equal);
+	GStrv urls = task->urls;
+	DBusGMethodInvocation *context = task->context;
 	guint i = 0;
 	GHashTableIter iter;
 	gpointer key, value;
 	gboolean had_error = FALSE;
-	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
-	GStrv urls = task->urls;
-	DBusGMethodInvocation *context = task->context;
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
