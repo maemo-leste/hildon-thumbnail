@@ -210,7 +210,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		get_some_file_infos (urls[i], &mime_type, &has_thumb, &error);
 
 		if (error) {
-			g_signal_emit (task->object, signals[READY_SIGNAL],
+			g_signal_emit (task->object, signals[ERROR_SIGNAL],
 				       0, task->num, 1, error->message);
 			g_error_free (error);
 		} else {
