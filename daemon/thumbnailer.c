@@ -97,7 +97,7 @@ static void
 get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, GError **error)
 {
 	const gchar *content_type, *tp;
-	GFileInfo *info;
+	GFileInfo *info, *thumb_info = NULL;
 	GFile *file;
 
 	*mime_type = NULL;
@@ -110,15 +110,28 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 				  G_FILE_QUERY_INFO_NONE,
 				  NULL, error);
 
+	if (info)
+		thumb_info = g_object_ref (info);
+
+/*	thumb_info = g_file_query_info (file,
+					 G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
+					 G_FILE_QUERY_INFO_NONE,
+					 NULL, NULL);
+*/
 	if (info) {
 		content_type = g_file_info_get_content_type (info);
+		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
+		g_object_unref (info);
+	}
+
+	if (thumb_info) {
 		tp	     = g_file_info_get_attribute_byte_string (info, 
 					G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
 		*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
-		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
 		// g_print ("T: %s\n", tp);
-		g_object_unref (info);
+		g_object_unref (thumb_info);
 	}
+
 
 	g_object_unref (file);
 }
@@ -160,7 +173,7 @@ thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *c
 }
 
 void
-thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
+thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBusGMethodInvocation *context)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	WorkTask *task = g_slice_new (WorkTask);
@@ -174,6 +187,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *conte
 	task->urls = g_strdupv (urls);
 
 	g_mutex_lock (priv->mutex);
+	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
 	priv->tasks = g_list_prepend (priv->tasks, task);
 	g_thread_pool_push (priv->pool, task, NULL);
 	g_mutex_unlock (priv->mutex);
@@ -255,10 +269,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 		copy = g_list_next (copy);
 		i++;
 	}
-
 	cached_items[i] = NULL;
-
-	g_signal_emit (task->object, signals[READY_SIGNAL], 0,
+	if (i > 0)
+		g_signal_emit (task->object, signals[READY_SIGNAL], 0,
 			       cached_items);
 
 	g_list_free (thumb_items);
@@ -271,6 +284,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
 
+		gchar *mime_type = g_strdup (key);
 		GList *urlm = value, *copy = urlm;
 		GStrv urlss;
 		DBusGProxy *proxy;
@@ -295,7 +309,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		/* If we have a third party thumbnailer for this mime-type, we
 		 * proxy the call */
 
-		proxy = manager_get_handler (priv->manager, key);
+		proxy = manager_get_handler (priv->manager, mime_type);
 		if (proxy) {
 			GError *error = NULL;
 
@@ -343,6 +357,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 			}
 		}
 
+		g_free (mime_type);
 		g_strfreev (urlss);
 	}
 

@@ -100,6 +100,21 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 
 	g_mutex_lock (priv->mutex);
 
+	mime_proxy = g_hash_table_lookup (priv->handlers, 
+					  mime_type);
+
+	if (mime_proxy) {
+		GError *error = NULL;
+		g_set_error (&error, 
+			     DBUS_ERROR, 
+			     0,
+			     "MIME type already registered");
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
+		g_mutex_unlock (priv->mutex);
+		return;
+	}
+
 	sender = dbus_g_method_get_sender (context);
 
 	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, sender, 
@@ -117,6 +132,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 			  object);
 
 	g_mutex_unlock (priv->mutex);
+
+	dbus_g_method_return (context);
 }
 
 static void

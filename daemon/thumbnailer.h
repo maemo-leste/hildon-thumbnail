@@ -56,7 +56,7 @@ struct ThumbnailerClass {
 
 GType thumbnailer_get_type (void);
 
-void thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
+void thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBusGMethodInvocation *context);
 void thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *context);
 void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
