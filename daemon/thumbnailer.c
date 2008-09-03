@@ -70,38 +70,31 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 
 
 static void
-get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb)
+get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, GError **error)
 {
 	const gchar *content_type, *tp;
 	GFileInfo *info;
 	GFile *file;
-	GError *error = NULL;
+
+	*mime_type = NULL;
+	*has_thumb = FALSE;
 
 	file = g_file_new_for_uri (uri);
 	info = g_file_query_info (file,
 				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
 				  G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
 				  G_FILE_QUERY_INFO_NONE,
-				  NULL, &error);
+				  NULL, error);
 
-	if (error) {
-		g_warning ("Error guessing mimetype for '%s': %s\n", 
-			   uri, error->message);
-		g_error_free (error);
-		*mime_type = g_strdup ("unknown/unknown");
-		*has_thumb = FALSE;
-	} else {
-
+	if (info) {
 		content_type = g_file_info_get_content_type (info);
 		tp	     = g_file_info_get_attribute_byte_string (info, 
 					G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
-
 		*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
 		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
+		g_object_unref (info);
 	}
 
-	if (info)
-		g_object_unref (info);
 	g_object_unref (file);
 }
 
@@ -212,16 +205,22 @@ do_the_work (WorkTask *task, gpointer user_data)
 	while (urls[i] != NULL) {
 		gchar *mime_type = NULL;
 		gboolean has_thumb = FALSE;
+		GError *error = NULL;
 
-		get_some_file_infos (urls[i],  &mime_type, 
-					       &has_thumb);
+		get_some_file_infos (urls[i], &mime_type, &has_thumb, &error);
 
-		if (mime_type && !has_thumb) {
-			GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
-			urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
-			g_hash_table_replace (hash, mime_type, urls_for_mime);
-		} else if (has_thumb)
-			thumb_items = g_list_prepend (thumb_items, urls[i]);
+		if (error) {
+			g_signal_emit (task->object, signals[READY_SIGNAL],
+				       0, task->num, 1, error->message);
+			g_error_free (error);
+		} else {
+			if (mime_type && !has_thumb) {
+				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
+				urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
+				g_hash_table_replace (hash, mime_type, urls_for_mime);
+			} else if (has_thumb)
+				thumb_items = g_list_prepend (thumb_items, urls[i]);
+		}
 
 		i++;
 	}
