@@ -72,7 +72,7 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 static void
 get_some_file_infos (const gchar *path, gchar **mime_type, gchar **thumb_path, gboolean *has_thumb)
 {
-	gchar *content_type, *tp;
+	const gchar *content_type, *tp;
 	GFileInfo *info;
 	GFile *file;
 	GError *error = NULL;
@@ -203,7 +203,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GHashTableIter iter;
 	gpointer key, value;
 	gboolean had_error = FALSE;
-	GList *thumb_items, *copy;
+	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
 	g_mutex_lock (priv->mutex);
@@ -236,6 +236,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 			g_hash_table_replace (hash, mime_type, urls_for_mime);
 		} else if (has_thumb)
 			thumb_items = g_list_prepend (thumb_items, urls[i]);
+
 		i++;
 	}
 
@@ -248,6 +249,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		cached_items[i] = g_strdup (copy->data);
 		copy = g_list_next (copy);
 	}
+	cached_items[i] = NULL;
 
 	g_signal_emit (task->object, signals[READY_SIGNAL], 0,
 			       cached_items);
@@ -269,10 +271,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 		i = 0;
 
 		while (copy) {
-			urlss [i] = g_strdup ((gchar *) copy->data);
+			urlss[i] = g_strdup ((gchar *) copy->data);
 			i++;
 			copy = g_list_next (copy);
 		}
+		urlss[i] = NULL;
 
 		g_list_free (urlm);
 		g_hash_table_iter_remove (&iter);
