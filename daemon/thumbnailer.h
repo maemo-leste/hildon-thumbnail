@@ -24,6 +24,7 @@ struct Thumbnailer {
 struct ThumbnailerClass {
 	GObjectClass parent;
 
+	void (*finished) (Thumbnailer *object, guint handle);
 	void (*started) (Thumbnailer *object, guint handle);
 	void (*ready) (Thumbnailer *object, guint handle);
 	void (*error) (Thumbnailer *object, guint handle, gchar *reason);

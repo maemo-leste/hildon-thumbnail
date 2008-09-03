@@ -17,8 +17,12 @@
       <arg type="u" name="handle" />
     </signal>
 
-    <signal name="Ready">
+    <signal name="Finished">
       <arg type="u" name="handle" />
+    </signal>
+
+    <signal name="Ready">
+      <arg type="as" name="uris" />
     </signal>
 
     <signal name="Error">

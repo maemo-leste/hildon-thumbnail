@@ -38,6 +38,7 @@ enum {
 
 enum {
 	STARTED_SIGNAL,
+	FINISHED_SIGNAL,
 	READY_SIGNAL,
 	ERROR_SIGNAL,
 	LAST_SIGNAL
@@ -301,11 +302,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	if (!had_error)
 		g_signal_emit (task->object, signals[READY_SIGNAL], 0,
-			       task->num);
+			       task->urls);
 	else
 		g_hash_table_foreach (hash, cleanup_hash, NULL);
 
 	g_hash_table_unref (hash);
+
+	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+			       task->num);
 
 unqueued:
 
@@ -433,10 +437,10 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
+			      g_cclosure_marshal_VOID__BOXED,
 			      G_TYPE_NONE,
 			      1,
-			      G_TYPE_UINT);
+			      G_TYPE_STRV);
 
 	signals[STARTED_SIGNAL] =
 		g_signal_new ("Started",
@@ -449,6 +453,17 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      1,
 			      G_TYPE_UINT);
 
+	signals[FINISHED_SIGNAL] =
+		g_signal_new ("Finished",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ThumbnailerClass, finished),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE,
+			      1,
+			      G_TYPE_UINT);
+	
 	signals[ERROR_SIGNAL] =
 		g_signal_new ("Error",
 			      G_OBJECT_CLASS_TYPE (object_class),
