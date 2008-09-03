@@ -185,6 +185,7 @@ AC_SUBST(HTML_DIR)
 # --- Output ---
 
 AC_OUTPUT(Makefile \
+	  tests/Makefile \
 	  daemon/Makefile \
 	  daemon/plugins/Makefile \
           thumbs/Makefile \
