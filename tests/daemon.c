@@ -49,6 +49,8 @@ daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
 		g_print ("Request for %s\n", uris[i]);
 		i++;
 	}
+
+	dbus_g_method_return (context);
 }
 
 #include "daemon-glue.h"

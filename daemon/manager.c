@@ -122,8 +122,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 						THUMBNAILER_INTERFACE);
 
 	g_hash_table_insert (priv->handlers, 
-			     mime_type,
-			     mime_proxy);
+			     g_strdup (mime_type),
+			     g_object_ref (mime_proxy));
 
 	g_free (sender);
 
