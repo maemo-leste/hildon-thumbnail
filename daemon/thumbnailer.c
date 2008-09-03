@@ -112,13 +112,6 @@ get_some_file_infos (const gchar *path, gchar **mime_type, gchar **thumb_path, g
 	g_object_unref (file);
 }
 
-static void
-cleanup_hash (gpointer key, gpointer value, gpointer user_data)
-{
-	if (value)
-		g_list_free (value);
-}
-
 typedef struct {
 	Thumbnailer *object;
 	GStrv urls;
@@ -199,10 +192,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
 	GHashTable *hash;
 	GStrv urls = task->urls;
-	guint i = 0;
+	guint i;
 	GHashTableIter iter;
 	gpointer key, value;
-	gboolean had_error = FALSE;
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
@@ -221,6 +213,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 			task->num);
 
 	hash = g_hash_table_new (g_str_hash, g_str_equal);
+
+	i = 0;
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime = NULL;
@@ -245,10 +239,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 	cached_items = (GStrv) g_malloc0 (sizeof (gchar*) * (g_list_length (thumb_items) + 1));
 	copy = thumb_items;
 
+	i = 0;
+
 	while (copy) {
 		cached_items[i] = g_strdup (copy->data);
 		copy = g_list_next (copy);
+		i++;
 	}
+
 	cached_items[i] = NULL;
 
 	g_signal_emit (task->object, signals[READY_SIGNAL], 0,
@@ -262,11 +260,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	/* Foreach of the groups that have items that require creating a thumbnail */
 
-	while (g_hash_table_iter_next (&iter, &key, &value) && !had_error) {
+	while (g_hash_table_iter_next (&iter, &key, &value)) {
 
 		GList *urlm = value, *copy = urlm;
-		GStrv urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
+		GStrv urlss;
 		DBusGProxy *proxy;
+
+ 		urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
 
 		i = 0;
 
@@ -275,7 +275,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 			i++;
 			copy = g_list_next (copy);
 		}
+
 		urlss[i] = NULL;
+
+		/* Free the value in the hash and remove the key */
 
 		g_list_free (urlm);
 		g_hash_table_iter_remove (&iter);
@@ -294,13 +297,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 			g_object_unref (proxy);
 
 			if (error) {
-				had_error = TRUE;
-				g_signal_emit (task->object, signals[ERROR_SIGNAL], 0,
-					       task->num, error->message);
+				g_signal_emit (task->object, signals[ERROR_SIGNAL],
+					       0, task->num, 1, error->message);
 				g_clear_error (&error);
-				g_strfreev (urlss);
-				break;
-			}
+			} else
+				g_signal_emit (task->object, signals[READY_SIGNAL], 
+					       0, urlss);
+
 
 		/* If not if we have a plugin that can handle it, we let the 
 		 * plugin have a go at it */
@@ -313,28 +316,27 @@ do_the_work (WorkTask *task, gpointer user_data)
 				hildon_thumbnail_plugin_do_create (module, urlss, &error);
 
 				if (error) {
-					had_error = TRUE;
-					g_signal_emit (task->object, signals[ERROR_SIGNAL], 0,
-						       task->num, error->message);
+					g_signal_emit (task->object, signals[ERROR_SIGNAL],
+						       0, task->num, 1, error->message);
 					g_clear_error (&error);
-					g_strfreev (urlss);
-					break;
-				}
+				} else
+					g_signal_emit (task->object, signals[READY_SIGNAL], 
+						       0, urlss);
 
 			/* And if even that is not the case, we are very sorry */
 
-			} else
-				g_message ("No handler for %s", (gchar*) key);
+			} else {
+				gchar *str = g_strdup_printf ("No handler for %s", (gchar*) key);
+				g_signal_emit (task->object, signals[ERROR_SIGNAL],
+						       0, task->num, 0, str);
+				g_free (str);
+			}
 		}
 
 		g_strfreev (urlss);
 	}
 
-	if (!had_error)
-		g_signal_emit (task->object, signals[READY_SIGNAL], 0,
-			       task->urls);
-	else
-		g_hash_table_foreach (hash, cleanup_hash, NULL);
+	g_assert (g_hash_table_size (hash) == 0);
 
 	g_hash_table_unref (hash);
 
@@ -500,10 +502,11 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, error),
 			      NULL, NULL,
-			      thumbnailer_marshal_VOID__UINT_STRING,
+			      thumbnailer_marshal_VOID__UINT_INT_STRING,
 			      G_TYPE_NONE,
 			      2,
 			      G_TYPE_UINT,
+			      G_TYPE_INT,
 			      G_TYPE_STRING);
 
 	g_type_class_add_private (object_class, sizeof (ThumbnailerPrivate));
