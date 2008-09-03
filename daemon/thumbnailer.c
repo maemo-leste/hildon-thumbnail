@@ -70,7 +70,7 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 
 
 static void
-get_some_file_infos (const gchar *path, gchar **mime_type, gchar **thumb_path, gboolean *has_thumb)
+get_some_file_infos (const gchar *path, gchar **mime_type, gboolean *has_thumb)
 {
 	const gchar *content_type, *tp;
 	GFileInfo *info;
@@ -88,20 +88,16 @@ get_some_file_infos (const gchar *path, gchar **mime_type, gchar **thumb_path, g
 		g_warning ("Error guessing mimetype for '%s': %s\n", path, error->message);
 		g_error_free (error);
 		*mime_type = g_strdup ("unknown/unknown");
-		*thumb_path = NULL;
 	}
 
 	content_type = g_file_info_get_content_type (info);
-	tp = g_file_info_get_attribute_byte_string (info, 
-			G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
+	tp	     = g_file_info_get_attribute_byte_string (info, 
+				G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
 
 	if (tp) {
-		*thumb_path = g_strdup (tp);
 		*has_thumb = g_file_test (tp, G_FILE_TEST_EXISTS);
-	} else {
-		*thumb_path = NULL;
+	} else
 		*has_thumb  = FALSE;
-	}
 
 	if (!content_type)
 		*mime_type = g_strdup ("unknown/unknown");
@@ -217,15 +213,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 	i = 0;
 
 	while (urls[i] != NULL) {
-		GList *urls_for_mime = NULL;
 		gchar *mime_type = NULL;
-		gchar *thumb_path = NULL;
 		gboolean has_thumb = FALSE;
 
-		get_some_file_infos (urls[i], &mime_type, &thumb_path, &has_thumb);
+		get_some_file_infos (urls[i],  &mime_type, 
+					       &has_thumb);
 
 		if (mime_type && !has_thumb) {
-			urls_for_mime = g_hash_table_lookup (hash, mime_type);
+			GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
 			urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
 			g_hash_table_replace (hash, mime_type, urls_for_mime);
 		} else if (has_thumb)
@@ -289,6 +284,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		proxy = manager_get_handler (priv->manager, key);
 		if (proxy) {
 			GError *error = NULL;
+
 			dbus_g_proxy_call (proxy, "Create", &error, 
 					   G_TYPE_STRV, urlss,
 					   G_TYPE_INVALID, 
@@ -344,8 +340,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 			       task->num);
 
 unqueued:
-
-	/* task->context will always be returned by now */
 
 	g_object_unref (task->object);
 	g_strfreev (task->urls);
