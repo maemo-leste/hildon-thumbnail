@@ -1,3 +1,27 @@
+/*
+ * This file is part of hildon-thumbnail package
+ *
+ * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
+ *
+ * Contact: Marius Vollmer <marius.vollmer@nokia.com>
+ * Author: Philip Van Hoof <philip@codeminded.be>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -92,6 +116,7 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 					G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
 		*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
 		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
+		// g_print ("T: %s\n", tp);
 		g_object_unref (info);
 	}
 
@@ -206,6 +231,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 				       0, task->num, 1, error->message);
 			g_error_free (error);
 		} else {
+			// g_print ("M: %s\n", mime_type);
 			if (mime_type && !has_thumb) {
 				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
 				urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
