@@ -139,7 +139,6 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *conte
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	WorkTask *task = g_slice_new (WorkTask);
-	guint urls_size = g_strv_length (urls), i = 0;
 	static guint num = 0;
 
 	dbus_async_return_if_fail (urls != NULL, context);
@@ -147,14 +146,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *conte
 	task->unqueued = FALSE;
 	task->num = num++;
 	task->object = g_object_ref (object);
-	task->urls = (GStrv) g_malloc0 (sizeof (gchar *) * (urls_size + 1));
-
-	while (urls[i] != NULL) {
-		task->urls[i] = g_strdup (urls[i]);
-		i++;
-	}
-
-	task->urls[i] = NULL;
+	task->urls = g_strdupv (urls);
 
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_prepend (priv->tasks, task);
