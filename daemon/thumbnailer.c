@@ -94,15 +94,8 @@ get_some_file_infos (const gchar *path, gchar **mime_type, gboolean *has_thumb)
 	tp	     = g_file_info_get_attribute_byte_string (info, 
 				G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
 
-	if (tp) {
-		*has_thumb = g_file_test (tp, G_FILE_TEST_EXISTS);
-	} else
-		*has_thumb  = FALSE;
-
-	if (!content_type)
-		*mime_type = g_strdup ("unknown/unknown");
-	else
-		*mime_type = g_strdup (content_type);
+	*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
+	*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
 
 	g_object_unref (info);
 	g_object_unref (file);
