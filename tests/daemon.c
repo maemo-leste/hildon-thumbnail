@@ -43,6 +43,12 @@ G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
 void 
 daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
 {
+	guint i = 0;
+
+	while (uris[i] != NULL) {
+		g_print ("Request for %s\n", uris[i]);
+		i++;
+	}
 }
 
 #include "daemon-glue.h"
