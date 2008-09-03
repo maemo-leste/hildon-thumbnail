@@ -1,5 +1,14 @@
 2008-09-03  Philip Van Hoof  <philip@codeminded.be>
 
+	* configure.ac
+	* config.h.in: Made GIO required
+
+	* daemon/thumbnailer.c
+	* daemon/Makefile.am
+	* daemon/thumbnailer.xml: Some specification changes
+
+2008-09-03  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/thumbnailer.c
 	* daemon/thumbnailer.h
 	* daemon/thumbnailer-marshal.list

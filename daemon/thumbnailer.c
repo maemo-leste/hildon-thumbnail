@@ -1,15 +1,9 @@
-#include <glib.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifdef HAVE_GIO
+#include <glib.h>
 #include <gio/gio.h>
-#else
-#include <libgnomevfs/gnome-vfs.h>
-#endif
-
 #include <dbus/dbus-glib-bindings.h>
 
 #include "manager.h"
@@ -75,42 +69,47 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 }
 
 
-static gchar *
-get_mime_type (const gchar *path)
+static void
+get_some_file_infos (const gchar *path, gchar **mime_type, gchar **thumb_path, gboolean *has_thumb)
 {
-	gchar *content_type;
-
-#ifdef HAVE_GIO
+	gchar *content_type, *tp;
 	GFileInfo *info;
 	GFile *file;
 	GError *error = NULL;
 
 	file = g_file_new_for_path (path);
 	info = g_file_query_info (file,
-				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
+				  G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
 				  G_FILE_QUERY_INFO_NONE,
 				  NULL, &error);
 
 	if (error) {
 		g_warning ("Error guessing mimetype for '%s': %s\n", path, error->message);
 		g_error_free (error);
-
-		return g_strdup ("unknown");
+		*mime_type = g_strdup ("unknown/unknown");
+		*thumb_path = NULL;
 	}
 
-	content_type = g_strdup (g_file_info_get_content_type (info));
+	content_type = g_file_info_get_content_type (info);
+	tp = g_file_info_get_attribute_byte_string (info, 
+			G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
+
+	if (tp) {
+		*thumb_path = g_strdup (tp);
+		*has_thumb = g_file_test (tp, G_FILE_TEST_EXISTS);
+	} else {
+		*thumb_path = NULL;
+		*has_thumb  = FALSE;
+	}
+
+	if (!content_type)
+		*mime_type = g_strdup ("unknown/unknown");
+	else
+		*mime_type = g_strdup (content_type);
 
 	g_object_unref (info);
 	g_object_unref (file);
-
-	if (!content_type) {
-		return g_strdup ("unknown");
-	}
-#else
-	content_type = gnome_vfs_get_mime_type_from_uri (path);
-#endif
-
-	return content_type;
 }
 
 static void
@@ -204,6 +203,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GHashTableIter iter;
 	gpointer key, value;
 	gboolean had_error = FALSE;
+	GList *thumb_items, *copy;
+	GStrv cached_items;
 
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
@@ -213,7 +214,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 	}
 	g_mutex_unlock (priv->mutex);
 
-	/* We split the request into groups that have items with the same mime-type */
+	/* We split the request into groups that have items with the same 
+	  * mime-type and one group with items that already have a thumbnail */
 
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
 			task->num);
@@ -221,17 +223,42 @@ do_the_work (WorkTask *task, gpointer user_data)
 	hash = g_hash_table_new (g_str_hash, g_str_equal);
 
 	while (urls[i] != NULL) {
-		GList *urls_for_mime;
-		gchar *mime_type = get_mime_type (urls[i]);
-		urls_for_mime = g_hash_table_lookup (hash, mime_type);
-		urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
-		g_hash_table_replace (hash, mime_type, urls_for_mime);
+		GList *urls_for_mime = NULL;
+		gchar *mime_type = NULL;
+		gchar *thumb_path = NULL;
+		gboolean has_thumb = FALSE;
+
+		get_some_file_infos (urls[i], &mime_type, &thumb_path, &has_thumb);
+
+		if (mime_type && !has_thumb) {
+			urls_for_mime = g_hash_table_lookup (hash, mime_type);
+			urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
+			g_hash_table_replace (hash, mime_type, urls_for_mime);
+		} else if (has_thumb)
+			thumb_items = g_list_prepend (thumb_items, urls[i]);
 		i++;
 	}
 
+	/* We emit the group that already has a thumbnail */
+
+	cached_items = (GStrv) g_malloc0 (sizeof (gchar*) * (g_list_length (thumb_items) + 1));
+	copy = thumb_items;
+
+	while (copy) {
+		cached_items[i] = g_strdup (copy->data);
+		copy = g_list_next (copy);
+	}
+
+	g_signal_emit (task->object, signals[READY_SIGNAL], 0,
+			       cached_items);
+
+	g_list_free (thumb_items);
+	g_strfreev (cached_items);
+
+
 	g_hash_table_iter_init (&iter, hash);
 
-	/* Foreach of those groups */
+	/* Foreach of the groups that have items that require creating a thumbnail */
 
 	while (g_hash_table_iter_next (&iter, &key, &value) && !had_error) {
 
@@ -432,7 +459,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 							      G_PARAM_CONSTRUCT));
 
 	signals[READY_SIGNAL] =
-		g_signal_new ("Ready",
+		g_signal_new ("ready",
 			      G_OBJECT_CLASS_TYPE (object_class),
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
@@ -443,7 +470,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_TYPE_STRV);
 
 	signals[STARTED_SIGNAL] =
-		g_signal_new ("Started",
+		g_signal_new ("started",
 			      G_OBJECT_CLASS_TYPE (object_class),
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
@@ -454,7 +481,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_TYPE_UINT);
 
 	signals[FINISHED_SIGNAL] =
-		g_signal_new ("Finished",
+		g_signal_new ("finished",
 			      G_OBJECT_CLASS_TYPE (object_class),
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, finished),
@@ -465,7 +492,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_TYPE_UINT);
 	
 	signals[ERROR_SIGNAL] =
-		g_signal_new ("Error",
+		g_signal_new ("error",
 			      G_OBJECT_CLASS_TYPE (object_class),
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, error),

@@ -60,12 +60,7 @@ AC_SUBST(DBUS_SERVICES_DIR)
 
 # N
 
-PKG_CHECK_MODULES(GIO, gio-2.0, [have_gio=yes], [have_gio=no])
-
-if test x$have_gio == "xyes"; then
-AC_DEFINE(HAVE_GIO, 1, [GIO available in glib])
-fi
-
+PKG_CHECK_MODULES(GIO, gio-2.0)
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
