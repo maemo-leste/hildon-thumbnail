@@ -88,16 +88,19 @@ get_some_file_infos (const gchar *path, gchar **mime_type, gboolean *has_thumb)
 		g_warning ("Error guessing mimetype for '%s': %s\n", path, error->message);
 		g_error_free (error);
 		*mime_type = g_strdup ("unknown/unknown");
+		*has_thumb = FALSE;
+	} else {
+
+		content_type = g_file_info_get_content_type (info);
+		tp	     = g_file_info_get_attribute_byte_string (info, 
+					G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
+
+		*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
+		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
 	}
 
-	content_type = g_file_info_get_content_type (info);
-	tp	     = g_file_info_get_attribute_byte_string (info, 
-				G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
-
-	*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
-	*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
-
-	g_object_unref (info);
+	if (info)
+		g_object_unref (info);
 	g_object_unref (file);
 }
 
