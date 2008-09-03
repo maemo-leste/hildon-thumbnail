@@ -23,12 +23,18 @@ struct Thumbnailer {
 
 struct ThumbnailerClass {
 	GObjectClass parent;
+
+	void (*started) (Thumbnailer *object, guint handle);
+	void (*ready) (Thumbnailer *object, guint handle);
+	void (*error) (Thumbnailer *object, guint handle, gchar *reason);
 };
 
 GType thumbnailer_get_type (void);
 
-void thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
+void thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
+void thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *context);
 void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
+void thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
 
 void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin);

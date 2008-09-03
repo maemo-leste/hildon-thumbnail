@@ -14,6 +14,7 @@
 
 #include "manager.h"
 #include "thumbnailer.h"
+#include "thumbnailer-marshal.h"
 #include "thumbnailer-glue.h"
 #include "hildon-thumbnail-plugin.h"
 #include "dbus-utils.h"
@@ -26,6 +27,8 @@ typedef struct {
 	Manager *manager;
 	GHashTable *plugins;
 	GThreadPool *pool;
+	GMutex *mutex;
+	GList *tasks;
 } ThumbnailerPrivate;
 
 enum {
@@ -33,6 +36,14 @@ enum {
 	PROP_MANAGER
 };
 
+enum {
+	STARTED_SIGNAL,
+	READY_SIGNAL,
+	ERROR_SIGNAL,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
 
 void 
 thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin)
@@ -111,8 +122,8 @@ cleanup_hash (gpointer key, gpointer value, gpointer user_data)
 typedef struct {
 	Thumbnailer *object;
 	GStrv urls;
-	DBusGMethodInvocation *context;
 	guint num;
+	gboolean unqueued;
 } WorkTask;
 
 
@@ -127,8 +138,25 @@ pool_sort_compare (gconstpointer a, gconstpointer b, gpointer user_data)
 	return task_b->num - task_a->num;
 }
 
+static void 
+mark_unqueued (WorkTask *task, guint handle)
+{
+	if (task->num == handle)
+		task->unqueued = TRUE;
+}
+
 void
-thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
+thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *context)
+{
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
+	g_mutex_lock (priv->mutex);
+	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle);
+	g_mutex_unlock (priv->mutex);
+}
+
+void
+thumbnailer_queue (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	WorkTask *task = g_slice_new (WorkTask);
@@ -137,6 +165,7 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 
 	dbus_async_return_if_fail (urls != NULL, context);
 
+	task->unqueued = FALSE;
 	task->num = num++;
 	task->object = g_object_ref (object);
 	task->urls = (GStrv) g_malloc0 (sizeof (gchar *) * (urls_size + 1));
@@ -147,9 +176,13 @@ thumbnailer_create (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	}
 
 	task->urls[i] = NULL;
-	task->context = context;
 
+	g_mutex_lock (priv->mutex);
+	priv->tasks = g_list_prepend (priv->tasks, task);
 	g_thread_pool_push (priv->pool, task, NULL);
+	g_mutex_unlock (priv->mutex);
+
+	dbus_g_method_return (context, num);
 }
 
 /* This is the threadpool's function. This means that everything we do is 
@@ -164,15 +197,27 @@ static void
 do_the_work (WorkTask *task, gpointer user_data)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
-	GHashTable *hash = g_hash_table_new (g_str_hash, g_str_equal);
+	GHashTable *hash;
 	GStrv urls = task->urls;
-	DBusGMethodInvocation *context = task->context;
 	guint i = 0;
 	GHashTableIter iter;
 	gpointer key, value;
 	gboolean had_error = FALSE;
 
+	g_mutex_lock (priv->mutex);
+	priv->tasks = g_list_remove (priv->tasks, task);
+	if (task->unqueued) {
+		g_mutex_unlock (priv->mutex);
+		goto unqueued;
+	}
+	g_mutex_unlock (priv->mutex);
+
 	/* We split the request into groups that have items with the same mime-type */
+
+	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
+			task->num);
+
+	hash = g_hash_table_new (g_str_hash, g_str_equal);
 
 	while (urls[i] != NULL) {
 		GList *urls_for_mime;
@@ -219,7 +264,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 			if (error) {
 				had_error = TRUE;
-				dbus_g_method_return_error (context, error);
+				g_signal_emit (task->object, signals[ERROR_SIGNAL], 0,
+					       task->num, error->message);
 				g_clear_error (&error);
 				g_strfreev (urlss);
 				break;
@@ -237,7 +283,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 				if (error) {
 					had_error = TRUE;
-					dbus_g_method_return_error (context, error);
+					g_signal_emit (task->object, signals[ERROR_SIGNAL], 0,
+						       task->num, error->message);
 					g_clear_error (&error);
 					g_strfreev (urlss);
 					break;
@@ -253,11 +300,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 	}
 
 	if (!had_error)
-		dbus_g_method_return (context);
+		g_signal_emit (task->object, signals[READY_SIGNAL], 0,
+			       task->num);
 	else
 		g_hash_table_foreach (hash, cleanup_hash, NULL);
 
 	g_hash_table_unref (hash);
+
+unqueued:
 
 	/* task->context will always be returned by now */
 
@@ -273,12 +323,31 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 {
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
+	
+	// TODO
+	
+	dbus_g_method_return (context);
+}
+
+void
+thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
+{
+	dbus_async_return_if_fail (from_urls != NULL, context);
+	dbus_async_return_if_fail (to_urls != NULL, context);
+	
+	// TODO
+	
+	dbus_g_method_return (context);
 }
 
 void
 thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
 	dbus_async_return_if_fail (urls != NULL, context);
+	
+	// TODO
+	
+	dbus_g_method_return (context);
 }
 
 static void
@@ -290,7 +359,7 @@ thumbnailer_finalize (GObject *object)
 
 	g_object_unref (priv->manager);
 	g_hash_table_unref (priv->plugins);
-
+	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
 }
@@ -358,6 +427,40 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
 
+	signals[READY_SIGNAL] =
+		g_signal_new ("Ready",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE,
+			      1,
+			      G_TYPE_UINT);
+
+	signals[STARTED_SIGNAL] =
+		g_signal_new ("Started",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE,
+			      1,
+			      G_TYPE_UINT);
+
+	signals[ERROR_SIGNAL] =
+		g_signal_new ("Error",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (ThumbnailerClass, error),
+			      NULL, NULL,
+			      thumbnailer_marshal_VOID__UINT_STRING,
+			      G_TYPE_NONE,
+			      2,
+			      G_TYPE_UINT,
+			      G_TYPE_STRING);
+
 	g_type_class_add_private (object_class, sizeof (ThumbnailerPrivate));
 }
 
@@ -365,6 +468,8 @@ static void
 thumbnailer_init (Thumbnailer *object)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
+	priv->mutex = g_mutex_new ();
 
 	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       (GDestroyNotify) g_free,

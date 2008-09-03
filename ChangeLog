@@ -1,3 +1,12 @@
+2008-09-03  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/thumbnailer-marshal.list
+	* daemon/Makefile.am
+	* daemon/thumbnailer.xml: Slightly different protocol, with queuing
+	and unqueueing and added a few signals
+
 2008-09-02  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/thumbnailer.c: Made the threadpool a LIFO
