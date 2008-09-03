@@ -70,14 +70,14 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 
 
 static void
-get_some_file_infos (const gchar *path, gchar **mime_type, gboolean *has_thumb)
+get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb)
 {
 	const gchar *content_type, *tp;
 	GFileInfo *info;
 	GFile *file;
 	GError *error = NULL;
 
-	file = g_file_new_for_path (path);
+	file = g_file_new_for_uri (uri);
 	info = g_file_query_info (file,
 				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
 				  G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
@@ -85,7 +85,8 @@ get_some_file_infos (const gchar *path, gchar **mime_type, gboolean *has_thumb)
 				  NULL, &error);
 
 	if (error) {
-		g_warning ("Error guessing mimetype for '%s': %s\n", path, error->message);
+		g_warning ("Error guessing mimetype for '%s': %s\n", 
+			   uri, error->message);
 		g_error_free (error);
 		*mime_type = g_strdup ("unknown/unknown");
 		*has_thumb = FALSE;
