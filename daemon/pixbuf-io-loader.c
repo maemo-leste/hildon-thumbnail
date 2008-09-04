@@ -23,11 +23,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-
 
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+
+#ifndef gdk_pixbuf_new_from_stream_at_scale
 
 #define LOAD_BUFFER_SIZE 65536
 
