@@ -200,6 +200,9 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		if (stream)
 			g_object_unref (stream);
 
+		g_free (large);
+		g_free (normal);
+
 		i++;
 	}
 
