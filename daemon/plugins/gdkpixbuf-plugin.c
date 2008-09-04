@@ -162,6 +162,8 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		save_thumb_file_meta (pixbuf_large, large, mtime, uri, &nerror);
 
+		gdk_pixbuf_unref (pixbuf_large);
+
 		if (nerror)
 			goto nerror_handler;
 
@@ -183,6 +185,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		save_thumb_file_meta (pixbuf_normal, normal, mtime, uri, &nerror);
 
+		gdk_pixbuf_unref (pixbuf_normal);
 
 		nerror_handler:
 
