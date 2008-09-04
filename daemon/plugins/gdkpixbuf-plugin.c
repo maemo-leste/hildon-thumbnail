@@ -39,7 +39,7 @@
 #define DEFAULT_ERROR		g_quark_from_static_string (DEFAULT_ERROR_DOMAIN)
 
 #include "utils.h"
-#include "default.h"
+#include "gdkpixbuf-plugin.h"
 #include "hildon-thumbnail-plugin.h"
 
 static gchar **supported = NULL;

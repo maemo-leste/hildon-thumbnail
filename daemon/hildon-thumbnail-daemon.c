@@ -61,7 +61,7 @@ main (int argc, char **argv)
 		manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
 
-		module = hildon_thumbnail_plugin_load ("default");
+		module = hildon_thumbnail_plugin_load ("gdkpixbuf");
 
 		manager_proxy = dbus_g_proxy_new_for_name (connection, 
 					   MANAGER_SERVICE,

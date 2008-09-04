@@ -1,5 +1,14 @@
 2008-09-04  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/default.c
+	* daemon/plugins/gdkpixbuf-plugin.h
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/default.h: Renamed default to gdkpixbuf-plugin
+
+2008-09-04  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/pixbuf-io-loader.c
 	* daemon/plugins/default.c
 	* daemon/plugins/Makefile.am
