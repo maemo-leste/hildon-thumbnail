@@ -32,6 +32,7 @@
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk-pixbuf/gdk-pixbuf-io.h>
 
 
 #define DEFAULT_ERROR_DOMAIN	"HildonThumbnailerDefault"
@@ -41,13 +42,33 @@
 #include "default.h"
 #include "hildon-thumbnail-plugin.h"
 
-static const gchar* supported[2] = { "image/png" , NULL };
-
 
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
-	return supported;
+	static gchar **supported = NULL;
+
+	if (!supported) {
+		GSList *formats = gdk_pixbuf_get_formats (), *copy;
+		GPtrArray *types_support = g_ptr_array_new ();
+		guint i;
+		copy = formats;
+		while (copy) {
+			gchar **mime_types = gdk_pixbuf_format_get_mime_types (copy->data);
+			i = 0;
+			while (mime_types[i] != NULL) {
+				g_ptr_array_add (types_support, mime_types[i]);
+				i++;
+			}
+			copy = g_slist_next (copy);
+		}
+		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1));
+		for (i = 0 ; i < types_support->len; i++)
+			supported[i] =  g_ptr_array_index (types_support, i);
+		g_slist_free (formats);
+	}
+
+	return (const gchar**) supported;
 }
 
 #define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
@@ -109,12 +130,12 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		guint64 mtime;
 		gchar *large = NULL, *normal = NULL;
 
-		g_print ("%s\n", uri);
+		//g_print ("%s\n", uri);
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &nerror);
 
-		g_print ("L %s\n", large);
-		g_print ("N %s\n", normal);
+		//g_print ("L %s\n", large);
+		//g_print ("N %s\n", normal);
 
 		if (nerror)
 			goto nerror_handler;
