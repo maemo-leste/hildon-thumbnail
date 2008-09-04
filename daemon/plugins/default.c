@@ -42,11 +42,11 @@
 #include "default.h"
 #include "hildon-thumbnail-plugin.h"
 
+static gchar **supported = NULL;
 
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
-	static gchar **supported = NULL;
 
 	if (!supported) {
 		GSList *formats = gdk_pixbuf_get_formats (), *copy;
@@ -64,7 +64,7 @@ hildon_thumbnail_plugin_supported (void)
 		}
 		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1));
 		for (i = 0 ; i < types_support->len; i++)
-			supported[i] =  g_ptr_array_index (types_support, i);
+			supported[i] =  g_strdup (g_ptr_array_index (types_support, i));
 		g_slist_free (formats);
 	}
 
@@ -73,8 +73,6 @@ hildon_thumbnail_plugin_supported (void)
 
 #define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
-#define DEFAULT_MAX_PROCESSES 1
-#define THUMBS_GCONF_DIR "/apps/osso/osso/thumbnailers"
 #define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
 #define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
 #define SOFTWARE_OPTION "tEXt::Software"
@@ -217,6 +215,8 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 void 
 hildon_thumbnail_plugin_stop (void)
 {
+	if (supported)
+		g_strfreev (supported);
 }
 
 
