@@ -29,9 +29,9 @@
 
 #include "manager.h"
 
-#define THUMBNAILER_SERVICE      "org.freedesktop.thumbnailer"
-#define THUMBNAILER_PATH         "/org/freedesktop/thumbnailer"
-#define THUMBNAILER_INTERFACE    "org.freedesktop.thumbnailer"
+#define THUMBNAILER_SERVICE      "org.freedesktop.Thumbnailer"
+#define THUMBNAILER_PATH         "/org/freedesktop/Thumbnailer"
+#define THUMBNAILER_INTERFACE    "org.freedesktop.Thumbnailer"
 
 #define TYPE_THUMBNAILER             (thumbnailer_get_type())
 #define THUMBNAILER(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_THUMBNAILER, Thumbnailer))

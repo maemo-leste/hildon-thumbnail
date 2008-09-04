@@ -3,13 +3,13 @@
 #include <dbus/dbus-glib-bindings.h>
 
 
-#define DAEMON_SERVICE      "org.freedesktop.thumbnailer"
-#define DAEMON_PATH         "/org/freedesktop/thumbnailer"
-#define DAEMON_INTERFACE    "org.freedesktop.thumbnailer"
+#define DAEMON_SERVICE      "org.freedesktop.Thumbnailer"
+#define DAEMON_PATH         "/org/freedesktop/Thumbnailer"
+#define DAEMON_INTERFACE    "org.freedesktop.Thumbnailer"
 
-#define MANAGER_SERVICE      "org.freedesktop.thumbnailer.manager"
-#define MANAGER_PATH         "/org/freedesktop/thumbnailer/manager"
-#define MANAGER_INTERFACE    "org.freedesktop.thumbnailer.manager"
+#define MANAGER_SERVICE      "org.freedesktop.Thumbnailer"
+#define MANAGER_PATH         "/org/freedesktop/Thumbnailer/Manager"
+#define MANAGER_INTERFACE    "org.freedesktop.Thumbnailer.Manager"
 
 #define TYPE_DAEMON             (daemon_get_type())
 #define DAEMON(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_DAEMON, Daemon))

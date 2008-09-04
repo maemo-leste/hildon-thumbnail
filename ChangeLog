@@ -1,3 +1,12 @@
+2008-09-04  Philip Van Hoof  <philip@codeminded.be>
+
+	tests/daemon.xml
+	tests/daemon.c
+	daemon/thumbnailer.h
+	daemon/manager.h
+	daemon/manager.xml
+	daemon/thumbnailer.xml: Changed spec
+
 2008-09-03  Philip Van Hoof  <philip@codeminded.be>
 
 	tests/daemon.xml

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <node name="/">
-  <interface name="org.freedesktop.thumbnailer.manager">  
+  <interface name="org.freedesktop.Thumbnailer.Manager">  
     <method name="Register">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
       <arg type="s" name="mime_type" direction="in" />
