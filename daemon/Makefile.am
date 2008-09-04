@@ -6,6 +6,7 @@ INCLUDES = \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) \
         $(GDK_PIXBUF_CFLAGS) \
+	$(DBUS_CFLAGS) \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
 
@@ -13,10 +14,9 @@ noinst_LTLIBRARIES = libshared.la
 
 libshared_la_SOURCES = md5.c md5.h utils.h utils.c pixbuf-io-loader.c
 
-libexec_PROGRAMS = hildon-thumbnailerd
+libexec_PROGRAMS = hildon-thumbnailerd hildon-thumbnailer-run-plugin-as-standalone
 
-include_HEADERS = hildon-thumbnail-plugin.h
-
+plugin_stuff = hildon-thumbnail-plugin.h hildon-thumbnail-plugin.c
 
 thumbnailer-marshal.h: thumbnailer-marshal.list
 	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --header > $@
@@ -24,9 +24,16 @@ thumbnailer-marshal.h: thumbnailer-marshal.list
 thumbnailer-marshal.c: thumbnailer-marshal.list
 	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --body > $@
 
+hildon_thumbnailer_run_plugin_as_standalone_SOURCES = \
+	plugin-runner.c \
+	$(plugin_stuff) \
+	plugin-runner-glue.h
+
+hildon_thumbnailer_run_plugin_as_standalone_LDADD = \
+        $(DBUS_LIBS) $(GLIB_LIBS) $(GMODULE_LIBS) $(GIO_LIBS)
+
 hildon_thumbnailerd_SOURCES = \
-	$(include_HEADERS) \
-	hildon-thumbnail-plugin.c \
+	$(plugin_stuff) \
 	hildon-thumbnail-daemon.c \
 	thumbnailer.c \
 	thumbnailer.h \
@@ -34,6 +41,8 @@ hildon_thumbnailerd_SOURCES = \
 	thumbnailer-marshal.h \
 	manager.c \
 	manager.h \
+	manager-glue.h \
+	thumbnailer-glue.h \
 	dbus-utils.h \
 	dbus-utils.c
 
@@ -54,7 +63,7 @@ org.freedesktop.thumbnailer_service_DATA = org.freedesktop.thumbnailer.service
 %-glue.h: $(top_srcdir)/daemon/%.xml
 	$(DBUSBINDINGTOOL) --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $^
 
-BUILT_SOURCES = manager-glue.h thumbnailer-glue.h \
+BUILT_SOURCES = manager-glue.h thumbnailer-glue.h plugin-runner-glue.h \
 	thumbnailer-marshal.c thumbnailer-marshal.h
 configdir = $(datadir)/hildon-thumbnail
 config_DATA = manager.xml thumbnailer.xml

@@ -1,5 +1,19 @@
 2008-09-04  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugin-runner.c
+	* daemon/plugin-runner.xml
+	* daemon/Makefile.am: Added a tool to run a GModule plugin as a
+	standalone specialized thumbnailer.
+
+	Sample usage:
+
+	libexec/hildon-thumbnailerd &
+	libexec/hildon-thumbnailer-run-plugin-as-standalone gdkpixbuf
+
+	To run the libhildon-thumbnailer-gdkpixbuf.so module as standalone
+
+2008-09-04  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/hildon-thumbnail-daemon.c
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/default.c

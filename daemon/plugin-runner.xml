@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/">
+  <interface name="org.freedesktop.Thumbnailer">  
+    <method name="Create">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+      <arg type="as" name="uris" direction="in" />
+    </method>
+  </interface>
+</node>
