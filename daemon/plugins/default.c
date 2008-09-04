@@ -142,9 +142,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		file = g_file_new_for_uri (uri);
 
-		info = g_file_query_info (file,
-					  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
-					  G_FILE_ATTRIBUTE_TIME_MODIFIED,
+		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
 					  G_FILE_QUERY_INFO_NONE,
 					  NULL, &nerror);
 
