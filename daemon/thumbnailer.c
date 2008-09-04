@@ -36,6 +36,7 @@
 #include "thumbnailer-glue.h"
 #include "hildon-thumbnail-plugin.h"
 #include "dbus-utils.h"
+#include "utils.h"
 
 #define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
 
@@ -96,42 +97,31 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 static void
 get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, GError **error)
 {
-	const gchar *content_type, *tp;
-	GFileInfo *info, *thumb_info = NULL;
+	const gchar *content_type;
+	GFileInfo *info;
 	GFile *file;
+	gchar *normal = NULL, *large = NULL;
 
 	*mime_type = NULL;
 	*has_thumb = FALSE;
 
 	file = g_file_new_for_uri (uri);
 	info = g_file_query_info (file,
-				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
-				  G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
+				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
 				  G_FILE_QUERY_INFO_NONE,
 				  NULL, error);
 
-	if (info)
-		thumb_info = g_object_ref (info);
-
-/*	thumb_info = g_file_query_info (file,
-					 G_FILE_ATTRIBUTE_THUMBNAIL_PATH,
-					 G_FILE_QUERY_INFO_NONE,
-					 NULL, NULL);
-*/
 	if (info) {
 		content_type = g_file_info_get_content_type (info);
 		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
 		g_object_unref (info);
 	}
 
-	if (thumb_info) {
-		tp	     = g_file_info_get_attribute_byte_string (info, 
-					G_FILE_ATTRIBUTE_THUMBNAIL_PATH);
-		*has_thumb = tp?g_file_test (tp, G_FILE_TEST_EXISTS):FALSE;
-		// g_print ("T: %s\n", tp);
-		g_object_unref (thumb_info);
-	}
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, error);
+	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && g_file_test (normal, G_FILE_TEST_EXISTS));
 
+	g_free (normal);
+	g_free (large);
 
 	g_object_unref (file);
 }

@@ -1,12 +1,17 @@
-SUBDIRS = plugins
+SUBDIRS = . plugins
 
 INCLUDES = \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) \
+        $(GDK_PIXBUF_CFLAGS) \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
+
+noinst_LTLIBRARIES = libshared.la
+
+libshared_la_SOURCES = md5.c md5.h utils.h utils.c pixbuf-io-loader.c
 
 libexec_PROGRAMS = hildon-thumbnailerd
 
@@ -33,6 +38,7 @@ hildon_thumbnailerd_SOURCES = \
 	dbus-utils.c
 
 hildon_thumbnailerd_LDADD = \
+	$(top_builddir)/daemon/libshared.la \
 	$(DBUS_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \

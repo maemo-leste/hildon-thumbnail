@@ -1,18 +1,30 @@
 2008-09-04  Philip Van Hoof  <philip@codeminded.be>
 
-	tests/daemon.xml
-	tests/daemon.c
-	daemon/thumbnailer.h
-	daemon/manager.h
-	daemon/manager.xml
-	daemon/thumbnailer.xml: Changed spec
+	* daemon/pixbuf-io-loader.c
+	* daemon/plugins/default.c
+	* daemon/plugins/Makefile.am
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/thumbnailer.c
+	* daemon/md5.c
+	* daemon/Makefile.am
+	* daemon/md5.h: Making our very first thumbnails!
+
+2008-09-04  Philip Van Hoof  <philip@codeminded.be>
+
+	* tests/daemon.xml
+	* tests/daemon.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml: Changed spec
 
 2008-09-03  Philip Van Hoof  <philip@codeminded.be>
 
-	tests/daemon.xml
-	tests/daemon.c
-	tests/Makefile.am
-	configure.ac: Made a little external plugin test
+	* tests/daemon.xml
+	* tests/daemon.c
+	* tests/Makefile.am
+	* configure.ac: Made a little external plugin test
 
 2008-09-03  Philip Van Hoof  <philip@codeminded.be>
 
