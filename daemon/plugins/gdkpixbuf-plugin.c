@@ -47,7 +47,6 @@ static gchar **supported = NULL;
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
-
 	if (!supported) {
 		GSList *formats = gdk_pixbuf_get_formats (), *copy;
 		GPtrArray *types_support = g_ptr_array_new ();
@@ -76,8 +75,6 @@ hildon_thumbnail_plugin_supported (void)
 #define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
 #define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
 #define SOFTWARE_OPTION "tEXt::Software"
-#define META_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "Meta"
-
 
 static gboolean 
 save_thumb_file_meta (GdkPixbuf *pixbuf, gchar *file, guint64 mtime, const gchar *uri, GError **error)
