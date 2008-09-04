@@ -217,6 +217,7 @@ hildon_thumbnail_plugin_stop (void)
 {
 	if (supported)
 		g_strfreev (supported);
+	supported = NULL;
 }
 
 
