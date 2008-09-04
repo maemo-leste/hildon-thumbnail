@@ -35,7 +35,7 @@
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
 
 
-#define DEFAULT_ERROR_DOMAIN	"HildonThumbnailerDefault"
+#define DEFAULT_ERROR_DOMAIN	"HildonThumbnailerGdkPixbuf"
 #define DEFAULT_ERROR		g_quark_from_static_string (DEFAULT_ERROR_DOMAIN)
 
 #include "utils.h"
