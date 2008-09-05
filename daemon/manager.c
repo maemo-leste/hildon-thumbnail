@@ -72,10 +72,20 @@ manager_add (Manager *object, gchar *mime_type, gchar *name)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
+	gchar *path = g_strdup_printf ("/%s", name);
+	guint len = strlen (path);
+	guint i;
+
+	for (i = 0; i< len; i++) {
+		if (path[i] == '.')
+			path[i] = '/';
+	}
 
 	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, name, 
-						THUMBNAILER_PATH,
-						THUMBNAILER_INTERFACE);
+						path,
+						name);
+
+	g_free (path);
 
 	g_hash_table_replace (priv->handlers, 
 			      g_strdup (mime_type),
@@ -411,7 +421,7 @@ manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
 			       "connection", connection,
 			       NULL);
 
-	manager_check (object);
+	manager_check (MANAGER (object));
 
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_manager_object_info);

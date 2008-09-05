@@ -22,6 +22,7 @@
  *
  */
 
+#include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -250,6 +251,15 @@ static GOptionEntry entries_daemon[] = {
 	{ NULL }
 };
 
+DBusGObjectInfo custom_info = {
+  0,
+  dbus_glib_plugin_runner_methods,
+  1,
+"org.freedesktop.Thumbnailer\0Create\0A\0uris\0I\0as\0\0\0",
+"\0",
+"\0"
+};
+
 int 
 main (int argc, char **argv) 
 {
@@ -262,6 +272,8 @@ main (int argc, char **argv)
 	GMainLoop *main_loop;
 	GObject *object;
 	GModule *module;
+	gchar str[4000];
+	guint len;
 
 	g_type_init ();
 
@@ -308,8 +320,15 @@ main (int argc, char **argv)
 
 	daemon_start (DAEMON (object), dynamic_register);
 
+	len = strlen (bus_name);
+	memcpy (str, bus_name, len);
+	memcpy (str+len, "\0Create\0A\0uris\0I\0as\0\0\0", 30); 
+
+	custom_info.data = str;
+
+
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
-					 &dbus_glib_plugin_runner_object_info);
+					 &custom_info);
 
 	dbus_g_connection_register_g_object (connection, 
 					     bus_path, 
