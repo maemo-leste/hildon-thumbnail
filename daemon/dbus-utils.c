@@ -4,7 +4,7 @@
  * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
  *
  * Contact: Marius Vollmer <marius.vollmer@nokia.com>
- * Author: Philip Van Hoof <philip@codeminded.be>
+ * Author: Philip Van Hoof <pvanhoof@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
