@@ -246,7 +246,7 @@ main (int argc, char **argv)
 		g_thread_init (NULL);
 
 	if (argc < 2) {
-		g_print ("Usage: %s MODULE [yes|no]\n - yes/no is for 'do a dynamic register'", argv[0]);
+		g_print ("Usage: %s MODULE [dynamic]\nThe [dynamic] option stands for 'do a dynamic register \nusing a org.freedesktop.Thumbnailer.Manager.Register()'\n", argv[0]);
 		return 0;
 	}
 
