@@ -1,0 +1,17 @@
+Put a file like this in 
+
+/usr/share/dbus-1/services :
+
+[D-BUS Service]
+Name=com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer
+Exec=/opt/thumbnailer/libexec/hildon-thumbnailer-plugin-runner -m gdkpixbuf -b com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer -p /com/nokia/hildon/thumbnail/pluginrunner/Thumbnailer
+
+And a file like this in 
+
+/usr/share/thumbnailers/com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer.service :
+
+[D-BUS Thumbnailer]
+Name=com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer
+mimetypes=image/png;image/jpeg
+comment=free comment
+

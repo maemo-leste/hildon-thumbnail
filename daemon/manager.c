@@ -190,7 +190,8 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 	g_hash_table_iter_init (&iter, pre);
 
 	while (g_hash_table_iter_next (&iter, &pkey, &pvalue))  {
-		gchar *k = pkey, *v = pvalue;
+		gchar *k = pkey;
+		ValueInfo *v = pvalue;
 		gchar *oname = NULL;
 
 		if (!override) {
@@ -199,8 +200,8 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 				oname = (gchar *) dbus_g_proxy_get_bus_name (proxy);
 		}
 
-		if (!oname || g_ascii_strcasecmp (v, oname) != 0)
-			manager_add (object, k, v);
+		if (!oname || g_ascii_strcasecmp (v->name, oname) != 0)
+			manager_add (object, k, v->name);
 	}
 
 	g_hash_table_unref (pre);
@@ -409,6 +410,8 @@ manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
 	object = g_object_new (TYPE_MANAGER, 
 			       "connection", connection,
 			       NULL);
+
+	manager_check (object);
 
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_manager_object_info);

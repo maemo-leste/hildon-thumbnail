@@ -1,5 +1,12 @@
 2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* daemon/plugin-runner.c
+	* daemon/manager.c
+	* daemon/README.plugin-runner
+	* daemon/Makefile.am: Making the pluginrunner work again
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/thumbnailer.c
 	* daemon/manager.c

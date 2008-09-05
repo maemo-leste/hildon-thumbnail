@@ -28,9 +28,6 @@
 
 #include "hildon-thumbnail-plugin.h"
 
-#define DAEMON_SERVICE      "org.freedesktop.Thumbnailer"
-#define DAEMON_PATH         "/org/freedesktop/Thumbnailer"
-#define DAEMON_INTERFACE    "org.freedesktop.Thumbnailer"
 
 #define MANAGER_SERVICE      "org.freedesktop.Thumbnailer"
 #define MANAGER_PATH         "/org/freedesktop/Thumbnailer/Manager"
@@ -228,10 +225,36 @@ daemon_start (Daemon *object, gboolean do_register)
 	g_object_unref (manager_proxy);
 }
 
+static gchar *module_name;
+static gboolean dynamic_register = FALSE;
+static gchar *bus_name;
+static gchar *bus_path;
+
+static GOptionEntry entries_daemon[] = {
+	{ "module-name", 'm', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_OPTIONAL_ARG, 
+	  G_OPTION_ARG_STRING, &module_name, 
+	  "Module to load (eg. gdkpixbuif) ", 
+	  NULL },
+	{ "bus-name", 'b', 0, 
+	  G_OPTION_ARG_STRING, &bus_name, 
+	  "Busname to use (eg. com.company.Thumbnailer) ", 
+	  NULL },
+	{ "bus-path", 'p', 0, 
+	  G_OPTION_ARG_STRING, &bus_path, 
+	  "Buspath to use (eg. /com/company/Thumbnailer) ", 
+	  NULL },
+	{ "dynamic-register", 'd', 0, 
+	  G_OPTION_ARG_NONE, &dynamic_register, 
+	  "Dynamic registration using org.freedesktop.Thumbnailer.Manager", 
+	  NULL },
+	{ NULL }
+};
 
 int 
 main (int argc, char **argv) 
 {
+	GOptionContext *context = NULL;
+	GOptionGroup *group;
 	DBusGConnection *connection;
 	DBusGProxy *proxy;
 	GError *error = NULL;
@@ -245,12 +268,27 @@ main (int argc, char **argv)
 	if (!g_thread_supported ())
 		g_thread_init (NULL);
 
-	if (argc < 2) {
-		g_print ("Usage: %s MODULE [dynamic]\nThe [dynamic] option stands for 'do a dynamic register \nusing a org.freedesktop.Thumbnailer.Manager.Register()'\n", argv[0]);
-		return 0;
+	context = g_option_context_new ("- start a plugin as a standalone daemon");
+
+	/* Daemon group */
+	group = g_option_group_new ("daemon", 
+				    "Daemon Options",
+				    "Show daemon options", 
+				    NULL, 
+				    NULL);
+	g_option_group_add_entries (group, entries_daemon);
+	g_option_context_add_group (context, group);
+
+	g_option_context_parse (context, &argc, &argv, &error);
+	g_option_context_free (context);
+
+	if (error) {
+		g_printerr ("Invalid arguments, %s\n", error->message);
+		g_error_free (error);
+		return -1;
 	}
 
-	module = hildon_thumbnail_plugin_load (argv[1]);
+	module = hildon_thumbnail_plugin_load (module_name);
 
 	connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
 
@@ -259,7 +297,7 @@ main (int argc, char **argv)
 					   DBUS_PATH_DBUS,
 					   DBUS_INTERFACE_DBUS);
 
-	org_freedesktop_DBus_request_name (proxy, DAEMON_SERVICE,
+	org_freedesktop_DBus_request_name (proxy, bus_name,
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, &error);
 
@@ -268,13 +306,13 @@ main (int argc, char **argv)
 			       "module", module,
 			       NULL);
 
-	daemon_start (DAEMON (object), argc > 2);
+	daemon_start (DAEMON (object), dynamic_register);
 
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_plugin_runner_object_info);
 
 	dbus_g_connection_register_g_object (connection, 
-					     DAEMON_PATH, 
+					     bus_path, 
 					     object);
 
 
