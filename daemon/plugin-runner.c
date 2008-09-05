@@ -1,3 +1,27 @@
+/*
+ * This file is part of hildon-thumbnail package
+ *
+ * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
+ *
+ * Contact: Marius Vollmer <marius.vollmer@nokia.com>
+ * Author: Philip Van Hoof <philip@codeminded.be>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *
+ */
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -51,9 +75,10 @@ daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GError *error = NULL;
 	hildon_thumbnail_plugin_do_create (priv->module, uris, &error);
-	if (error)
+	if (error) {
 		dbus_g_method_return_error (context, error);
-	else
+		g_error_free (error);
+	} else
 		dbus_g_method_return (context);
 }
 
@@ -158,59 +183,47 @@ daemon_init (Daemon *object)
 {
 }
 
-// these two are a little hack that will be fixed when that silly manager thing
-// is better specified
-
-typedef struct {
-	Thumbnailer parent;
-	DBusGProxy *manager_proxy;
-} SomeInfo;
-
-void 
-thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin)
-{
-	GError *error = NULL;
-	SomeInfo *info = (SomeInfo *) object;
-	DBusGProxy *manager_proxy = info->manager_proxy;
-
-	dbus_g_proxy_call (manager_proxy, "Register",
-			   &error, G_TYPE_STRING,
-			   mime_type,
-			   G_TYPE_INVALID,
-			   G_TYPE_INVALID);
-
-	if (error) {
-		g_critical ("Failed to init: %s\n", error->message);
-		g_error_free (error);
-	}
-}
-
-void 
-thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
-{
-}
-
 static void
 daemon_start (Daemon *object)
 {
 	GError *error = NULL;
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
-	SomeInfo *info = g_slice_new (SomeInfo);
+	GModule *module = priv->module;
+	DBusGProxy *manager_proxy;
+	guint i = 0;
+	GStrv supported;
 
-	info->manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
+	manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
 							  MANAGER_SERVICE,
 							  MANAGER_PATH,
 					   		  MANAGER_INTERFACE);
 
-	hildon_thumbnail_plugin_do_init (priv->module, (Thumbnailer *) info, &error);
+	hildon_thumbnail_plugin_do_init (module, &error);
+
+	supported = hildon_thumbnail_plugin_get_supported (module);
+
+	if (supported) {
+		while (supported[i] != NULL) {
+			GError *nerror = NULL;
+			dbus_g_proxy_call (manager_proxy, "Register",
+					   &nerror, G_TYPE_STRING,
+					   supported[i],
+					   G_TYPE_INVALID,
+					   G_TYPE_INVALID);
+			if (nerror) {
+				g_critical ("Failed to init: %s\n", nerror->message);
+				g_error_free (nerror);
+			}
+			i++;
+		}
+	}
 
 	if (error) {
 		g_critical ("Failed to init: %s\n", error->message);
 		g_error_free (error);
 	}
 
-	g_object_unref (info->manager_proxy);
-	g_slice_free (SomeInfo, info);
+	g_object_unref (manager_proxy);
 }
 
 
@@ -246,7 +259,7 @@ main (int argc, char **argv)
 
 	org_freedesktop_DBus_request_name (proxy, DAEMON_SERVICE,
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
-					   &result, error);
+					   &result, &error);
 
 	object = g_object_new (TYPE_DAEMON, 
 			       "connection", connection, 

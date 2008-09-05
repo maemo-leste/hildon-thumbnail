@@ -52,35 +52,30 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 	return module;
 }
 
-typedef void (*InitFunc) (GError **error);
 typedef GStrv (*SupportedFunc) (void);
 
+GStrv
+hildon_thumbnail_plugin_get_supported (GModule *module) 
+{
+	GStrv supported = NULL;
+	SupportedFunc supported_func;
+
+	if (g_module_symbol (module, "hildon_thumbnail_plugin_supported", (gpointer *) &supported_func)) {
+		supported = (supported_func) ();
+	}
+
+	return supported;
+}
+
+typedef void (*InitFunc) (GError **error);
+
 void
-hildon_thumbnail_plugin_do_init (GModule *module, Thumbnailer *thumbnailer, GError **error)
+hildon_thumbnail_plugin_do_init (GModule *module, GError **error)
 {
 	InitFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
-		GStrv supported = NULL;
-		SupportedFunc supported_func;
-
-		if (g_module_symbol (module, "hildon_thumbnail_plugin_supported", (gpointer *) &supported_func)) {
-			guint i = 0;
-
-			supported = (supported_func) ();
-
-			if (supported) {
-				while (supported[i] != NULL) {
-
-					thumbnailer_register_plugin (thumbnailer, 
-								     supported[i], 
-								     module);
-					i++;
-				}
-			}
-
-			(func) (error);
-		}
+		(func) (error);
 	}
 }
 
@@ -98,12 +93,11 @@ hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, GError **error)
 typedef void (*StopFunc) (void);
 
 void
-hildon_thumbnail_plugin_do_stop (GModule *module, Thumbnailer *thumbnailer)
+hildon_thumbnail_plugin_do_stop (GModule *module)
 {
 	StopFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_stop", (gpointer *) &func)) {
-		thumbnailer_unregister_plugin (thumbnailer, module);
 		(func) ();
 	}
 }

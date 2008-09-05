@@ -1,3 +1,20 @@
+2008-09-05  Philip Van Hoof  <philip@codeminded.be>
+
+	daemon/plugins/gdkpixbuf-plugin.c
+	daemon/plugins/pixbuf-io-loader.c
+	daemon/plugins/Makefile.am
+	daemon/utils.h
+	daemon/pixbuf-io-loader.c
+	daemon/Makefile.am: Moving things around
+
+2008-09-05  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Removed dependency on
+	thumbnailer.h in hildon-thumbnail-plugin.h
+
 2008-09-04  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugin-runner.c

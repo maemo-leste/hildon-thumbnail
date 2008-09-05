@@ -10,7 +10,7 @@ INCLUDES = -I. -I$(top_srcdir)/daemon \
 
 plugins_LTLIBRARIES = libhildon-thumbnailer-gdkpixbuf.la
 
-libhildon_thumbnailer_gdkpixbuf_la_SOURCES = gdkpixbuf-plugin.c gdkpixbuf-plugin.h
+libhildon_thumbnailer_gdkpixbuf_la_SOURCES = gdkpixbuf-plugin.c gdkpixbuf-plugin.h pixbuf-io-loader.c
 libhildon_thumbnailer_gdkpixbuf_la_LDFLAGS = $(plugin_flags)
 libhildon_thumbnailer_gdkpixbuf_la_LIBADD = \
 	$(PGK_LIBS) \

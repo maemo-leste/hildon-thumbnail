@@ -5,16 +5,15 @@ INCLUDES = \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) \
-        $(GDK_PIXBUF_CFLAGS) \
 	$(DBUS_CFLAGS) \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
 
 noinst_LTLIBRARIES = libshared.la
 
-libshared_la_SOURCES = md5.c md5.h utils.h utils.c pixbuf-io-loader.c
+libshared_la_SOURCES = md5.c md5.h utils.h utils.c
 
-libexec_PROGRAMS = hildon-thumbnailerd hildon-thumbnailer-run-plugin-as-standalone
+libexec_PROGRAMS = hildon-thumbnailerd hildon-thumbnailer-plugin-runner
 
 plugin_stuff = hildon-thumbnail-plugin.h hildon-thumbnail-plugin.c
 
@@ -24,12 +23,12 @@ thumbnailer-marshal.h: thumbnailer-marshal.list
 thumbnailer-marshal.c: thumbnailer-marshal.list
 	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --body > $@
 
-hildon_thumbnailer_run_plugin_as_standalone_SOURCES = \
+hildon_thumbnailer_plugin_runner_SOURCES = \
 	plugin-runner.c \
 	$(plugin_stuff) \
 	plugin-runner-glue.h
 
-hildon_thumbnailer_run_plugin_as_standalone_LDADD = \
+hildon_thumbnailer_plugin_runner_LDADD = \
         $(DBUS_LIBS) $(GLIB_LIBS) $(GMODULE_LIBS) $(GIO_LIBS)
 
 hildon_thumbnailerd_SOURCES = \

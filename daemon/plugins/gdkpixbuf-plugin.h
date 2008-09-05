@@ -1,5 +1,5 @@
-#ifndef __DEFAULT_H__
-#define __DEFAULT_H__
+#ifndef __GDKPIXBUF_PLUGIN_H__
+#define __GDKPIXBUF_PLUGIN_H__
 
 /*
  * This file is part of hildon-thumbnail package

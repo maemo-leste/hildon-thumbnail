@@ -53,6 +53,8 @@ main (int argc, char **argv)
 		Manager *manager;
 		Thumbnailer *thumbnailer;
 		DBusGProxy *manager_proxy;
+		GStrv supported;
+		guint i = 0;
 
 		/* TODO: dynamically load plugins, and detect when new ones get
 		 * dropped, and removed ones get removed (and therefore must
@@ -69,13 +71,23 @@ main (int argc, char **argv)
 					   MANAGER_INTERFACE);
 
 		hildon_thumbnail_plugin_do_init (module, 
-						 thumbnailer,
 						 &error);
+
+		supported = hildon_thumbnail_plugin_get_supported (module);
+		if (supported) {
+			while (supported[i] != NULL) {
+				thumbnailer_register_plugin (thumbnailer, 
+							     supported[i], 
+							     module);
+				i++;
+			}
+		}
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (main_loop);
 
-		hildon_thumbnail_plugin_do_stop (module, thumbnailer);
+		thumbnailer_unregister_plugin (thumbnailer, module);
+		hildon_thumbnail_plugin_do_stop (module);
 
 		manager_do_stop ();
 		thumbnailer_do_stop ();
