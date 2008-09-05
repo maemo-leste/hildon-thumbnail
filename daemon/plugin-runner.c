@@ -318,8 +318,6 @@ main (int argc, char **argv)
 			       "module", module,
 			       NULL);
 
-	daemon_start (DAEMON (object), dynamic_register);
-
 	len = strlen (bus_name);
 	memcpy (str, bus_name, len);
 	memcpy (str+len, "\0Create\0A\0uris\0I\0as\0\0\0", 30); 
@@ -334,6 +332,8 @@ main (int argc, char **argv)
 					     bus_path, 
 					     object);
 
+
+	daemon_start (DAEMON (object), dynamic_register);
 
 	main_loop = g_main_loop_new (NULL, FALSE);
 	g_main_loop_run (main_loop);
