@@ -242,12 +242,17 @@ service_gone (DBusGProxy *proxy,
 
 	g_mutex_lock (priv->mutex);
 
+	/* This only happens for not-activable ones */
+
 	g_hash_table_foreach_remove (priv->handlers, 
 				     do_remove_or_not,
 				     proxy);
 
 	g_mutex_unlock (priv->mutex);
 }
+
+/* This is a custom spec addition, for dynamic registration of thumbnailers.
+ * Consult manager.xml for more information about this custom spec addition. */
 
 void
 manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *context)
@@ -280,6 +285,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	manager_add (object, mime_type, sender);
 
 	g_free (sender);
+
+	/* This is not necessary for activatable ones */
 
 	g_signal_connect (mime_proxy, "destroy",
 			  G_CALLBACK (service_gone),

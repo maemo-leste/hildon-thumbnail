@@ -184,7 +184,7 @@ daemon_init (Daemon *object)
 }
 
 static void
-daemon_start (Daemon *object)
+daemon_start (Daemon *object, gboolean do_register)
 {
 	GError *error = NULL;
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
@@ -200,21 +200,23 @@ daemon_start (Daemon *object)
 
 	hildon_thumbnail_plugin_do_init (module, &error);
 
-	supported = hildon_thumbnail_plugin_get_supported (module);
+	if (!error && do_register) {
+		supported = hildon_thumbnail_plugin_get_supported (module);
 
-	if (supported) {
-		while (supported[i] != NULL) {
-			GError *nerror = NULL;
-			dbus_g_proxy_call (manager_proxy, "Register",
-					   &nerror, G_TYPE_STRING,
-					   supported[i],
-					   G_TYPE_INVALID,
-					   G_TYPE_INVALID);
-			if (nerror) {
-				g_critical ("Failed to init: %s\n", nerror->message);
-				g_error_free (nerror);
+		if (supported) {
+			while (supported[i] != NULL) {
+				GError *nerror = NULL;
+				dbus_g_proxy_call (manager_proxy, "Register",
+						   &nerror, G_TYPE_STRING,
+						   supported[i],
+						   G_TYPE_INVALID,
+						   G_TYPE_INVALID);
+				if (nerror) {
+					g_critical ("Failed to init: %s\n", nerror->message);
+					g_error_free (nerror);
+				}
+				i++;
 			}
-			i++;
 		}
 	}
 
@@ -243,8 +245,8 @@ main (int argc, char **argv)
 	if (!g_thread_supported ())
 		g_thread_init (NULL);
 
-	if (argc != 2) {
-		g_print ("Usage: %s MODULE\n", argv[0]);
+	if (argc < 2) {
+		g_print ("Usage: %s MODULE [yes|no]\n - yes/no is for 'do a dynamic register'", argv[0]);
 		return 0;
 	}
 
@@ -266,7 +268,7 @@ main (int argc, char **argv)
 			       "module", module,
 			       NULL);
 
-	daemon_start (DAEMON (object));
+	daemon_start (DAEMON (object), argc > 2);
 
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_plugin_runner_object_info);
