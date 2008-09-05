@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <glib.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 
 #include "manager.h"
@@ -63,6 +64,165 @@ manager_get_handler (Manager *object, const gchar *mime_type)
 	g_mutex_unlock (priv->mutex);
 
 	return proxy;
+}
+
+
+static void
+manager_add (Manager *object, gchar *mime_type, gchar *name)
+{
+	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	DBusGProxy *mime_proxy;
+
+	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, name, 
+						THUMBNAILER_PATH,
+						THUMBNAILER_INTERFACE);
+
+	g_hash_table_replace (priv->handlers, 
+			      g_strdup (mime_type),
+			      g_object_ref (mime_proxy));
+
+}
+
+typedef struct {
+	gchar *name;
+	guint64 mtime;
+} ValueInfo;
+
+static void
+free_valueinfo (ValueInfo *info) {
+	g_slice_free (ValueInfo, info);
+}
+
+void
+manager_check_dir (Manager *object, gchar *path, gboolean override)
+{
+	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	const gchar *filen;
+	GDir *dir;
+	GHashTableIter iter;
+	GHashTable *pre;
+	gpointer pkey, pvalue;
+
+	dir = g_dir_open (path, 0, NULL);
+
+	if (!dir)
+		return;
+
+	pre = g_hash_table_new_full (g_str_hash, g_str_equal,
+				     (GDestroyNotify) g_free, 
+				     (GDestroyNotify) free_valueinfo);
+
+	for (filen = g_dir_read_name (dir); filen; filen = g_dir_read_name (dir)) {
+		GKeyFile *keyfile;
+		gchar *fullfilen = g_build_filename (path, filen, NULL);
+		gchar *value;
+		GStrv values;
+		GError *error = NULL;
+		guint i = 0;
+		guint64 mtime;
+		GFileInfo *info;
+		GFile *file;
+
+		keyfile = g_key_file_new ();
+
+		if (!g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
+			g_free (fullfilen);
+			continue;
+		}
+
+		value = g_key_file_get_string (keyfile, "D-BUS Thumbnailer", "Name", NULL);
+
+		if (!value) 
+			continue;
+
+		values = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "mimetypes", NULL, NULL);
+
+		if (!values)
+			continue;
+
+		file = g_file_new_for_path (fullfilen);
+
+		g_free (fullfilen);
+
+		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+					  G_FILE_QUERY_INFO_NONE,
+					  NULL, &error);
+
+		if (error) {
+			g_free (value);
+			g_strfreev (values);
+			g_key_file_free (keyfile);
+			continue;
+		}
+
+		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+
+		while (values[i] != NULL) {
+			ValueInfo *info;
+
+			info = g_hash_table_lookup (pre, values[i]);
+
+			if (!info || info->mtime < mtime) {
+				info = g_slice_new (ValueInfo);
+				info->name = g_strdup (value);
+				info->mtime = mtime;
+
+				g_hash_table_replace (pre, 
+						      g_strdup (values[i]), 
+						      info);
+			}
+
+			i++;
+		}
+
+		if (info)
+			g_object_unref (info);
+		if (file)
+			g_object_unref (file);
+
+		g_free (value);
+		g_strfreev (values);
+		g_key_file_free (keyfile);
+	}
+
+	g_dir_close (dir);
+
+	g_hash_table_iter_init (&iter, pre);
+
+	while (g_hash_table_iter_next (&iter, &pkey, &pvalue))  {
+		gchar *k = pkey, *v = pvalue;
+		gchar *oname = NULL;
+
+		if (!override) {
+			DBusGProxy *proxy = g_hash_table_lookup (priv->handlers, k);
+			if (proxy)
+				oname = (gchar *) dbus_g_proxy_get_bus_name (proxy);
+		}
+
+		if (!oname || g_ascii_strcasecmp (v, oname) != 0)
+			manager_add (object, k, v);
+	}
+
+	g_hash_table_unref (pre);
+}
+
+void
+manager_check (Manager *object)
+{
+	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+
+	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
+		"thumbnailers", NULL);
+
+	g_mutex_lock (priv->mutex);
+
+	manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
+	manager_check_dir (object, home_thumbnlrs, TRUE);
+
+	g_mutex_unlock (priv->mutex);
+
+	g_free (home_thumbnlrs);
+
 }
 
 
@@ -117,13 +277,7 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 
 	sender = dbus_g_method_get_sender (context);
 
-	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, sender, 
-						THUMBNAILER_PATH,
-						THUMBNAILER_INTERFACE);
-
-	g_hash_table_insert (priv->handlers, 
-			     g_strdup (mime_type),
-			     g_object_ref (mime_proxy));
+	manager_add (object, mime_type, sender);
 
 	g_free (sender);
 
@@ -135,6 +289,7 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 
 	dbus_g_method_return (context);
 }
+
 
 static void
 manager_finalize (GObject *object)

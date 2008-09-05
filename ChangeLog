@@ -1,11 +1,20 @@
 2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
 
-	daemon/plugins/gdkpixbuf-plugin.c
-	daemon/plugins/pixbuf-io-loader.c
-	daemon/plugins/Makefile.am
-	daemon/utils.h
-	daemon/pixbuf-io-loader.c
-	daemon/Makefile.am: Moving things around
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/manager.h
+	* daemon/Makefile.am: Spec change, added registrations using service 
+	files in the thumbnailer directories
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c
+	* daemon/plugins/Makefile.am
+	* daemon/utils.h
+	* daemon/pixbuf-io-loader.c
+	* daemon/Makefile.am: Moving things around
 
 2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
 
