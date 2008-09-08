@@ -66,7 +66,6 @@ manager_get_handler (Manager *object, const gchar *mime_type)
 	return proxy;
 }
 
-
 static void
 manager_add (Manager *object, gchar *mime_type, gchar *name)
 {
@@ -83,7 +82,7 @@ manager_add (Manager *object, gchar *mime_type, gchar *name)
 
 	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, name, 
 						path,
-						name);
+						SPECIALIZED_INTERFACE);
 
 	g_free (path);
 

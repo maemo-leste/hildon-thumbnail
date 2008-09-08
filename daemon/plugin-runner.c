@@ -29,10 +29,9 @@
 
 #include "hildon-thumbnail-plugin.h"
 
-
-#define MANAGER_SERVICE      "org.freedesktop.Thumbnailer"
-#define MANAGER_PATH         "/org/freedesktop/Thumbnailer/Manager"
-#define MANAGER_INTERFACE    "org.freedesktop.Thumbnailer.Manager"
+#define MANAGER_SERVICE        "org.freedesktop.thumbnailer"
+#define MANAGER_PATH           "/org/freedesktop/thumbnailer/Manager"
+#define MANAGER_INTERFACE      "org.freedesktop.thumbnailer.Manager"
 
 #define TYPE_DAEMON             (daemon_get_type())
 #define DAEMON(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_DAEMON, Daemon))
@@ -187,18 +186,18 @@ daemon_start (Daemon *object, gboolean do_register)
 	GError *error = NULL;
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GModule *module = priv->module;
-	DBusGProxy *manager_proxy;
-	guint i = 0;
-	GStrv supported;
-
-	manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
-							  MANAGER_SERVICE,
-							  MANAGER_PATH,
-					   		  MANAGER_INTERFACE);
 
 	hildon_thumbnail_plugin_do_init (module, &error);
 
 	if (!error && do_register) {
+		DBusGProxy *manager_proxy;
+		GStrv supported;
+		guint i = 0;
+		manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
+							   MANAGER_SERVICE,
+							   MANAGER_PATH,
+							   MANAGER_INTERFACE);
+
 		supported = hildon_thumbnail_plugin_get_supported (module);
 
 		if (supported) {
@@ -216,6 +215,7 @@ daemon_start (Daemon *object, gboolean do_register)
 				i++;
 			}
 		}
+		g_object_unref (manager_proxy);
 	}
 
 	if (error) {
@@ -223,7 +223,6 @@ daemon_start (Daemon *object, gboolean do_register)
 		g_error_free (error);
 	}
 
-	g_object_unref (manager_proxy);
 }
 
 static gchar *module_name;
@@ -251,15 +250,6 @@ static GOptionEntry entries_daemon[] = {
 	{ NULL }
 };
 
-DBusGObjectInfo custom_info = {
-  0,
-  dbus_glib_plugin_runner_methods,
-  1,
-"org.freedesktop.Thumbnailer\0Create\0A\0uris\0I\0as\0\0\0",
-"\0",
-"\0"
-};
-
 int 
 main (int argc, char **argv) 
 {
@@ -272,8 +262,6 @@ main (int argc, char **argv)
 	GMainLoop *main_loop;
 	GObject *object;
 	GModule *module;
-	gchar str[4000];
-	guint len;
 
 	g_type_init ();
 
@@ -318,20 +306,12 @@ main (int argc, char **argv)
 			       "module", module,
 			       NULL);
 
-	len = strlen (bus_name);
-	memcpy (str, bus_name, len);
-	memcpy (str+len, "\0Create\0A\0uris\0I\0as\0\0\0", 30); 
-
-	custom_info.data = str;
-
-
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
-					 &custom_info);
+					 &dbus_glib_plugin_runner_object_info);
 
 	dbus_g_connection_register_g_object (connection, 
 					     bus_path, 
 					     object);
-
 
 	daemon_start (DAEMON (object), dynamic_register);
 

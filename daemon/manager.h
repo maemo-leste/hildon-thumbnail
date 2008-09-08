@@ -25,9 +25,9 @@
  *
  */
 
-#define MANAGER_SERVICE      "org.freedesktop.Thumbnailer"
-#define MANAGER_PATH         "/org/freedesktop/Thumbnailer/Manager"
-#define MANAGER_INTERFACE    "org.freedesktop.Thumbnailer.Manager"
+#define MANAGER_SERVICE      "org.freedesktop.thumbnailer"
+#define MANAGER_PATH         "/org/freedesktop/thumbnailer/Manager"
+#define MANAGER_INTERFACE    "org.freedesktop.thumbnailer.Manager"
 
 #define TYPE_MANAGER             (manager_get_type())
 #define MANAGER(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_MANAGER, Manager))

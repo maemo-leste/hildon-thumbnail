@@ -1,3 +1,14 @@
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugin-runner.c
+	* daemon/manager.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/plugin-runner.xml
+	* daemon/thumbnailer.xml
+	* daemon/manager.xml: Changed specification to have more sane
+	namespace names
+
 2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/plugin-runner.c
