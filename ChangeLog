@@ -1,5 +1,18 @@
 2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Making it possible to disable
+	cropping by configuration in $HOME/.config/hildon-thumbnailer/
+	gdkpixbuf-plugin.config:
+
+	[Hildon Thumbnailer]
+	doCropped=false
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/pixbuf-io-loader.c
 	* daemon/utils.c

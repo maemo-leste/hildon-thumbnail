@@ -52,6 +52,7 @@ struct DaemonClass {
 typedef struct {
 	DBusGConnection *connection;
 	GModule *module;
+	gboolean cropping;
 } DaemonPrivate;
 
 enum {
@@ -187,7 +188,7 @@ daemon_start (Daemon *object, gboolean do_register)
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GModule *module = priv->module;
 
-	hildon_thumbnail_plugin_do_init (module, &error);
+	hildon_thumbnail_plugin_do_init (module, &priv->cropping, &error);
 
 	if (!error && do_register) {
 		DBusGProxy *manager_proxy;

@@ -57,6 +57,7 @@ GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
 #endif 
 
 static gchar **supported = NULL;
+static gboolean do_cropped = TRUE;
 
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
@@ -218,11 +219,29 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		GdkPixbuf *pixbuf_normal;
 		GdkPixbuf *pixbuf, *pixbuf_cropped;
 		guint64 mtime;
-		gchar *large = NULL, *normal = NULL, *cropped = NULL;
+		gchar *large = NULL, 
+		      *normal = NULL, 
+		      *cropped = NULL;
+		gboolean just_crop;
 
 		//g_print ("%s\n", uri);
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, &nerror);
+
+
+		if (nerror)
+			goto nerror_handler;
+
+		just_crop = (g_file_test (large, G_FILE_TEST_EXISTS) && 
+			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
+			     !g_file_test (cropped, G_FILE_TEST_EXISTS));
+
+		if (just_crop && !do_cropped) {
+			g_free (cropped);
+			g_free (normal);
+			g_free (large);
+			continue;
+		}
 
 		//g_print ("L %s\n", large);
 		//g_print ("N %s\n", normal);
@@ -348,8 +367,21 @@ hildon_thumbnail_plugin_stop (void)
 	supported = NULL;
 }
 
-
 void 
-hildon_thumbnail_plugin_init (GError **error)
+hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 {
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-plugin.conf", NULL);
+	GKeyFile *keyfile;
+
+	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		g_free (config);
+		do_cropped = TRUE;
+		*cropping = do_cropped;
+		return;
+	}
+
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "doCropped", NULL);
+	*cropping = do_cropped;
+	g_free (config);
+	g_key_file_free (keyfile);
 }

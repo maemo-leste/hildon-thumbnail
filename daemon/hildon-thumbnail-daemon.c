@@ -55,6 +55,7 @@ main (int argc, char **argv)
 		DBusGProxy *manager_proxy;
 		GStrv supported;
 		guint i = 0;
+		gboolean cropping;
 
 		/* TODO: dynamically load plugins, and detect when new ones get
 		 * dropped, and removed ones get removed (and therefore must
@@ -70,7 +71,7 @@ main (int argc, char **argv)
 					   MANAGER_PATH,
 					   MANAGER_INTERFACE);
 
-		hildon_thumbnail_plugin_do_init (module, 
+		hildon_thumbnail_plugin_do_init (module, &cropping,
 						 &error);
 
 		supported = hildon_thumbnail_plugin_get_supported (module);

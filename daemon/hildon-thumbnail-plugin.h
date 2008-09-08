@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
 GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
 void        hildon_thumbnail_plugin_do_init       (GModule *module, 
+						   gboolean *cropping,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
 						   GStrv uris, 
