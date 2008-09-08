@@ -26,9 +26,6 @@
 #include "md5.h"
 #include "utils.h"
 
-#define UTILS_ERROR_DOMAIN	"HildonThumbnailerUtils"
-#define UTILS_ERROR		g_quark_from_static_string (UTILS_ERROR_DOMAIN)
-
 static void 
 md5_digest_to_ascii(guchar digest[16], gchar str[33])
 {

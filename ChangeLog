@@ -1,5 +1,25 @@
 2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/thumbs-private.h
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/thumber-gdk-pixbuf.c
+	* thumbs/md5.c
+	* thumbs/Makefile.am
+	* thumbs/hildon-thumbnail-factory.h
+	* thumbs/thumber-register.c
+	* thumbs/thumbs-common.c
+	* thumbs/md5.h
+	* thumbs/thumber-common.c
+	* configure.ac
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/Makefile.am
+	* INSTALL
+	* Makefile.am: Hollowed out the old hildon-thumbnail API, made it use
+	 the service
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/hildon-thumbnail-daemon.c
 	* daemon/plugins/gdkpixbuf-plugin.c

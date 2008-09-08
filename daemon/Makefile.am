@@ -5,7 +5,6 @@ INCLUDES = \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) \
-	$(DBUS_CFLAGS) \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 

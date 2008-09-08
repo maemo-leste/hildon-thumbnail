@@ -1,4 +1,4 @@
-SUBDIRS = thumbs daemon
+SUBDIRS = thumbs daemon doc
 
 EXTRA_DIST = debian/changelog debian/control debian/copyright debian/rules \
         debian/hildon-thumbnail.install \

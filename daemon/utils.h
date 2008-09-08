@@ -34,4 +34,8 @@ void hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gch
 gint g_sprintf (gchar *string, gchar const *format, ...);
 #endif
 
+#ifndef g_unlink
+int g_unlink (const gchar *filename);
+#endif
+
 #endif
