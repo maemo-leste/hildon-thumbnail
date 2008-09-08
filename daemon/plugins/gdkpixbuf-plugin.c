@@ -295,7 +295,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		if (nerror)
 			goto nerror_handler;
 
-		pixbuf_cropped = crop_resize (pixbuf, 94, 94);
+		pixbuf_cropped = crop_resize (pixbuf, 124, 124);
 
 		gdk_pixbuf_unref (pixbuf);
 
