@@ -499,6 +499,12 @@ static void init (void) {
 		if (error) {
 			g_critical ("Can't initialize HildonThumbnailer: %s\n", error->message);
 			g_error_free (error);
+			g_hash_table_unref (tasks);
+			tasks = NULL;
+			connection = NULL;
+			had_init = FALSE;
+			abort ();
+			return;
 		}
 
 		proxy = dbus_g_proxy_new_for_name (connection, 
