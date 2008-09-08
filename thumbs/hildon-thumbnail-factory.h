@@ -141,6 +141,8 @@ void hildon_thumbnail_factory_remove(const gchar *uri);
  *
  * Move the thumbnail for @handle to the front of the queue, so it will
  * be processed next
+ *
+ * Deprecated
  */
 void hildon_thumbnail_factory_move_front(HildonThumbnailFactoryHandle handle);
 
@@ -151,6 +153,8 @@ void hildon_thumbnail_factory_move_front(HildonThumbnailFactoryHandle handle);
  * Move all thumbnails starting from and including @handle to
  * the front of the queue
  * Thumbnail order is the sequence in which they were added
+ *
+ * Deprecated
  */
 void hildon_thumbnail_factory_move_front_all_from(HildonThumbnailFactoryHandle handle);
 
@@ -190,7 +194,7 @@ void hildon_thumbnail_factory_set_debug(gboolean debug);
 
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
 
-GQuark hildon_thumbnail_error_quark();
+GQuark hildon_thumbnail_error_quark(void);
 
 /**
  * HILDON_THUMBNAIL_ERROR_DOMAIN:
@@ -205,15 +209,25 @@ GQuark hildon_thumbnail_error_quark();
  * GError codes returned by library
  */
 typedef enum {
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_ILLEGAL_SIZE = 1,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_NO_MIME_HANDLER,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_NO_THUMB_DIR,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_TEMP_FILE_FAILED,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_SPAWN_FAILED,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_CHILD_WATCH_FAILED,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_PIXBUF_LOAD_FAILED,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_NO_PIXBUF_OPTIONS,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_THUMB_EXPIRED,
+	/* Deprecated */
     HILDON_THUMBNAIL_ERROR_FAILURE_CACHED
 } HildonThumbnailError;
 

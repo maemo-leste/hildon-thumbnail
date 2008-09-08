@@ -514,10 +514,21 @@ static void init (void) {
 	had_init = TRUE;
 }
 
-int hildon_thumber_main (int *argc_p, char ***argv_p, HildonThumberCreateThumb create_thumb)
+int 
+hildon_thumber_main (int *argc_p, char ***argv_p, HildonThumberCreateThumb create_thumb)
 {
 	g_warning ("hildon_thumber_main is deprecated\n");
 	return -1;
 }
 
+GdkPixbuf* 
+hildon_thumber_create_empty_pixbuf (void)
+{
+	gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
+}
 
+GQuark 
+hildon_thumbnail_error_quark (void)
+{
+	return FACTORY_ERROR;
+}

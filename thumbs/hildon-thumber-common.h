@@ -42,6 +42,8 @@
  *
  * Function called by the main function to create a thumbnail for the given file.
  * Returns: %NULL if thumbnail can't be created, pixbuf with thumbnail otherwise.
+ *
+ * Deprecated
  */
 typedef GdkPixbuf * (*HildonThumberCreateThumb)(const gchar *local_file, 
     const gchar *mime_type,
@@ -58,6 +60,8 @@ typedef GdkPixbuf * (*HildonThumberCreateThumb)(const gchar *local_file,
  * Utility function used in thumbnailers. Usually called from thumbnailer main.
  * Passed a function that does the thumbnailing work. Error handling etc. is provided
  * automatically by this function
+ *
+ * Deprecated
  */
 int hildon_thumber_main(
     int *argc_p, char ***argv_p, HildonThumberCreateThumb create_thumb
@@ -68,6 +72,6 @@ int hildon_thumber_main(
  *
  * Returns: An empty pixbuf for saving metadata only, eg. for MP3 files
  */
-GdkPixbuf* hildon_thumber_create_empty_pixbuf();
+GdkPixbuf* hildon_thumber_create_empty_pixbuf (void);
 
 #endif
