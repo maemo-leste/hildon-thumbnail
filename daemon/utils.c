@@ -53,13 +53,15 @@ md5_c_string(const gchar *str, gchar ascii_digest[33])
 }
 
 void
-hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, GError **error)
+hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, GError **error)
 {
 	gchar ascii_digest[33];
 	gchar thumb_filename[128];
+	gchar cropped_filename[128];
 
 	static gchar *large_dir = NULL;
 	static gchar *normal_dir = NULL;
+	static gchar *cropped_dir = NULL;
 
 	/* I know we leak, but it's better than doing memory fragementation on 
 	 * these strings ... */
@@ -70,19 +72,27 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	if (!normal_dir)
 		normal_dir = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", NULL);
 
+	if (!cropped_dir)
+		cropped_dir = g_build_filename (g_get_home_dir (), ".thumbnails", "cropped", NULL);
+
 	*large = NULL;
 	*normal = NULL;
+	*cropped = NULL;
 
-	if(!g_file_test(large_dir, G_FILE_TEST_EXISTS))
+	if(!g_file_test (large_dir, G_FILE_TEST_EXISTS))
 		g_mkdir_with_parents (large_dir, 0770);
-	if(!g_file_test(normal_dir, G_FILE_TEST_EXISTS))
+	if(!g_file_test (normal_dir, G_FILE_TEST_EXISTS))
 		g_mkdir_with_parents (normal_dir, 0770);
+	if(!g_file_test (cropped_dir, G_FILE_TEST_EXISTS))
+		g_mkdir_with_parents (cropped_dir, 0770);
 
 	md5_c_string (uri, ascii_digest);
 
 	g_sprintf (thumb_filename, "%s.png", ascii_digest);
+	g_sprintf (cropped_filename, "%s.jpg", ascii_digest);
 
 	*large = g_build_filename (large_dir, thumb_filename, NULL);
 	*normal = g_build_filename (normal_dir, thumb_filename, NULL);
+	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
 
 }

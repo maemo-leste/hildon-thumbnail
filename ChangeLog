@@ -1,5 +1,13 @@
 2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/thumbnailer.c: Support for cropped thumbnails
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/plugin-runner.c
 	* daemon/manager.c
 	* daemon/thumbnailer.h

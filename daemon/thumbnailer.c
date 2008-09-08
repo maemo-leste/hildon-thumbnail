@@ -100,7 +100,7 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 	const gchar *content_type;
 	GFileInfo *info;
 	GFile *file;
-	gchar *normal = NULL, *large = NULL;
+	gchar *normal = NULL, *large = NULL, *cropped = NULL;
 
 	*mime_type = NULL;
 	*has_thumb = FALSE;
@@ -117,11 +117,15 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 		g_object_unref (info);
 	}
 
-	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, error);
-	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && g_file_test (normal, G_FILE_TEST_EXISTS));
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, error);
+
+	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
+		      g_file_test (normal, G_FILE_TEST_EXISTS) && 
+		      g_file_test (cropped, G_FILE_TEST_EXISTS));
 
 	g_free (normal);
 	g_free (large);
+	g_free (cropped);
 
 	g_object_unref (file);
 }

@@ -192,4 +192,43 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 	return pixbuf;
 }
 
+/**
+ * gdk_pixbuf_new_from_stream:
+ * @stream:  a #GInputStream to load the pixbuf from
+ * @cancellable: optional #GCancellable object, %NULL to ignore
+ * @error: Return location for an error
+ *
+ * Creates a new pixbuf by loading an image from an input stream.
+ *
+ * The file format is detected automatically. If %NULL is returned, then
+ * @error will be set. The @cancellable can be used to abort the operation
+ * from another thread. If the operation was cancelled, the error
+ * %GIO_ERROR_CANCELLED will be returned. Other possible errors are in
+ * the #GDK_PIXBUF_ERROR and %G_IO_ERROR domains.
+ *
+ * The stream is not closed.
+ *
+ * Return value: A newly-created pixbuf, or %NULL if any of several error
+ * conditions occurred: the file could not be opened, the image format is
+ * not supported, there was not enough memory to allocate the image buffer,
+ * the stream contained invalid data, or the operation was cancelled.
+ *
+ * Since: 2.14
+ **/
+GdkPixbuf *
+gdk_pixbuf_new_from_stream (GInputStream  *stream,
+			    GCancellable  *cancellable,
+			    GError       **error)
+{
+	GdkPixbuf *pixbuf;
+	GdkPixbufLoader *loader;
+
+	loader = gdk_pixbuf_loader_new ();
+	pixbuf = load_from_stream (loader, stream, cancellable, error);
+	g_object_unref (loader);
+
+	return pixbuf;
+}
+
 #endif
+

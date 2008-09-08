@@ -44,11 +44,17 @@
 
 #ifndef gdk_pixbuf_new_from_stream_at_scale
 /* It's implemented in pixbuf-io-loader.c in this case */
-
 GdkPixbuf* gdk_pixbuf_new_from_stream_at_scale (GInputStream *stream, gint width,
 			gint height, gboolean preserve_aspect_ratio,
 			GCancellable *cancellable, GError **error);
 #endif
+
+#ifndef gdk_pixbuf_new_from_stream
+/* It's implemented in pixbuf-io-loader.c in this case */
+GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
+			    GCancellable  *cancellable,
+			    GError       **error);
+#endif 
 
 static gchar **supported = NULL;
 
@@ -116,6 +122,86 @@ save_thumb_file_meta (GdkPixbuf *pixbuf, gchar *file, guint64 mtime, const gchar
 
 
 
+static gboolean 
+save_thumb_file_cropped (GdkPixbuf *pixbuf, gchar *file, guint64 mtime, const gchar *uri, GError **error)
+{
+	gboolean ret;
+
+	ret = gdk_pixbuf_save (pixbuf, file, "jpeg", error, NULL);
+
+	return ret;
+}
+
+
+static GdkPixbuf*
+crop_resize (GdkPixbuf *src, int width, int height) {
+	int x = width, y = height;
+	int a = gdk_pixbuf_get_width(src);
+	int b = gdk_pixbuf_get_height(src);
+
+	GdkPixbuf *dest;
+
+	// This is the automagic cropper algorithm 
+	// It is an optimized version of a system of equations
+	// Basically it maximizes the final size while minimizing the scale
+
+	int nx, ny;
+	double na, nb;
+	double offx = 0, offy = 0;
+	double scax, scay;
+
+	na = a;
+	nb = b;
+
+	if(a < x && b < y) {
+		//nx = a;
+		//ny = b;
+		g_object_ref(src);
+		return src;
+	} else {
+		int u, v;
+
+		nx = u = x;
+		ny = v = y;
+
+		if(a < x) {
+			nx = a;
+			u = a;
+		}
+
+		if(b < y) {
+			ny = b;
+		 	v = b;
+		}
+
+		if(a * y < b * x) {
+			nb = (double)a * v / u;
+			// Center
+			offy = (double)(b - nb) / 2;
+		} else {
+			na = (double)b * u / v;
+			// Center
+			offx = (double)(a - na) / 2;
+		}
+	}
+
+	// gdk_pixbuf_scale has crappy inputs
+	scax = scay = (double)nx / na;
+
+	offx = -offx * scax;
+	offy = -offy * scay;
+
+	dest = gdk_pixbuf_new (gdk_pixbuf_get_colorspace(src),
+			       gdk_pixbuf_get_has_alpha(src), 
+			       gdk_pixbuf_get_bits_per_sample(src), 
+			       nx, ny);
+
+	gdk_pixbuf_scale (src, dest, 0, 0, nx, ny, offx, offy, scax, scay,
+			  GDK_INTERP_BILINEAR);
+
+	return dest;
+}
+
 void
 hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 {
@@ -130,12 +216,13 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		gchar *uri = uris[i];
 		GdkPixbuf *pixbuf_large;
 		GdkPixbuf *pixbuf_normal;
+		GdkPixbuf *pixbuf, *pixbuf_cropped;
 		guint64 mtime;
-		gchar *large = NULL, *normal = NULL;
+		gchar *large = NULL, *normal = NULL, *cropped = NULL;
 
 		//g_print ("%s\n", uri);
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &nerror);
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, &nerror);
 
 		//g_print ("L %s\n", large);
 		//g_print ("N %s\n", normal);
@@ -160,10 +247,10 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 			goto nerror_handler;
 
 		pixbuf_large = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
-							      256, 256,
-							      TRUE,
-							      NULL,
-							      &nerror);
+								    256, 256,
+								    TRUE,
+								    NULL,
+								    &nerror);
 
 		if (nerror)
 			goto nerror_handler;
@@ -181,12 +268,10 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 			goto nerror_handler;
 
 		pixbuf_normal = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
-							      128, 128,
-							      TRUE,
-							      NULL,
-							      &nerror);
-
-		g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
+								     128, 128,
+								     TRUE,
+								     NULL,
+								     &nerror);
 
 		if (nerror)
 			goto nerror_handler;
@@ -195,7 +280,33 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		gdk_pixbuf_unref (pixbuf_normal);
 
+		if (nerror)
+			goto nerror_handler;
+
+		g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		pixbuf = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
+						     NULL,
+						     &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		pixbuf_cropped = crop_resize (pixbuf, 94, 94);
+
+		gdk_pixbuf_unref (pixbuf);
+
+		save_thumb_file_cropped (pixbuf_cropped, cropped, mtime, uri, &nerror);
+
+		gdk_pixbuf_unref (pixbuf_cropped);
+
 		nerror_handler:
+
+		if (stream)
+			g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
 
 		if (nerror) {
 			if (!errors)
@@ -215,6 +326,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		g_free (large);
 		g_free (normal);
+		g_free (cropped);
 
 		i++;
 	}
