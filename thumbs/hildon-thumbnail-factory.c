@@ -364,8 +364,11 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
 		callback, user_data, HILDON_THUMBNAIL_FLAG_CROP, -1);
 }
 
-static void on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
+static void 
+on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
 {
+	ThumbsItem *item = userdata;
+	g_hash_table_replace (tasks, (gpointer) item->handle_id, item);
 }
 
 void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
@@ -378,7 +381,7 @@ void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
 		return;
 
 	org_freedesktop_thumbnailer_Generic_unqueue_async (proxy, item->handle_id, 
-							   on_cancelled, NULL);
+							   on_cancelled, item);
 
 }
 
