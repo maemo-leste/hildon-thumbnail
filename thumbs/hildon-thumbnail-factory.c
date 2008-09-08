@@ -368,7 +368,7 @@ static void
 on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
 {
 	ThumbsItem *item = userdata;
-	g_hash_table_replace (tasks, (gpointer) item->handle_id, item);
+	g_hash_table_remove (tasks, (gpointer) item->handle_id);
 }
 
 void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
