@@ -144,7 +144,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		if (!value) 
 			continue;
 
-		values = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "mimeTypes", NULL, NULL);
+		values = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "MimeTypes", NULL, NULL);
 
 		if (!values)
 			continue;
