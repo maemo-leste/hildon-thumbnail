@@ -1,3 +1,11 @@
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/exec-plugin.h
+	* daemon/plugins/Makefile.am: Added a thumbnailer that simply executes
+	external thumbnailers to perform being a thumbnailer
+
 2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* thumbs/thumbs-private.h

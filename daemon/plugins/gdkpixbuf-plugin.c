@@ -79,6 +79,7 @@ hildon_thumbnail_plugin_supported (void)
 		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1));
 		for (i = 0 ; i < types_support->len; i++)
 			supported[i] =  g_strdup (g_ptr_array_index (types_support, i));
+		g_ptr_array_free (types_support, TRUE);
 		g_slist_free (formats);
 	}
 
@@ -380,7 +381,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 		return;
 	}
 
-	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "doCropped", NULL);
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
 	*cropping = do_cropped;
 	g_free (config);
 	g_key_file_free (keyfile);
