@@ -315,6 +315,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 	GStrv mimetypes;
 	guint i = 0, length;
 
+	keyfile = g_key_file_new ();
+
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		g_free (config);
 		do_cropped = TRUE;

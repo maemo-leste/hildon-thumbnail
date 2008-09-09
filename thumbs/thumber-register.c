@@ -32,14 +32,122 @@ enum {
 
 GQuark reg_quark = 0;
 
+#define CONVERT_CMD "%s \"{large}\" \"{mime}\" /tmp/.thumbnail_file 0 256 256"
+
+static void
+write_keyfile (const gchar *filen, GKeyFile *keyfile)
+{
+	FILE* file = fopen (filen, "w");
+
+	if (file) {
+		gsize len;
+		char *str = g_key_file_to_data (keyfile, &len, NULL);
+		fputs (str, file);
+		fclose (file);
+	}
+}
+
 void thumber_register(char *cmd, char *mime_type, GError **err)
 {
- 
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
+	gchar **mimetypes;
+	guint i = 0, length;
+	gchar *r_cmd;
+
+	keyfile = g_key_file_new ();
+	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		gchar **mimetypes;
+
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * 2);
+		mimetypes[0] = g_strdup (mime_type);
+		g_key_file_set_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", FALSE);
+		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) 1);
+
+		g_strfreev (mimetypes);
+
+	} else {
+		guint length, i;
+		gchar **o;
+		gchar **mimetypes;
+
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
+
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * (length + 1));
+		for (i = 0; i< length; i++)
+			mimetypes[i] = g_strdup (o[i]);
+
+		mimetypes[i] = g_strdup (mime_type);
+		g_strfreev (o);
+
+		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) length+1);
+
+		g_strfreev (mimetypes);
+	}
+
+	r_cmd = g_strdup_printf (CONVERT_CMD, cmd);
+
+	g_key_file_set_string (keyfile, mime_type, "Exec", r_cmd);
+
+	write_keyfile (config, keyfile);
+
+	g_free (r_cmd);
+	g_free (config);
+	g_key_file_free (keyfile);
 }
 
 void thumber_unregister(char *cmd, GError **err)
 {
- 
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
+	gchar **mimetypes;
+	guint i = 0, length;
+
+	keyfile = g_key_file_new ();
+
+	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		guint length, i, z;
+		gchar **o;
+		gchar **mimetypes;
+
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
+
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
+
+		z = 0;
+
+		for (i = 0; i< length; i++) {
+			gchar *exec = g_key_file_get_string (keyfile, o[i], "Exec", NULL);
+
+			if (exec) {
+				gchar *ptr = strchr (exec, '"');
+				if (ptr)
+					*ptr = '\0';
+				if (strcmp (ptr, cmd) != 0) {
+					mimetypes[z] = g_strdup (o[i]);
+					z++;
+				} else {
+					g_key_file_remove_group (keyfile, o[i], NULL);
+				}
+			}
+		}
+
+		g_strfreev (o);
+
+		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) length+1);
+
+		g_strfreev (mimetypes);
+	}
+
+	write_keyfile (config, keyfile);
+
+	g_free (config);
+	g_key_file_free (keyfile);
 }
 
 int main(int argc, char **argv)

@@ -1,5 +1,11 @@
 2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/thumber-register.c: Reimplemented hildon-thumbnail-register
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c: Fixed two bugs loading configuration
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* thumbs/thumber-gdk-pixbuf.c
 	* thumbs/Makefile.am
 	* thumbs/thumber-register.c

@@ -374,6 +374,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-plugin.conf", NULL);
 	GKeyFile *keyfile;
 
+	keyfile = g_key_file_new ();
+
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		g_free (config);
 		do_cropped = TRUE;
