@@ -142,9 +142,9 @@ void thumber_unregister(char *cmd, GError **err)
 					    (const gchar **) mimetypes, (gsize) length+1);
 
 		g_strfreev (mimetypes);
-	}
 
-	write_keyfile (config, keyfile);
+		write_keyfile (config, keyfile);
+	}
 
 	g_free (config);
 	g_key_file_free (keyfile);
