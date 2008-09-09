@@ -70,12 +70,13 @@ hildon_thumbnail_plugin_supported (void)
 
 
 static gchar*
-string_replace (const gchar *in, const gchar *large, const gchar *normal, const gchar *cropped, const gchar *mime_type, gboolean cropping, guint mtime)
+string_replace (const gchar *in, const gchar *large, const gchar *normal, const gchar *cropped, const gchar *mime_type, const gchar *mime_type_at, gboolean cropping, guint mtime)
 {
 	gchar *ptr;
 	guint total = strlen (in);
 	guint len, i, off = 0, z, in_len = total;
-	guint large_len, normal_len, cropped_len, mime_len, mtime_len, cropping_len;
+	guint large_len, normal_len, cropped_len, mime_len, 
+		mtime_len, cropping_len, mime_at_len;
 	gchar *s_mtime = g_strdup_printf ("%lu", mtime);
 	gchar *ret;
 
@@ -110,6 +111,14 @@ string_replace (const gchar *in, const gchar *large, const gchar *normal, const 
 		total += len;
 	}
 	mime_len = len;
+
+	ptr = (gchar *) in;
+	len = strlen (mime_type_at);
+	while (ptr) {
+		ptr = strstr ("{mime_at}", ptr);
+		total += len;
+	}
+	mime_at_len = len;
 
 	ptr = (gchar *) in;
 	len = strlen (s_mtime);
@@ -156,9 +165,14 @@ string_replace (const gchar *in, const gchar *large, const gchar *normal, const 
 					off += mtime_len;
 				}
 
-				if (buf[0] == 'm' && buf[1] == 'i') {
+				if (buf[0] == 'm' && buf[1] == 'i' && buf[4] != '_') {
 					memcpy (ret + off, mime_type, mime_len);
 					off += mime_len;
+				}
+
+				if (buf[0] == 'm' && buf[1] == 'i' && buf[4] == '_') {
+					memcpy (ret + off, mime_type_at, mime_at_len);
+					off += mime_at_len;
 				}
 
 				if (buf[0] == 'n') {
@@ -221,11 +235,14 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		      *ocropped = NULL;
 		gchar *exec = NULL;
 		gchar *mime_type = NULL;
+		gchar *mime_type_at = NULL;
 		GFile *file = NULL;
 		GFileInfo *info = NULL;
 		const gchar *content_type;
 		guint64 mtime;
 		gchar *r_exec = NULL;
+		gchar *slash_pos;
+		gchar *cmd_dir, *cmd_path;
 
 		file = g_file_new_for_uri (uri);
 		info = g_file_query_info (file,
@@ -240,27 +257,26 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 		content_type = g_file_info_get_content_type (info);
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &olarge, &onormal, 
-						       &ocropped, &nerror);
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
+						       &cropped, &nerror);
 
 		if (nerror)
 			goto nerror_handler;
 
-		large = g_strdup_printf ("\"%s\"", olarge);
-		cropped = g_strdup_printf ("\"%s\"", ocropped);
-		normal = g_strdup_printf ("\"%s\"", onormal);
-		mime_type = g_strdup_printf ("\"%s\"", content_type);
+		mime_type = g_strdup (content_type);
+		mime_type_at = g_strdup (content_type);
+		slash_pos = strchr(mime_type_at, '/');
+		if(slash_pos)
+			*slash_pos = '@';
 
 		exec = g_hash_table_lookup (execs, content_type);
 
 		r_exec = string_replace (exec, large, normal, cropped, 
-					 mime_type, do_cropped, mtime);
+					 mime_type, mime_type_at, do_cropped, mtime);
 
 		g_free (exec);
-		g_free (normal);
-		g_free (large);
-		g_free (cropped);
 		g_free (mime_type);
+		g_free (mime_type_at);
 
 		g_spawn_command_line_sync (r_exec, NULL, NULL, NULL, NULL);
 
@@ -281,9 +297,9 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		if (info)
 			g_object_unref (info);
 
-		g_free (olarge);
-		g_free (onormal);
-		g_free (ocropped);
+		g_free (large);
+		g_free (normal);
+		g_free (cropped);
 
 		i++;
 	}

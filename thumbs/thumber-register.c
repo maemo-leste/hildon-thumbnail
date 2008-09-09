@@ -32,7 +32,7 @@ enum {
 
 GQuark reg_quark = 0;
 
-#define CONVERT_CMD "%s \"{large}\" \"{mime}\" /tmp/.thumbnail_file 0 256 256"
+#define CONVERT_CMD "%s \"{large}\" \"{mime_at}\" /tmp/.thumbnail_file 0 256 256"
 
 static void
 write_keyfile (const gchar *filen, GKeyFile *keyfile)

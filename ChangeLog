@@ -1,5 +1,12 @@
 2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/thumber-register.c
+	* daemon/plugins/exec-plugin.c: Support for mime@type, strange old
+	hildon-thumbnail code ... grmbl (I'm not even sure if @ ain't a not
+	allowed character in mime/types). Anyway.
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* thumbs/thumber-register.c: Reimplemented hildon-thumbnail-register
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/exec-plugin.c: Fixed two bugs loading configuration
