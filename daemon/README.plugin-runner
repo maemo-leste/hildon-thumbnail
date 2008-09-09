@@ -12,6 +12,6 @@ And a file like this in
 
 [D-BUS Thumbnailer]
 Name=com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer
-mimetypes=image/png;image/jpeg
-comment=free comment
+MimeTypes=image/png;image/jpeg
+Comment=free comment
 
