@@ -88,6 +88,10 @@ void thumber_register(char *cmd, char *mime_type, GError **err)
 		g_strfreev (mimetypes);
 	}
 
+	// TODO: replace this with a script that launches the thumbnailer for all
+	// required sizes. This is of course not good enough. Also look at the todo
+	// below!
+
 	r_cmd = g_strdup_printf (CONVERT_CMD, cmd);
 
 	g_key_file_set_string (keyfile, mime_type, "Exec", r_cmd);
@@ -121,6 +125,11 @@ void thumber_unregister(char *cmd, GError **err)
 		z = 0;
 
 		for (i = 0; i< length; i++) {
+			
+			// TODO: if above it's replaced with a script, we better
+			// make sure this is fixed to cope with whatever changes
+			// above too
+			
 			gchar *exec = g_key_file_get_string (keyfile, o[i], "Exec", NULL);
 
 			if (exec) {
