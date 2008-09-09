@@ -125,6 +125,15 @@ AC_SUBST(localedir)
 #AC_SUBST(outomoduledir)
 AC_SUBST(HTML_DIR)
 
+
+LIBOSSO_CHECK="libosso >= 0.9.19"
+PKG_CHECK_MODULES(LIBOSSO, $LIBOSSO_CHECK, [have_osso=yes], [have_osso=no])
+AC_SUBST(LIBOSSO_LIBS)
+AC_SUBST(LIBOSSO_CFLAGS)
+
+AM_CONDITIONAL(ENABLE_OSSO, test x$have_osso = xyes)
+
+
 # --- Output ---
 
 AC_CONFIG_LINKS(thumbs/pixbuf-io-loader.c:daemon/plugins/pixbuf-io-loader.c)

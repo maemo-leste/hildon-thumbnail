@@ -1,5 +1,14 @@
 2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/thumber-gdk-pixbuf.c
+	* thumbs/Makefile.am
+	* thumbs/thumber-register.c
+	* thumbs/thumber-common.c
+	* configure.ac: Started to replace the register binary, reinstalled 
+	the original pixbuf thumber after a rewrite to GIO
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/exec-plugin.c
 	* daemon/plugins/exec-plugin.h
