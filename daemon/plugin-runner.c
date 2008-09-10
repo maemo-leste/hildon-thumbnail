@@ -181,44 +181,43 @@ daemon_init (Daemon *object)
 {
 }
 
+
+static void 
+daemon_register_func (gpointer self, const gchar *mime_type, GModule *module)
+{
+	GError *nerror = NULL;
+
+	dbus_g_proxy_call (self, "Register",
+			   &nerror, G_TYPE_STRING,
+			   mime_type,
+			   G_TYPE_INVALID,
+			   G_TYPE_INVALID);
+
+	if (nerror) {
+		g_critical ("Failed to init: %s\n", nerror->message);
+		g_error_free (nerror);
+	}
+}
+
 static void
 daemon_start (Daemon *object, gboolean do_register)
 {
 	GError *error = NULL;
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GModule *module = priv->module;
+	DBusGProxy *manager_proxy;
+
+	manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
+						   MANAGER_SERVICE,
+						   MANAGER_PATH,
+						   MANAGER_INTERFACE);
 
 	hildon_thumbnail_plugin_do_init (module, &priv->cropping, 
-					 NULL, NULL, &error);
+					 daemon_register_func, 
+					 manager_proxy, &error);
 
-	if (!error && do_register) {
-		DBusGProxy *manager_proxy;
-		GStrv supported;
-		guint i = 0;
-		manager_proxy = dbus_g_proxy_new_for_name (priv->connection, 
-							   MANAGER_SERVICE,
-							   MANAGER_PATH,
-							   MANAGER_INTERFACE);
 
-		supported = hildon_thumbnail_plugin_get_supported (module);
-
-		if (supported) {
-			while (supported[i] != NULL) {
-				GError *nerror = NULL;
-				dbus_g_proxy_call (manager_proxy, "Register",
-						   &nerror, G_TYPE_STRING,
-						   supported[i],
-						   G_TYPE_INVALID,
-						   G_TYPE_INVALID);
-				if (nerror) {
-					g_critical ("Failed to init: %s\n", nerror->message);
-					g_error_free (nerror);
-				}
-				i++;
-			}
-		}
-		g_object_unref (manager_proxy);
-	}
+	g_object_unref (manager_proxy);
 
 	if (error) {
 		g_critical ("Failed to init: %s\n", error->message);
