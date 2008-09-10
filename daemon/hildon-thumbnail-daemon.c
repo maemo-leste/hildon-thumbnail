@@ -54,9 +54,9 @@ main (int argc, char **argv)
 		Thumbnailer *thumbnailer;
 		DBusGProxy *manager_proxy;
 		GStrv supported;
-		guint i = 0;
+		guint i = 0, y = 0;
 		gboolean cropping;
-
+		const gchar *plugins[3] = { "gdkpixbuf", "exec", NULL};
 		/* TODO: dynamically load plugins, and detect when new ones get
 		 * dropped, and removed ones get removed (and therefore must
 		 * shut down) */
@@ -64,24 +64,28 @@ main (int argc, char **argv)
 		manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
 
-		module = hildon_thumbnail_plugin_load ("gdkpixbuf");
 
 		manager_proxy = dbus_g_proxy_new_for_name (connection, 
 					   MANAGER_SERVICE,
 					   MANAGER_PATH,
 					   MANAGER_INTERFACE);
 
-		hildon_thumbnail_plugin_do_init (module, &cropping,
-						 &error);
+		while (plugins[y] != NULL) {
+			module = hildon_thumbnail_plugin_load ("gdkpixbuf");
 
-		supported = hildon_thumbnail_plugin_get_supported (module);
-		if (supported) {
-			while (supported[i] != NULL) {
-				thumbnailer_register_plugin (thumbnailer, 
-							     supported[i], 
-							     module);
-				i++;
+			hildon_thumbnail_plugin_do_init (module, &cropping,
+							 &error);
+
+			supported = hildon_thumbnail_plugin_get_supported (module);
+			if (supported) {
+				while (supported[i] != NULL) {
+					thumbnailer_register_plugin (thumbnailer, 
+								     supported[i], 
+								     module);
+					i++;
+				}
 			}
+			y++;
 		}
 
 		main_loop = g_main_loop_new (NULL, FALSE);
