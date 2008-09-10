@@ -4,6 +4,7 @@
  * Copyright (C) 2005 Nokia Corporation.
  *
  * Contact: Marius Vollmer <marius.vollmer@nokia.com>
+ * Author: Philip Van Hoof <pvanhoof@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -26,11 +27,6 @@
 
 #include <glib.h>
 
-enum {
-    THUMBER_REGISTER_ERROR = 10
-} ThumberRegisterError;
-
-GQuark reg_quark = 0;
 
 #define CONVERT_CMD BIN_PATH G_DIR_SEPARATOR_S "hildon-thumbnailer-wrap.sh \"%s\" \"{uri}\" \"{large}\" \"{normal}\" \"{cropped}\" \"{mime_at}\" \"{mime}\""
 
@@ -234,8 +230,7 @@ int main(int argc, char **argv)
     int status = 0;
 
     g_type_init();
-    reg_quark = g_quark_from_static_string("osso-thumber-register");
-
+ 
     if(argc != 3) {
         printf( "Usage:\n"
                 "    osso-thumber-register <handler-cmd> <mime-type>\n"
