@@ -45,7 +45,8 @@ write_keyfile (const gchar *filen, GKeyFile *keyfile)
 	}
 }
 
-void thumber_register(char *cmd, char *mime_type, GError **err)
+static void 
+thumber_register(char *cmd, char *mime_type, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
@@ -106,7 +107,8 @@ void thumber_register(char *cmd, char *mime_type, GError **err)
 	g_key_file_free (keyfile);
 }
 
-void thumber_unregister(char *cmd, GError **err)
+static void 
+thumber_unregister(char *cmd, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
@@ -177,7 +179,8 @@ void thumber_unregister(char *cmd, GError **err)
 }
 
 
-void thumber_unregister_mime (char *mime, GError **err)
+static void 
+thumber_unregister_mime (char *mime, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
