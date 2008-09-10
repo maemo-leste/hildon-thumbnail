@@ -58,6 +58,7 @@ GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
+static GFileMonitor *monitor = NULL;
 
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
@@ -365,26 +366,52 @@ hildon_thumbnail_plugin_stop (void)
 {
 	if (supported)
 		g_strfreev (supported);
+	if (monitor)
+		g_object_unref (monitor);
 	supported = NULL;
+}
+
+static void
+reload_config (const gchar *config)
+{
+	GKeyFile *keyfile;
+
+	keyfile = g_key_file_new ();
+
+	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		do_cropped = TRUE;
+		return;
+	}
+
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
+	g_key_file_free (keyfile);
+}
+
+static void 
+on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+{
+	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
+		gchar *config = g_file_get_path (file);
+		reload_config (config);
+		g_free (config);
+	}
 }
 
 void 
 hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-plugin.conf", NULL);
-	GKeyFile *keyfile;
+	GFile *file = g_file_new_for_path (config);
 
-	keyfile = g_key_file_new ();
+	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
-	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
-		g_free (config);
-		do_cropped = TRUE;
-		*cropping = do_cropped;
-		return;
-	}
+	g_signal_connect (G_OBJECT (monitor), "changed", 
+			  G_CALLBACK (on_file_changed), NULL);
 
-	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
+	reload_config (config);
+
 	*cropping = do_cropped;
+
 	g_free (config);
-	g_key_file_free (keyfile);
+
 }

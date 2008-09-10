@@ -1,3 +1,10 @@
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c
+	* daemon/manager.h: File monitoring the service and configuration files
+
 2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* thumbs/thumber-register.c

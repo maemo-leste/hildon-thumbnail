@@ -217,9 +217,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 	}
 	g_mutex_unlock (priv->mutex);
 
-
-	manager_check (priv->manager);
-
 	/* We split the request into groups that have items with the same 
 	  * mime-type and one group with items that already have a thumbnail */
 

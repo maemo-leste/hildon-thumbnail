@@ -49,7 +49,6 @@ GType manager_get_type (void);
 
 void manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *context);
 
-void manager_check (Manager *Object);
 DBusGProxy* manager_get_handler (Manager *object, const gchar *mime_type);
 
 void manager_do_stop (void);

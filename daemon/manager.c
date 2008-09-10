@@ -102,7 +102,7 @@ free_valueinfo (ValueInfo *info) {
 	g_slice_free (ValueInfo, info);
 }
 
-void
+static void
 manager_check_dir (Manager *object, gchar *path, gboolean override)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
@@ -216,10 +216,33 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 	g_hash_table_unref (pre);
 }
 
-void
+
+static void
+on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+{
+	switch (event_type) 
+	{
+		case G_FILE_MONITOR_EVENT_CHANGED:
+		case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+		case G_FILE_MONITOR_EVENT_DELETED:
+		case G_FILE_MONITOR_EVENT_CREATED: {
+			gchar *path = g_file_get_path (file);
+			gboolean override = (strcmp (THUMBNAILERS_DIR, path) == 0);
+			manager_check_dir (MANAGER (user_data), path, override);
+			g_free (path);
+		} 
+		break;
+		default:
+		break;
+	}
+}
+
+static void
 manager_check (Manager *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	GFileMonitor *monitor;
+	GFile *file;
 
 	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
 		"thumbnailers", NULL);
@@ -229,10 +252,25 @@ manager_check (Manager *object)
 	manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
 	manager_check_dir (object, home_thumbnlrs, TRUE);
 
+	file = g_file_new_for_path (home_thumbnlrs);
+	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
+	g_signal_connect (G_OBJECT (monitor), "changed", 
+			  G_CALLBACK (on_dir_changed), NULL);
+
+	// g_object_unref (file)
+	// g_object_unref (monitor)
+
+	file = g_file_new_for_path (THUMBNAILERS_DIR);
+	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
+	g_signal_connect (G_OBJECT (monitor), "changed", 
+			  G_CALLBACK (on_dir_changed), NULL);
+
 	g_mutex_unlock (priv->mutex);
 
-	g_free (home_thumbnlrs);
+	// g_object_unref (file)
+	// g_object_unref (monitor)
 
+	g_free (home_thumbnlrs);
 }
 
 
@@ -387,12 +425,12 @@ static void
 manager_init (Manager *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	GFile *file1, *file2;
 
 	priv->mutex = g_mutex_new ();
 	priv->handlers = g_hash_table_new_full (g_str_hash, g_str_equal,
 						(GDestroyNotify) g_free, 
 						(GDestroyNotify) g_object_unref);
-
 }
 
 void 
