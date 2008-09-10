@@ -44,6 +44,7 @@ write_keyfile (const gchar *filen, GKeyFile *keyfile)
 		gsize len;
 		char *str = g_key_file_to_data (keyfile, &len, NULL);
 		fputs (str, file);
+		g_free (str);
 		fclose (file);
 	}
 }
