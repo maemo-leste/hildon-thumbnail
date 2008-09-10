@@ -71,7 +71,7 @@ main (int argc, char **argv)
 					   MANAGER_INTERFACE);
 
 		while (plugins[y] != NULL) {
-			module = hildon_thumbnail_plugin_load ("gdkpixbuf");
+			module = hildon_thumbnail_plugin_load (plugins[y]);
 
 			hildon_thumbnail_plugin_do_init (module, &cropping,
 							 (register_func) thumbnailer_register_plugin,
