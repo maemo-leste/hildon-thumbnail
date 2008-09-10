@@ -13,6 +13,8 @@ generic_libs = \
 
 bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
 
+bin_SCRIPTS = hildon-thumbnailer-wrap.sh
+
 if ENABLE_OSSO
 hildon_thumb_gdk_pixbuf_CFLAGS = $(generic_includes)  $(LIBOSSO_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS)
@@ -21,7 +23,8 @@ hildon_thumb_gdk_pixbuf_LDADD = libhildonthumbnail.la $(generic_libs) \
 	$(top_builddir)/daemon/libshared.la $(GDK_PIXBUF_LIBS) \
 	$(LIBOSSO_LIBS)
 
-hildon_thumber_register_CFLAGS = $(generic_includes) $(LIBOSSO_CFLAGS)
+hildon_thumber_register_CFLAGS = $(generic_includes) $(LIBOSSO_CFLAGS) \
+	-DBIN_PATH=\"$(prefix)/bin\"
 hildon_thumber_register_SOURCES = thumber-register.c
 hildon_thumber_register_LDADD = libhildonthumbnail.la $(generic_libs) \
 	$(top_builddir)/daemon/libshared.la $(LIBOSSO_LIBS)

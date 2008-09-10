@@ -32,7 +32,8 @@ enum {
 
 GQuark reg_quark = 0;
 
-#define CONVERT_CMD "%s \"{large}\" \"{mime_at}\" /tmp/.thumbnail_file 0 256 256"
+#define CONVERT_CMD BIN_PATH G_DIR_SEPARATOR_S "hildon-thumbnailer-wrap.sh \"%s\" \"{uri}\" \"{large}\" \"{normal}\" \"{cropped}\" \"{mime_at}\" \"{mime}\""
+
 
 static void
 write_keyfile (const gchar *filen, GKeyFile *keyfile)
@@ -55,6 +56,11 @@ void thumber_register(char *cmd, char *mime_type, GError **err)
 	guint i = 0, length;
 	gchar *r_cmd;
 
+	gchar *d = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", NULL);
+
+	g_mkdir_with_parents (d, 0770);
+	g_free (d);
+
 	keyfile = g_key_file_new ();
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		gchar **mimetypes;
@@ -68,18 +74,22 @@ void thumber_register(char *cmd, char *mime_type, GError **err)
 		g_strfreev (mimetypes);
 
 	} else {
-		guint length, i;
+		guint length, i, z = 0;
 		gchar **o;
 		gchar **mimetypes;
 
 		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
 							&length, NULL);
 
-		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * (length + 1));
-		for (i = 0; i< length; i++)
-			mimetypes[i] = g_strdup (o[i]);
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * (length + 2));
+		for (i = 0; i< length; i++) {
+			if (strcmp (o[i], mime_type) != 0) {
+				mimetypes[z] = g_strdup (o[i]);
+				z++;
+			}
+		}
 
-		mimetypes[i] = g_strdup (mime_type);
+		mimetypes[z] = g_strdup (mime_type);
 		g_strfreev (o);
 
 		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
@@ -115,42 +125,105 @@ void thumber_unregister(char *cmd, GError **err)
 	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		guint length, i, z;
 		gchar **o;
-		gchar **mimetypes;
+		gchar **mimetypes = NULL;
 
 		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
 							&length, NULL);
 
-		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
+		if (length > 0) {
+			mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
 
-		z = 0;
+			z = 0;
 
-		for (i = 0; i< length; i++) {
-			
-			// TODO: if above it's replaced with a script, we better
-			// make sure this is fixed to cope with whatever changes
-			// above too
-			
-			gchar *exec = g_key_file_get_string (keyfile, o[i], "Exec", NULL);
+			for (i = 0; i< length; i++) {
+				gboolean doit = FALSE;
+				gchar *exec = g_key_file_get_string (keyfile, o[i], "Exec", NULL);
 
-			if (exec) {
-				gchar *ptr = strchr (exec, '"');
-				if (ptr)
-					*ptr = '\0';
-				if (strcmp (ptr, cmd) != 0) {
+				if (exec) {
+					gchar *ptr = strchr (exec, '"');
+					if (ptr) {
+						gchar *check;
+						ptr++;
+						check = ptr;
+						ptr = strchr (ptr, '"');
+						if (ptr) {
+							*ptr = '\0';
+							if (strcmp (check, cmd) == 0) {
+								g_key_file_remove_group (keyfile, o[i], NULL);
+								doit = FALSE;
+							} else
+								doit = TRUE;
+						} else
+							doit = TRUE;
+					} else
+						doit = TRUE;
+				} else
+					doit = TRUE;
+
+				if (doit) {
 					mimetypes[z] = g_strdup (o[i]);
 					z++;
-				} else {
-					g_key_file_remove_group (keyfile, o[i], NULL);
 				}
 			}
 		}
 
 		g_strfreev (o);
 
-		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+		if (mimetypes) {
+			g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+						    (const gchar **) mimetypes, (gsize) length+1);
+
+			g_strfreev (mimetypes);
+		}
+
+		write_keyfile (config, keyfile);
+	}
+
+	g_free (config);
+	g_key_file_free (keyfile);
+}
+
+
+void thumber_unregister_mime (char *mime, GError **err)
+{
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
+	gchar **mimetypes;
+	guint i = 0, length;
+
+	keyfile = g_key_file_new ();
+
+	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		guint length, i, z;
+		gchar **o;
+		gchar **mimetypes = NULL;
+
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
+
+		if (length > 0) {
+			mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
+
+			z = 0;
+
+			for (i = 0; i< length; i++) {
+				if (strcmp (o[i], mime) == 0) {
+					g_key_file_remove_group (keyfile, o[i], NULL);
+				} else {
+					mimetypes[z] = g_strdup (o[i]);
+					z++;
+				}
+			}
+		}
+
+		g_strfreev (o);
+
+		if (mimetypes) {
+			g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
 					    (const gchar **) mimetypes, (gsize) length+1);
 
-		g_strfreev (mimetypes);
+			g_strfreev (mimetypes);
+		}
 
 		write_keyfile (config, keyfile);
 	}
@@ -170,6 +243,7 @@ int main(int argc, char **argv)
         printf( "Usage:\n"
                 "    osso-thumber-register <handler-cmd> <mime-type>\n"
                 "    osso-thumber-register -u <handler-cmd>\n"
+                "    osso-thumber-register -um <mime>\n"
                 "Options:\n"
                 "    -u : unregister specified thumber command\n"
         );
@@ -180,6 +254,8 @@ int main(int argc, char **argv)
 
         if(strcmp(argv[1], "-u") == 0) {
             thumber_unregister(argv[2], &err);
+        } else if(strcmp(argv[1], "-um") == 0) {
+            thumber_unregister_mime(argv[2], &err);
         } else {
             thumber_register(argv[1], argv[2], &err);
         }

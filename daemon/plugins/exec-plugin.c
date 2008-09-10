@@ -71,15 +71,24 @@ hildon_thumbnail_plugin_supported (void)
 
 
 static gchar*
-string_replace (const gchar *in, const gchar *large, const gchar *normal, const gchar *cropped, const gchar *mime_type, const gchar *mime_type_at, gboolean cropping, guint mtime)
+string_replace (const gchar *in, const gchar *uri, const gchar *large, const gchar *normal, const gchar *cropped, const gchar *mime_type, const gchar *mime_type_at, gboolean cropping, guint mtime)
 {
 	gchar *ptr;
 	guint total = strlen (in);
 	guint len, i, off = 0, z, in_len = total;
 	guint large_len, normal_len, cropped_len, mime_len, 
-		mtime_len, cropping_len, mime_at_len;
+		mtime_len, cropping_len, mime_at_len, uri_len;
 	gchar *s_mtime = g_strdup_printf ("%lu", mtime);
 	gchar *ret;
+
+
+	ptr = (gchar *) in;
+	len = strlen (uri);
+	while (ptr) {
+		ptr = strstr ("{uri}", ptr);
+		total += len;
+	}
+	uri_len = len;
 
 	ptr = (gchar *) in;
 	len = strlen (normal);
@@ -174,6 +183,11 @@ string_replace (const gchar *in, const gchar *large, const gchar *normal, const 
 				if (buf[0] == 'm' && buf[1] == 'i' && buf[4] == '_') {
 					memcpy (ret + off, mime_type_at, mime_at_len);
 					off += mime_at_len;
+				}
+
+				if (buf[0] == 'u') {
+					memcpy (ret + off, uri, uri_len);
+					off += uri_len;
 				}
 
 				if (buf[0] == 'n') {
@@ -272,7 +286,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		exec = g_hash_table_lookup (execs, content_type);
 
-		r_exec = string_replace (exec, large, normal, cropped, 
+		r_exec = string_replace (exec, uri, large, normal, cropped, 
 					 mime_type, mime_type_at, do_cropped, mtime);
 
 		g_free (exec);

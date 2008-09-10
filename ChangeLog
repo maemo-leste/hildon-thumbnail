@@ -1,5 +1,12 @@
 2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/hildon-thumbnailer-wrap.sh
+	* thumbs/Makefile.am
+	* thumbs/thumber-register.c
+	* daemon/plugins/exec-plugin.c: Making it work, a bunch of bugfixes
+
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/exec-plugin.c
 	* daemon/manager.c
