@@ -68,15 +68,15 @@ hildon_thumbnail_plugin_get_supported (GModule *module)
 }
 
 
-typedef void (*InitFunc) (gboolean *cropping, GError **error);
+typedef void (*InitFunc) (gboolean *cropping, register_func func, gpointer instance, GModule *module, GError **error);
 
 void
-hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, GError **error)
+hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, register_func in_func, gpointer instance, GError **error)
 {
 	InitFunc func;
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
-		(func) (cropping, error);
+		(func) (cropping, in_func, instance, module, error);
 	}
 }
 

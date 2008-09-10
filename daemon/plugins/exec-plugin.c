@@ -384,10 +384,12 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 }
 
 void 
-hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
+hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer thumbnailer, GModule *module, GError **error)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);
+	guint i = 0;
+	const gchar **supported;
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
@@ -397,6 +399,16 @@ hildon_thumbnail_plugin_init (gboolean *cropping, GError **error)
 	reload_config (config);
 
 	*cropping = do_cropped;
+
+	if (func) {
+		supported = hildon_thumbnail_plugin_supported ();
+		if (supported) {
+			while (supported[i] != NULL) {
+				func (thumbnailer, supported[i], module);
+				i++;
+			}
+		}
+	}
 
 	g_free (config);
 }

@@ -188,7 +188,8 @@ daemon_start (Daemon *object, gboolean do_register)
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GModule *module = priv->module;
 
-	hildon_thumbnail_plugin_do_init (module, &priv->cropping, &error);
+	hildon_thumbnail_plugin_do_init (module, &priv->cropping, 
+					 NULL, NULL, &error);
 
 	if (!error && do_register) {
 		DBusGProxy *manager_proxy;

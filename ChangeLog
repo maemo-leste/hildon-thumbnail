@@ -1,5 +1,14 @@
 2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Changed the init of plugins
+
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* thumbs/hildon-thumbnailer-wrap.sh
 	* thumbs/Makefile.am
 	* thumbs/thumber-register.c

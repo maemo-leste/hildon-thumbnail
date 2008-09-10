@@ -31,10 +31,14 @@
 
 G_BEGIN_DECLS
 
+typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module);
+
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
 GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
 void        hildon_thumbnail_plugin_do_init       (GModule *module, 
 						   gboolean *cropping,
+						   register_func func,
+						   gpointer self,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
 						   GStrv uris, 

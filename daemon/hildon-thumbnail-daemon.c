@@ -74,17 +74,9 @@ main (int argc, char **argv)
 			module = hildon_thumbnail_plugin_load ("gdkpixbuf");
 
 			hildon_thumbnail_plugin_do_init (module, &cropping,
+							 (register_func) thumbnailer_register_plugin,
+							 thumbnailer,
 							 &error);
-
-			supported = hildon_thumbnail_plugin_get_supported (module);
-			if (supported) {
-				while (supported[i] != NULL) {
-					thumbnailer_register_plugin (thumbnailer, 
-								     supported[i], 
-								     module);
-					i++;
-				}
-			}
 			y++;
 		}
 
