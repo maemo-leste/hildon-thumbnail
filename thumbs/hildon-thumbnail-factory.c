@@ -105,7 +105,8 @@ on_task_finished (DBusGProxy *proxy,
 		  guint       handle,
 		  gpointer    user_data)
 {
-	ThumbsItem *item = g_hash_table_lookup (tasks, (gpointer) handle);
+	gchar *key = g_strdup_printf ("%d", handle);
+	ThumbsItem *item = g_hash_table_lookup (tasks, key);
 
 	if (item) {
 		GdkPixbuf *pixbuf = NULL;
@@ -160,8 +161,11 @@ on_task_finished (DBusGProxy *proxy,
 		g_free (normal);
 		g_free (large);
 
-		g_hash_table_remove (tasks, (gpointer) handle);
+		g_hash_table_remove (tasks, key);
 	}
+
+	g_free (key);
+
 }
 
 static void 
@@ -294,8 +298,9 @@ static void
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
 	ThumbsItem *item = userdata;
+	gchar *key = g_strdup_printf ("%d", OUT_handle);
 	item->handle_id = OUT_handle;
-	g_hash_table_replace (tasks, (gpointer) OUT_handle, item);
+	g_hash_table_replace (tasks, key, item);
 }
 
 HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
@@ -368,7 +373,9 @@ static void
 on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
 {
 	ThumbsItem *item = userdata;
-	g_hash_table_remove (tasks, (gpointer) item->handle_id);
+	gchar *key = g_strdup_printf ("%d", item->handle_id);
+	g_hash_table_remove (tasks, key);
+	g_free (key);
 }
 
 void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
@@ -493,8 +500,8 @@ static void init (void) {
 	if (!had_init) {
 		GError *error = NULL;
 
-		tasks = g_hash_table_new_full (g_int_hash, g_int_equal,
-					       (GDestroyNotify) NULL,
+		tasks = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       (GDestroyNotify) g_free,
 					       (GDestroyNotify) thumb_item_free);
 
 		connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
@@ -514,6 +521,9 @@ static void init (void) {
 					   THUMBNAILER_SERVICE,
 					   THUMBNAILER_PATH,
 					   THUMBNAILER_INTERFACE);
+
+		dbus_g_proxy_add_signal (proxy, "Finished", 
+					G_TYPE_UINT, G_TYPE_INVALID);
 
 		dbus_g_proxy_connect_signal (proxy, "Finished",
 				     G_CALLBACK (on_task_finished),

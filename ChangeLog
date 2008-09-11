@@ -1,3 +1,9 @@
+2008-09-11  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* daemon/thumbnailer.c: Various fixes that make hildon-thumbnail
+	-factory.h actually work
+
 2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/hildon-thumbnail-daemon.c

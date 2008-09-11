@@ -176,7 +176,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 	dbus_async_return_if_fail (urls != NULL, context);
 
 	task->unqueued = FALSE;
-	task->num = num++;
+	task->num = ++num;
 	task->object = g_object_ref (object);
 	task->urls = g_strdupv (urls);
 
