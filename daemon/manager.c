@@ -316,6 +316,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	mime_proxy = g_hash_table_lookup (priv->handlers, 
 					  mime_type);
 
+	/*
+	 Special plugin registrations always override
 	if (mime_proxy) {
 		GError *error = NULL;
 		g_set_error (&error, 
@@ -327,6 +329,7 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 		g_mutex_unlock (priv->mutex);
 		return;
 	}
+	*/
 
 	sender = dbus_g_method_get_sender (context);
 
