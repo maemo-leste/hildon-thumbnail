@@ -477,14 +477,14 @@ void hildon_thumbnail_factory_move_front(HildonThumbnailFactoryHandle handle)
 {
 	init ();
 
-	g_warning ("hildon_thumbnail_factory_move_front is deprecated");
+	//g_warning ("hildon_thumbnail_factory_move_front is deprecated");
 }
 
 void hildon_thumbnail_factory_move_front_all_from(HildonThumbnailFactoryHandle handle)
 {
 	init ();
 
-	g_warning ("hildon_thumbnail_factory_move_front_all_from is deprecated");
+	//g_warning ("hildon_thumbnail_factory_move_front_all_from is deprecated");
 }
 
 void hildon_thumbnail_factory_set_debug(gboolean debug)
