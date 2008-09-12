@@ -543,7 +543,7 @@ hildon_thumber_main (int *argc_p, char ***argv_p, HildonThumberCreateThumb creat
 GdkPixbuf* 
 hildon_thumber_create_empty_pixbuf (void)
 {
-	gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
+	return gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
 }
 
 GQuark 

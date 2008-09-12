@@ -1,5 +1,13 @@
 2008-09-12  Philip Van Hoof  <pvanhoof@gnome.org>
 
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/thumber-register.c
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c: Removed warnings
+
+2008-09-12  Philip Van Hoof  <pvanhoof@gnome.org>
+
 	* debian/hildon-thumbnail.install
 	* thumbs/Makefile.am: Packaging work
 

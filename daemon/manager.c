@@ -428,7 +428,6 @@ static void
 manager_init (Manager *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
-	GFile *file1, *file2;
 
 	priv->mutex = g_mutex_new ();
 	priv->handlers = g_hash_table_new_full (g_str_hash, g_str_equal,

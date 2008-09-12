@@ -53,8 +53,7 @@ main (int argc, char **argv)
 		Manager *manager;
 		Thumbnailer *thumbnailer;
 		DBusGProxy *manager_proxy;
-		GStrv supported;
-		guint i = 0, y = 0;
+		guint y = 0;
 		gboolean cropping;
 		const gchar *plugins[3] = { "gdkpixbuf", "exec", NULL};
 		/* TODO: dynamically load plugins, and detect when new ones get

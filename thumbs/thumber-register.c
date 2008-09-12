@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <glib-object.h>
 
 
 #define CONVERT_CMD BIN_PATH G_DIR_SEPARATOR_S "hildon-thumbnailer-wrap.sh \"%s\" \"{uri}\" \"{large}\" \"{normal}\" \"{cropped}\" \"{mime_at}\" \"{mime}\""
@@ -50,8 +51,6 @@ thumber_register(char *cmd, char *mime_type, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
-	gchar **mimetypes;
-	guint i = 0, length;
 	gchar *r_cmd;
 
 	gchar *d = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", NULL);
@@ -112,8 +111,6 @@ thumber_unregister(char *cmd, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
-	gchar **mimetypes;
-	guint i = 0, length;
 
 	keyfile = g_key_file_new ();
 
@@ -190,9 +187,8 @@ thumber_unregister_mime (char *mime, GError **err)
 	keyfile = g_key_file_new ();
 
 	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
-		guint length, i, z;
+		guint z;
 		gchar **o;
-		gchar **mimetypes = NULL;
 
 		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
 							&length, NULL);

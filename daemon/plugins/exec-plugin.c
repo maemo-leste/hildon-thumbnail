@@ -78,7 +78,7 @@ string_replace (const gchar *in, const gchar *uri, const gchar *large, const gch
 	guint len, i, off = 0, z, in_len = total;
 	guint large_len, normal_len, cropped_len, mime_len, 
 		mtime_len, cropping_len, mime_at_len, uri_len;
-	gchar *s_mtime = g_strdup_printf ("%lu", mtime);
+	gchar *s_mtime = g_strdup_printf ("%u", mtime);
 	gchar *ret;
 
 
@@ -245,9 +245,6 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		gchar *large = NULL, 
 		      *normal = NULL, 
 		      *cropped = NULL;
-		gchar *olarge = NULL, 
-		      *onormal = NULL, 
-		      *ocropped = NULL;
 		gchar *exec = NULL;
 		gchar *mime_type = NULL;
 		gchar *mime_type_at = NULL;
@@ -257,7 +254,6 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		guint64 mtime;
 		gchar *r_exec = NULL;
 		gchar *slash_pos;
-		gchar *cmd_dir, *cmd_path;
 
 		file = g_file_new_for_uri (uri);
 		info = g_file_query_info (file,
