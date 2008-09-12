@@ -48,4 +48,10 @@ BUILT_SOURCES = thumbnailer-client.h
 libhildonthumbnaildir=$(includedir)/hildon-thumbnail
 libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h
 
+install-exec-local:
+	rm -f $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf
+	ln -s hildon-thumb-gdk-pixbuf $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf
+	rm -f $(DESTDIR)$(bindir)/osso-thumber-register
+	ln -s hildon-thumber-register $(DESTDIR)$(bindir)/osso-thumber-register
+
 
