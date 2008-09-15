@@ -67,6 +67,21 @@ PKG_CHECK_MODULES(GDK_PIXBUF, $GDK_PIXBUF_CHECK)
 AC_SUBST(GDK_PIXBUF_LIBS)
 AC_SUBST(GDK_PIXBUF_CFLAGS)
 
+AC_ARG_ENABLE(gstreamer, 
+	      AS_HELP_STRING([--disable-gstreamer],
+			     [Disable gstreamer based thumbnailers]),,
+	      [enable_gstreamer=yes])
+
+if test "x$enable_gstreamer" = "xyes"; then
+   PKG_CHECK_MODULES(GSTREAMER,[gstreamer-0.10 >= 0.10.0],
+   		[have_gstreamer=yes],
+		[have_gstreamer=no])
+   AC_SUBST(GSTREAMER_CFLAGS)
+   AC_SUBST(GSTREAMER_LIBS)
+fi
+
+AM_CONDITIONAL(HAVE_GSTREAMER, test "$have_gstreamer" = "yes")
+
 ##################################################
 # Check for gtk-doc.
 ##################################################

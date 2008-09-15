@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -55,22 +56,32 @@ main (int argc, char **argv)
 		DBusGProxy *manager_proxy;
 		guint y = 0;
 		gboolean cropping;
-		const gchar *plugins[3] = { "gdkpixbuf", "exec", NULL};
-		/* TODO: dynamically load plugins, and detect when new ones get
-		 * dropped, and removed ones get removed (and therefore must
-		 * shut down) */
+		GDir        *dir;
+		const gchar *plugin;
 
 		manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
-
 
 		manager_proxy = dbus_g_proxy_new_for_name (connection, 
 					   MANAGER_SERVICE,
 					   MANAGER_PATH,
 					   MANAGER_INTERFACE);
 
-		while (plugins[y] != NULL) {
-			module = hildon_thumbnail_plugin_load (plugins[y]);
+		dir = g_dir_open (PLUGINS_DIR, 0, &error);
+
+		if (!dir) {
+			g_error ("Error opening modules directory: %s", error->message);
+			g_error_free (error);
+			return;
+		}
+
+		while ((plugin = g_dir_read_name (dir)) != NULL) {
+
+			if (!g_str_has_suffix (plugin, "." G_MODULE_SUFFIX)) {
+				continue;
+			}
+			
+			module = hildon_thumbnail_plugin_load (plugin);
 
 			hildon_thumbnail_plugin_do_init (module, &cropping,
 							 (register_func) thumbnailer_register_plugin,
@@ -78,6 +89,8 @@ main (int argc, char **argv)
 							 &error);
 			y++;
 		}
+
+		g_dir_close (dir);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (main_loop);

@@ -1,3 +1,20 @@
+2008-09-15  Mikael Ottela    <mikael.ottela@ixonos.com>
+	* configure.ac:
+	* daemon/hildon-thumbnail-daemon.c:
+	* daemon/plugins/gstreamer-video-plugin.h:
+	* daemon/plugins/Makefile.am:
+	* daemon/plugins/gstreamer-video-plugin.c:
+	* daemon/thumbnailer.c: Added the gstreamer based video
+	thumbnailer.
+
+	* daemon/plugins/gdkpixbuf-plugin.c: Using g_object_unref instead
+	of gdk_pixbuf_unref.
+
+	* daemon/thumbnailer.c:
+	* daemon/hildon-thumbnail-plugin.c: The plugin directory is now
+	read for the list of available plugins.
+
+	
 2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/thumbnailer.c

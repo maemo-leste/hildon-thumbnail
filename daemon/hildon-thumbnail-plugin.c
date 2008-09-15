@@ -28,13 +28,12 @@
 GModule *
 hildon_thumbnail_plugin_load (const gchar *module_name)
 {
-	gchar *full_name, *path;
+	gchar *path;
 	GModule *module;
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
-	full_name = g_strdup_printf ("libhildon-thumbnailer-%s", module_name);
-	path = g_build_filename (PLUGINS_DIR, full_name, NULL);
+	path = g_build_filename (PLUGINS_DIR, module_name, NULL);
 
 	module = g_module_open (path, G_MODULE_BIND_LOCAL);
 
@@ -46,7 +45,6 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 		g_module_make_resident (module);
 	}
 
-	g_free (full_name);
 	g_free (path);
 
 	return module;

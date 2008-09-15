@@ -12,7 +12,7 @@
  *
  * This library is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * MERCHANTABILITY or FITNESS FOR  PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -278,7 +278,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		save_thumb_file_meta (pixbuf_large, large, mtime, uri, &nerror);
 
-		gdk_pixbuf_unref (pixbuf_large);
+		g_object_unref (pixbuf_large);
 
 		if (nerror)
 			goto nerror_handler;
@@ -299,7 +299,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		save_thumb_file_meta (pixbuf_normal, normal, mtime, uri, &nerror);
 
-		gdk_pixbuf_unref (pixbuf_normal);
+		g_object_unref (pixbuf_normal);
 
 		if (nerror)
 			goto nerror_handler;
@@ -318,11 +318,11 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		pixbuf_cropped = crop_resize (pixbuf, 124, 124);
 
-		gdk_pixbuf_unref (pixbuf);
+		g_object_unref (pixbuf);
 
 		save_thumb_file_cropped (pixbuf_cropped, cropped, mtime, uri, &nerror);
 
-		gdk_pixbuf_unref (pixbuf_cropped);
+		g_object_unref (pixbuf_cropped);
 
 		nerror_handler:
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -237,11 +238,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 		get_some_file_infos (urls[i], &mime_type, &has_thumb, &error);
 
 		if (error) {
+			
 			g_signal_emit (task->object, signals[ERROR_SIGNAL],
 				       0, task->num, 1, error->message);
 			g_error_free (error);
 		} else {
 			// g_print ("M: %s\n", mime_type);
+		  
 			if (mime_type && !has_thumb) {
 				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
 				urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
