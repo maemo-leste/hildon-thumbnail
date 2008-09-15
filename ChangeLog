@@ -1,3 +1,10 @@
+2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/manager.h
+	* daemon/manager.xml: Added a method to get the supported mime-types
+
 2008-09-12  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* thumbs/hildon-thumbnail-factory.c

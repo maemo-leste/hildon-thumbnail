@@ -73,6 +73,8 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 	g_hash_table_insert (priv->plugins, 
 			     g_strdup (mime_type), 
 			     plugin);
+	manager_i_have (priv->manager, mime_type);
+
 }
 
 static gboolean 

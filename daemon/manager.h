@@ -48,7 +48,9 @@ struct ManagerClass {
 GType manager_get_type (void);
 
 void manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *context);
+void manager_get_supported (Manager *object, DBusGMethodInvocation *context);
 
+void manager_i_have (Manager *object, const gchar *mime_type);
 DBusGProxy* manager_get_handler (Manager *object, const gchar *mime_type);
 
 void manager_do_stop (void);

@@ -44,6 +44,7 @@ typedef struct {
 	DBusGConnection *connection;
 	GHashTable *handlers;
 	GMutex *mutex;
+	GList *thumber_has;
 } ManagerPrivate;
 
 enum {
@@ -316,21 +317,6 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	mime_proxy = g_hash_table_lookup (priv->handlers, 
 					  mime_type);
 
-	/*
-	 Special plugin registrations always override
-	if (mime_proxy) {
-		GError *error = NULL;
-		g_set_error (&error, 
-			     DBUS_ERROR, 
-			     0,
-			     "MIME type already registered");
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-		g_mutex_unlock (priv->mutex);
-		return;
-	}
-	*/
-
 	sender = dbus_g_method_get_sender (context);
 
 	manager_add (object, mime_type, sender);
@@ -348,12 +334,72 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	dbus_g_method_return (context);
 }
 
+void 
+manager_i_have (Manager *object, const gchar *mime_type)
+{
+	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+
+	g_mutex_lock (priv->mutex);
+	priv->thumber_has = g_list_prepend (priv->thumber_has, 
+					    g_strdup (mime_type));
+	g_mutex_unlock (priv->mutex);
+}
+
+
+void
+manager_get_supported (Manager *object, DBusGMethodInvocation *context)
+{
+	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	GStrv supported;
+	GHashTable *supported_h;
+	GHashTableIter iter;
+	gpointer key, value;
+	GList *copy;
+	guint y;
+
+	supported_h = g_hash_table_new_full (g_str_hash, g_str_equal,
+					     (GDestroyNotify) g_free, 
+					     (GDestroyNotify) NULL);
+
+	g_mutex_lock (priv->mutex);
+	copy = priv->thumber_has;
+	while (copy) {
+		g_hash_table_replace (supported_h, g_strdup (copy->data), NULL);
+		copy = g_list_next (copy);
+	}
+
+	copy = g_hash_table_get_keys (priv->handlers);
+	while (copy) {
+		g_hash_table_replace (supported_h, g_strdup (copy->data), NULL);
+		copy = g_list_next (copy);
+	}
+	g_list_free (copy);
+
+	g_mutex_unlock (priv->mutex);
+
+	g_hash_table_iter_init (&iter, supported_h);
+
+	supported = (GStrv) g_malloc0 (sizeof (gchar *) * (g_hash_table_size (supported_h) + 1));
+
+	y = 0;
+	while (g_hash_table_iter_next (&iter, &key, &value))  {
+		supported[y] = g_strdup (key);
+		y++;
+	}
+
+	dbus_g_method_return (context, supported);
+
+	g_strfreev (supported);
+	g_hash_table_unref (supported_h);
+}
 
 static void
 manager_finalize (GObject *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
+	if (priv->thumber_has)
+		g_list_free (priv->thumber_has);
 	g_hash_table_unref (priv->handlers);
 	g_mutex_free (priv->mutex);
 
@@ -430,6 +476,7 @@ manager_init (Manager *object)
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
 	priv->mutex = g_mutex_new ();
+	priv->thumber_has = NULL;
 	priv->handlers = g_hash_table_new_full (g_str_hash, g_str_equal,
 						(GDestroyNotify) g_free, 
 						(GDestroyNotify) g_object_unref);
