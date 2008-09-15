@@ -77,7 +77,6 @@ main (int argc, char **argv)
 		Manager *manager;
 		Thumbnailer *thumbnailer;
 		DBusGProxy *manager_proxy;
-		guint y = 0;
 		gboolean cropping;
 		GDir *dir;
 		const gchar *plugin;
@@ -113,7 +112,6 @@ main (int argc, char **argv)
 							 &error);
 			g_hash_table_replace (registrations, g_strdup (plugin),
 					      module);
-			y++;
 		  }
 		  g_dir_close (dir);
 		}
