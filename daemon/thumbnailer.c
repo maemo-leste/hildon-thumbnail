@@ -43,6 +43,9 @@
 
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
 
+void keep_alive (void);
+
+
 typedef struct {
 	Manager *manager;
 	GHashTable *plugins;
@@ -164,6 +167,8 @@ thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *c
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+	keep_alive ();
+
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle);
 	g_mutex_unlock (priv->mutex);
@@ -177,6 +182,8 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 	static guint num = 0;
 
 	dbus_async_return_if_fail (urls != NULL, context);
+
+	keep_alive ();
 
 	task->unqueued = FALSE;
 	task->num = ++num;
@@ -312,10 +319,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 		if (proxy) {
 			GError *error = NULL;
 
+			keep_alive ();
+
 			dbus_g_proxy_call (proxy, "Create", &error, 
 					   G_TYPE_STRV, urlss,
 					   G_TYPE_INVALID, 
 					   G_TYPE_INVALID);
+
+			keep_alive ();
 
 			g_object_unref (proxy);
 
@@ -336,7 +347,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 			if (module) {
 				GError *error = NULL;
 
+				keep_alive ();
+
 				hildon_thumbnail_plugin_do_create (module, urlss, &error);
+
+				keep_alive ();
 
 				if (error) {
 					g_signal_emit (task->object, signals[ERROR_SIGNAL],
@@ -381,7 +396,9 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 {
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
-	
+
+	keep_alive ();
+
 	// TODO
 	
 	dbus_g_method_return (context);
@@ -392,7 +409,9 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 {
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
-	
+
+	keep_alive ();
+
 	// TODO
 	
 	dbus_g_method_return (context);
@@ -402,7 +421,9 @@ void
 thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
 	dbus_async_return_if_fail (urls != NULL, context);
-	
+
+	keep_alive ();
+
 	// TODO
 	
 	dbus_g_method_return (context);

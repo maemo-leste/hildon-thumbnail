@@ -40,6 +40,8 @@ G_DEFINE_TYPE (Manager, manager, G_TYPE_OBJECT)
 gchar* dbus_g_method_get_sender (DBusGMethodInvocation *context);
 #endif
 
+void keep_alive (void);
+
 typedef struct {
 	DBusGConnection *connection;
 	GHashTable *handlers;
@@ -312,6 +314,8 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 
 	dbus_async_return_if_fail (mime_type != NULL, context);
 
+	keep_alive ();
+
 	g_mutex_lock (priv->mutex);
 
 	mime_proxy = g_hash_table_lookup (priv->handlers, 
@@ -356,6 +360,8 @@ manager_get_supported (Manager *object, DBusGMethodInvocation *context)
 	gpointer key, value;
 	GList *copy;
 	guint y;
+
+	keep_alive ();
 
 	supported_h = g_hash_table_new_full (g_str_hash, g_str_equal,
 					     (GDestroyNotify) g_free, 

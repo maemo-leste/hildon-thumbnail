@@ -1,4 +1,13 @@
+2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c: Memory leak fix
+
+	* daemon/hildon-thumbnail-daemon.c:
+	* daemon/manager.c:
+	* daemon/thumbnailer.c: Keep alive for ten minutes
+
 2008-09-15  Mikael Ottela    <mikael.ottela@ixonos.com>
+
 	* configure.ac:
 	* daemon/hildon-thumbnail-daemon.c:
 	* daemon/plugins/gstreamer-video-plugin.h:
