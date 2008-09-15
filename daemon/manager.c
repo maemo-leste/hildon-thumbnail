@@ -398,8 +398,10 @@ manager_finalize (GObject *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 
-	if (priv->thumber_has)
+	if (priv->thumber_has) {
+		g_list_foreach (priv->thumber_has, (GFunc) g_free, NULL);
 		g_list_free (priv->thumber_has);
+	}
 	g_hash_table_unref (priv->handlers);
 	g_mutex_free (priv->mutex);
 
