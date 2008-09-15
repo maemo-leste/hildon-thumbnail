@@ -118,11 +118,12 @@ main (int argc, char **argv)
 		  g_dir_close (dir);
 		}
 
+		main_loop = g_main_loop_new (NULL, FALSE);
+
 		g_timeout_add_seconds (600, 
 				       shut_down_after_timeout,
 				       main_loop);
 
-		main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (main_loop);
 
 		g_hash_table_iter_init (&iter, registrations);
