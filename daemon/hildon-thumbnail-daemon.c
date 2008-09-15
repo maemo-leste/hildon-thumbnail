@@ -130,7 +130,7 @@ main (int argc, char **argv)
 
 		while (g_hash_table_iter_next (&iter, &key, &value))  {
 			thumbnailer_unregister_plugin (thumbnailer, value);
-			hildon_thumbnail_plugin_do_stop (module);
+			hildon_thumbnail_plugin_do_stop (value);
 		}
 
 		g_hash_table_unref (registrations);
