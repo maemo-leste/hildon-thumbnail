@@ -11,11 +11,12 @@ generic_libs = \
 	$(GLIB_LIBS) \
 	$(GIO_LIBS)
 
-bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
 
 bin_SCRIPTS = hildon-thumbnailer-wrap.sh
 
 if ENABLE_OSSO
+bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
+
 hildon_thumb_gdk_pixbuf_CFLAGS = $(generic_includes)  $(LIBOSSO_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS)
 hildon_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c thumber-common.c
