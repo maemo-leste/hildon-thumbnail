@@ -373,9 +373,8 @@ manager_get_supported (Manager *object, DBusGMethodInvocation *context)
 		g_hash_table_replace (supported_h, g_strdup (copy->data), NULL);
 		copy = g_list_next (copy);
 	}
-	g_list_free (copy);
-
 	g_mutex_unlock (priv->mutex);
+	g_list_free (copy);
 
 	g_hash_table_iter_init (&iter, supported_h);
 
