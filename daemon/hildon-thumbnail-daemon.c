@@ -135,8 +135,8 @@ main (int argc, char **argv)
 
 		g_hash_table_unref (registrations);
 
-		manager_do_stop ();
 		thumbnailer_do_stop ();
+		manager_do_stop ();
 
 		g_main_loop_unref (main_loop);
 	}
