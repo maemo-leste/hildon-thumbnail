@@ -452,9 +452,9 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		video_thumbnail_create (thumber, &nerror);
 
-		g_slice_free (VideoThumbnailer, thumber);
-
 		nerror_handler:
+
+		g_slice_free (VideoThumbnailer, thumber);
 
 		if (nerror) {
 			if (!errors)
