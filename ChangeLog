@@ -1,3 +1,8 @@
+2008-09-16  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Error reporting and a few 
+	memory leak fixes
+
 2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/hildon-thumbnail-daemon.c: Memory leak fix

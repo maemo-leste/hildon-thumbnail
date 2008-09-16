@@ -36,6 +36,9 @@
 
 #include "hildon-thumbnail-plugin.h"
 
+#define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"
+#define GSTP_ERROR		g_quark_from_static_string (GSTP_ERROR_DOMAIN)
+
 #define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
 #define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
@@ -261,80 +264,97 @@ callback_bus(GstBus           *bus,
 }
 
 static void
-video_thumbnail_create (VideoThumbnailer *thumber)
-{	
-	GstBus		  *bus;
-
+video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
+{
+	GstBus            *bus;
 	GstPad            *videopad;
 	GstCaps           *caps;
 
-	/* Create the source pipeline and elements*/
+	/* Resetting */
+	thumber->loop         = NULL;
+	thumber->source       = NULL;
+	thumber->decodebin    = NULL;
+	thumber->bin          = NULL;
+	thumber->video_scaler = NULL;
+	thumber->video_filter = NULL;
+	thumber->video_sink   = NULL;
+
+	/* Preparing the source, decodebin and pipeline */
 	thumber->pipeline     = gst_pipeline_new("source pipeline");
-       	thumber->source       = gst_element_factory_make ("filesrc", "source");
+	thumber->source       = gst_element_factory_make ("filesrc", "source");
 	thumber->decodebin    = gst_element_factory_make ("decodebin", "decodebin");
-	if(!(thumber->pipeline && thumber->source && thumber->decodebin))
-	{
-		g_critical("Couldn't create pipeline elements");
-		return;
+
+	if (!(thumber->pipeline && thumber->source && thumber->decodebin)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			     "Couldn't create pipeline elements");
+		goto cleanup;
 	}
 
-
-	gst_bin_add_many(GST_BIN(thumber->pipeline),
-			 thumber->source, thumber->decodebin,
-			 NULL);	
+	gst_bin_add_many (GST_BIN(thumber->pipeline),
+			  thumber->source, thumber->decodebin,
+			  NULL);
 
 	bus = gst_pipeline_get_bus (GST_PIPELINE (thumber->pipeline));
-	gst_bus_add_watch (bus, (GstBusFunc)callback_bus, thumber);
+	gst_bus_add_watch (bus, (GstBusFunc) callback_bus, thumber);
 	gst_object_unref (bus);
 
-	g_object_set (G_OBJECT (thumber->source), "location", g_filename_from_uri (thumber->uri, NULL, NULL), NULL);
+	g_object_set (thumber->source, "location", 
+		      g_filename_from_uri (thumber->uri, NULL, NULL), 
+		      NULL);
 
-	g_signal_connect (thumber->decodebin, "new-decoded-pad", G_CALLBACK (callback_newpad), thumber);
+	g_signal_connect (thumber->decodebin, "new-decoded-pad", 
+			  G_CALLBACK (callback_newpad), thumber);
 
-	if(!gst_element_link_many(thumber->source, thumber->decodebin, NULL))
-	{
-		g_error ("Failed to link source pipeline elements");
-		return;
+	if (!gst_element_link_many(thumber->source, thumber->decodebin, NULL)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link source pipeline elements");
+		goto cleanup;
 	}
 
-	/* Create the sink bin and elements */
+	/* Preparing the sink bin and elements */
 	thumber->bin          = gst_bin_new("sink bin");
 	thumber->video_scaler = gst_element_factory_make("videoscale", "video_scaler");
 	thumber->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
 	thumber->video_sink   = gst_element_factory_make("fakesink", "video_sink");
-	if(!(thumber->bin && thumber->video_scaler && thumber->video_filter && thumber->video_sink))
-	{
-		g_critical("Couldn't create sink bin elements");
-		return;
+
+	if (!(thumber->bin && thumber->video_scaler && thumber->video_filter && thumber->video_sink)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Couldn't create sink bin elements");
+		goto cleanup;
 	}
 
-	gst_bin_add_many(GST_BIN(thumber->bin),
-			 thumber->video_scaler, thumber->video_filter, thumber->video_sink,
-			 NULL);	
+	gst_bin_add_many (GST_BIN(thumber->bin),
+			  thumber->video_scaler, 
+			  thumber->video_filter, 
+			  thumber->video_sink,
+			  NULL);
 
-	if(!gst_element_link_many(thumber->video_scaler, thumber->video_filter, NULL))
-	{
-		g_error ("Failed to link sink bin elements");
-		return;
+	if (!gst_element_link_many(thumber->video_scaler, thumber->video_filter, NULL)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link sink bin elements");
+		goto cleanup;
 	}
 
-	caps = gst_caps_new_simple("video/x-raw-rgb",
-				   "width", G_TYPE_INT, thumber->size,
-				   "height", G_TYPE_INT, thumber->size,
-				   "bpp", G_TYPE_INT, 24,
-				   "depth", G_TYPE_INT, 24,
-				   NULL);
-	if(!gst_element_link_filtered(thumber->video_filter, thumber->video_sink, caps))
-	{
-		g_error ("Failed to link sink bin elements");
-		return;
-	}
-	gst_caps_unref(caps);
+	caps = gst_caps_new_simple ("video/x-raw-rgb",
+				    "width", G_TYPE_INT, thumber->size,
+				    "height", G_TYPE_INT, thumber->size,
+				    "bpp", G_TYPE_INT, 24,
+				    "depth", G_TYPE_INT, 24,
+				    NULL);
 
-	g_object_set(G_OBJECT(thumber->video_sink), "signal-handoffs", TRUE, NULL);
-	g_signal_connect(G_OBJECT(thumber->video_sink), "preroll-handoff",
-			 G_CALLBACK(callback_thumbnail), thumber);
-	
+	if (!gst_element_link_filtered(thumber->video_filter, thumber->video_sink, caps)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link sink bin elements");
+		goto cleanup;
+	}
+
+	gst_caps_unref (caps);
+
+	g_object_set (thumber->video_sink, "signal-handoffs", TRUE, NULL);
+
+	g_signal_connect (thumber->video_sink, "preroll-handoff",
+			  G_CALLBACK(callback_thumbnail), thumber);
+
 	videopad = gst_element_get_pad (thumber->video_scaler, "sink");
 	gst_element_add_pad (thumber->bin, gst_ghost_pad_new ("sink", videopad));
 	gst_object_unref (videopad);
@@ -342,18 +362,38 @@ video_thumbnail_create (VideoThumbnailer *thumber)
 
 	/* Run */
 	thumber->loop = g_main_loop_new (NULL, FALSE);
-
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
-
 	g_main_loop_run (thumber->loop);
 
+	cleanup:
 
-	/* Cleanup */
-	gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
-	/* This should free all the elements in the pipeline FIXME Check that this is the case*/
-	gst_object_unref (thumber->pipeline);
+	if (thumber->pipeline) {
+		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
 
-	g_main_loop_unref (thumber->loop);
+		/* This should free all the elements in the pipeline FIXME 
+		 * Check that this is the case 
+		 *
+		 * Review by Philip: I'm assuming here that this is a correct
+		 * assumption ;-) - I have not checked myself - */
+
+		gst_object_unref (thumber->pipeline);
+	} else {
+		if (thumber->source)
+			gst_object_unref (thumber->source);
+		if (thumber->decodebin)
+			gst_object_unref (thumber->decodebin);
+		if (thumber->bin)
+			gst_object_unref (thumber->bin);
+		if (thumber->video_scaler)
+			gst_object_unref (thumber->video_scaler);
+		if (thumber->video_filter)
+			gst_object_unref (thumber->video_filter);
+		if (thumber->video_sink)
+			gst_object_unref (thumber->video_sink);
+	}
+
+	if (thumber->loop)
+		g_main_loop_unref (thumber->loop);
 }
 
 const gchar** 
@@ -377,48 +417,64 @@ void
 hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 {
 	VideoThumbnailer *thumber;
-	GError *local_error = NULL;
-	gchar *large   = NULL;
-	gchar *normal  = NULL;
-	gchar *cropped = NULL;
-	guint i = 0;
-	
+	gchar *large    = NULL;
+	gchar *normal   = NULL;
+	gchar *cropped  = NULL;
+	guint i         = 0;
+	GString *errors = NULL;
+
 	while (uris[i] != NULL) {
-		hildon_thumbnail_util_get_thumb_paths (uris[i], &large, &normal, &cropped, &local_error);
-			
-		if (local_error) {
-			
-			g_free (large);
-			g_free (normal);
-			g_free (cropped);		
-			return;
-		}
+		GError *nerror = NULL;
+
+		hildon_thumbnail_util_get_thumb_paths (uris[i], &large, &normal, 
+						       &cropped, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
 
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);
-		
+
 		thumber->has_audio    = thumber->has_video = FALSE;
 		thumber->video_fps_n  = thumber->video_fps_d = -1;
 		thumber->video_height = thumber->video_width = -1;
-		
 		thumber->uri          = uris[i];
-		
 		thumber->target       = normal;
 		thumber->size         = 128;
 
-		video_thumbnail_create (thumber);
+		video_thumbnail_create (thumber, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
 
 		thumber->target       = large;
 		thumber->size         = 256;
-		
-		video_thumbnail_create (thumber);
-			
+
+		video_thumbnail_create (thumber, &nerror);
+
 		g_slice_free (VideoThumbnailer, thumber);
+
+		nerror_handler:
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+						uris[i],
+						nerror->message);
+		}
+
 		g_free (large);
 		g_free (normal);
 		g_free (cropped);
 
 		i++;
+	}
+
+	if (errors) {
+		g_set_error (error, GSTP_ERROR, 0,
+			     errors->str);
+		g_string_free (errors, TRUE);
 	}
 }
 
