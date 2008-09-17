@@ -1,4 +1,12 @@
 usr/bin/hildon-thumb-gdk-pixbuf
 usr/bin/hildon-thumber-register
+usr/bin/hildon-thumbnailer-wrap.sh
 usr/bin/osso-thumb-gdk-pixbuf
 usr/bin/osso-thumber-register
+usr/libexec/hildon-thumbnailer-plugin-runner
+usr/libexec/hildon-thumbnailerd
+usr/share/hildon-thumbnail/manager.xml
+usr/share/hildon-thumbnail/thumbnailer.xml
+usr/share/dbus-1/services/org.freedesktop.thumbnailer.service
+usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-exec.so
+usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-gdkpixbuf.so

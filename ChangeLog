@@ -1,3 +1,340 @@
+2008-09-17  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c: Respecting the override file
+
+2008-09-16  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Error reporting and a few 
+	memory leak fixes
+
+2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c: Memory leak fix
+
+	* daemon/hildon-thumbnail-daemon.c:
+	* daemon/manager.c:
+	* daemon/thumbnailer.c: Keep alive for ten minutes
+
+2008-09-15  Mikael Ottela    <mikael.ottela@ixonos.com>
+
+	* configure.ac:
+	* daemon/hildon-thumbnail-daemon.c:
+	* daemon/plugins/gstreamer-video-plugin.h:
+	* daemon/plugins/Makefile.am:
+	* daemon/plugins/gstreamer-video-plugin.c:
+	* daemon/thumbnailer.c: Added the gstreamer based video
+	thumbnailer.
+
+	* daemon/plugins/gdkpixbuf-plugin.c: Using g_object_unref instead
+	of gdk_pixbuf_unref.
+
+	* daemon/thumbnailer.c:
+	* daemon/hildon-thumbnail-plugin.c: The plugin directory is now
+	read for the list of available plugins.
+
+	
+2008-09-15  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/manager.h
+	* daemon/manager.xml: Added a method to get the supported mime-types
+
+2008-09-12  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/thumber-register.c
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c: Removed warnings
+
+2008-09-12  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* debian/hildon-thumbnail.install
+	* thumbs/Makefile.am: Packaging work
+
+2008-09-11  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* daemon/thumbnailer.c: Various fixes that make hildon-thumbnail
+	-factory.h actually work
+
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Changed the init of plugins
+
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnailer-wrap.sh
+	* thumbs/Makefile.am
+	* thumbs/thumber-register.c
+	* daemon/plugins/exec-plugin.c: Making it work, a bunch of bugfixes
+
+2008-09-10  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c
+	* daemon/manager.h: File monitoring the service and configuration files
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/thumber-register.c
+	* daemon/plugins/exec-plugin.c: Support for mime@type, strange old
+	hildon-thumbnail code ... grmbl (I'm not even sure if @ ain't a not
+	allowed character in mime/types). Anyway.
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/thumber-register.c: Reimplemented hildon-thumbnail-register
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c: Fixed two bugs loading configuration
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/thumber-gdk-pixbuf.c
+	* thumbs/Makefile.am
+	* thumbs/thumber-register.c
+	* thumbs/thumber-common.c
+	* configure.ac: Started to replace the register binary, reinstalled 
+	the original pixbuf thumber after a rewrite to GIO
+
+2008-09-09  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/exec-plugin.h
+	* daemon/plugins/Makefile.am: Added a thumbnailer that simply executes
+	external thumbnailers to perform being a thumbnailer
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/thumbs-private.h
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/thumber-gdk-pixbuf.c
+	* thumbs/md5.c
+	* thumbs/Makefile.am
+	* thumbs/hildon-thumbnail-factory.h
+	* thumbs/thumber-register.c
+	* thumbs/thumbs-common.c
+	* thumbs/md5.h
+	* thumbs/thumber-common.c
+	* configure.ac
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/Makefile.am
+	* INSTALL
+	* Makefile.am: Hollowed out the old hildon-thumbnail API, made it use
+	 the service
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Making it possible to disable
+	cropping by configuration in $HOME/.config/hildon-thumbnailer/
+	gdkpixbuf-plugin.config:
+
+	[Hildon Thumbnailer]
+	doCropped=false
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/thumbnailer.c: Support for cropped thumbnails
+
+2008-09-08  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugin-runner.c
+	* daemon/manager.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/plugin-runner.xml
+	* daemon/thumbnailer.xml
+	* daemon/manager.xml: Changed specification to have more sane
+	namespace names
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugin-runner.c
+	* daemon/manager.c
+	* daemon/README.plugin-runner
+	* daemon/Makefile.am: Making the pluginrunner work again
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/manager.h
+	* daemon/Makefile.am: Spec change, added registrations using service 
+	files in the thumbnailer directories
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c
+	* daemon/plugins/Makefile.am
+	* daemon/utils.h
+	* daemon/pixbuf-io-loader.c
+	* daemon/Makefile.am: Moving things around
+
+2008-09-05  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugin-runner.c
+	* daemon/hildon-thumbnail-plugin.c: Removed dependency on
+	thumbnailer.h in hildon-thumbnail-plugin.h
+
+2008-09-04  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugin-runner.c
+	* daemon/plugin-runner.xml
+	* daemon/Makefile.am: Added a tool to run a GModule plugin as a
+	standalone specialized thumbnailer.
+
+	Sample usage:
+
+	libexec/hildon-thumbnailerd &
+	libexec/hildon-thumbnailer-run-plugin-as-standalone gdkpixbuf
+
+	To run the libhildon-thumbnailer-gdkpixbuf.so module as standalone
+
+2008-09-04  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/default.c
+	* daemon/plugins/gdkpixbuf-plugin.h
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/default.h: Renamed default to gdkpixbuf-plugin
+
+2008-09-04  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/pixbuf-io-loader.c
+	* daemon/plugins/default.c
+	* daemon/plugins/Makefile.am
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/thumbnailer.c
+	* daemon/md5.c
+	* daemon/Makefile.am
+	* daemon/md5.h: Making our very first thumbnails!
+
+2008-09-04  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* tests/daemon.xml
+	* tests/daemon.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml: Changed spec
+
+2008-09-03  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* tests/daemon.xml
+	* tests/daemon.c
+	* tests/Makefile.am
+	* configure.ac: Made a little external plugin test
+
+2008-09-03  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* configure.ac
+	* config.h.in: Made GIO required
+
+	* daemon/thumbnailer.c
+	* daemon/Makefile.am
+	* daemon/thumbnailer.xml: Some specification changes
+
+2008-09-03  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/thumbnailer-marshal.list
+	* daemon/Makefile.am
+	* daemon/thumbnailer.xml: Slightly different protocol, with queuing
+	and unqueueing and added a few signals
+
+2008-09-02  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.c: Made the threadpool a LIFO
+
+2008-09-02  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/default.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/hildon-thumbnail-plugin.c
+	* configure.ac: More infrastructure and initial architecture work
+
+2008-09-02  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c: Bugfix, DBusGConnection is not a GObject
+
+2008-09-02  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/dbus-utils.h
+	* daemon/thumbnailer.c
+	* daemon/manager.c
+	* daemon/generic.c
+	* daemon/thumbnailer.h
+	* daemon/manager.h
+	* daemon/generic.h
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml
+	* daemon/Makefile.am
+	* daemon/generic.xml
+	* daemon/dbus-utils.c: Some major refactoring and setting up of initial
+	infrastructure
+
+2008-09-01  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/image-png.xml
+	* daemon/plugins/default.c
+	* daemon/plugins/default.h
+	* daemon/generic.h
+	* daemon/Makefile.am
+	* daemon/generic.xml
+	* daemon/generic.c
+	* daemon/org.freedesktop.Thumbnailer.service.in
+	* daemon/org.freedesktop.thumbnailer.service.in: Installed a
+	org.freedesktop.thumbnailer.generic, according to changed
+	specifications
+
+2008-09-01  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* Removed generated files from the repository
+	* Created daemon subdirectory, unfinished
+	* Cleanups here and there
+
+	* Branchpoint (rev 15925+)
+
 2007-10-09  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 2.0.0

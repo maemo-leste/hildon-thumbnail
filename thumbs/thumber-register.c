@@ -4,6 +4,7 @@
  * Copyright (C) 2005 Nokia Corporation.
  *
  * Contact: Marius Vollmer <marius.vollmer@nokia.com>
+ * Author: Philip Van Hoof <pvanhoof@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -21,115 +22,206 @@
  *
  */
 
-#include "hildon-thumbnail-factory.h"
-#include "thumbs-private.h"
-
 #include <stdio.h>
 #include <string.h>
 
 #include <glib.h>
-#include <gconf/gconf-client.h>
+#include <glib-object.h>
 
-enum {
-    THUMBER_REGISTER_ERROR = 10
-} ThumberRegisterError;
 
-GQuark reg_quark = 0;
+#define CONVERT_CMD BIN_PATH G_DIR_SEPARATOR_S "hildon-thumbnailer-wrap.sh \"%s\" \"{uri}\" \"{large}\" \"{normal}\" \"{cropped}\" \"{mime_at}\" \"{mime}\""
 
-GConfClient *client = NULL;
 
-gboolean init_gconf()
+static void
+write_keyfile (const gchar *filen, GKeyFile *keyfile)
 {
-    client = gconf_client_get_default();
+	FILE* file = fopen (filen, "w");
 
-    return client != NULL;
+	if (file) {
+		gsize len;
+		char *str = g_key_file_to_data (keyfile, &len, NULL);
+		fputs (str, file);
+		g_free (str);
+		fclose (file);
+	}
 }
 
-void destroy_gconf()
+static void 
+thumber_register(char *cmd, char *mime_type, GError **err)
 {
-    g_object_unref(client);
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
+	gchar *r_cmd;
+
+	gchar *d = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", NULL);
+
+	g_mkdir_with_parents (d, 0770);
+	g_free (d);
+
+	keyfile = g_key_file_new ();
+	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		gchar **mimetypes;
+
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * 2);
+		mimetypes[0] = g_strdup (mime_type);
+		g_key_file_set_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", FALSE);
+		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) 1);
+
+		g_strfreev (mimetypes);
+
+	} else {
+		guint length, i, z = 0;
+		gchar **o;
+		gchar **mimetypes;
+
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
+
+		mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * (length + 2));
+		for (i = 0; i< length; i++) {
+			if (strcmp (o[i], mime_type) != 0) {
+				mimetypes[z] = g_strdup (o[i]);
+				z++;
+			}
+		}
+
+		mimetypes[z] = g_strdup (mime_type);
+		g_strfreev (o);
+
+		g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) length+1);
+
+		g_strfreev (mimetypes);
+	}
+
+	r_cmd = g_strdup_printf (CONVERT_CMD, cmd);
+
+	g_key_file_set_string (keyfile, mime_type, "Exec", r_cmd);
+
+	write_keyfile (config, keyfile);
+
+	g_free (r_cmd);
+	g_free (config);
+	g_key_file_free (keyfile);
 }
 
-void thumber_register(char *cmd, char *mime_type, GError **err)
+static void 
+thumber_unregister(char *cmd, GError **err)
 {
-    char *q_mime = g_strdup(mime_type);
-    char *slash_pos = strchr(q_mime, '/');
-    char *cmd_dir, *cmd_path;
-    GError *conf_error = NULL;
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
 
-    if(slash_pos) {
-        *slash_pos = '@';
-    }
+	keyfile = g_key_file_new ();
 
-    if(strchr(q_mime, '/')) {
-        g_set_error(err, reg_quark, THUMBER_REGISTER_ERROR,
-            "MIME type contains more than one slash: %s", mime_type);
+	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		guint length, i, z;
+		gchar **o;
+		gchar **mimetypes = NULL;
 
-        g_free(q_mime);
-        return;
-    }
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
 
-    cmd_dir = g_strconcat(THUMBS_GCONF_DIR, "/", q_mime, NULL);
-    cmd_path = get_conf_cmd_path(cmd_dir);
+		if (length > 0) {
+			mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
 
-    gconf_client_set_string(client, cmd_path, cmd, &conf_error);
+			z = 0;
 
-    if(conf_error) {
-        g_propagate_error(err, conf_error);
-    }
+			for (i = 0; i< length; i++) {
+				gboolean doit = FALSE;
+				gchar *exec = g_key_file_get_string (keyfile, o[i], "Exec", NULL);
 
-    g_free(cmd_dir);
-    g_free(cmd_path);
-    g_free(q_mime);
+				if (exec) {
+					gchar *ptr = strchr (exec, '"');
+					if (ptr) {
+						gchar *check;
+						ptr++;
+						check = ptr;
+						ptr = strchr (ptr, '"');
+						if (ptr) {
+							*ptr = '\0';
+							if (strcmp (check, cmd) == 0) {
+								g_key_file_remove_group (keyfile, o[i], NULL);
+								doit = FALSE;
+							} else
+								doit = TRUE;
+						} else
+							doit = TRUE;
+					} else
+						doit = TRUE;
+				} else
+					doit = TRUE;
+
+				if (doit) {
+					mimetypes[z] = g_strdup (o[i]);
+					z++;
+				}
+			}
+		}
+
+		g_strfreev (o);
+
+		if (mimetypes) {
+			g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+						    (const gchar **) mimetypes, (gsize) length+1);
+
+			g_strfreev (mimetypes);
+		}
+
+		write_keyfile (config, keyfile);
+	}
+
+	g_free (config);
+	g_key_file_free (keyfile);
 }
 
-void thumber_unregister(char *cmd, GError **err)
+
+static void 
+thumber_unregister_mime (char *mime, GError **err)
 {
-    GSList *mime_dirs;
-    GSList *dir;
+	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
+	GKeyFile *keyfile;
+	gchar **mimetypes;
+	guint i = 0, length;
 
-    mime_dirs = gconf_client_all_dirs(client, THUMBS_GCONF_DIR, NULL);
+	keyfile = g_key_file_new ();
 
-    if(!mime_dirs) {
-        g_set_error(err, reg_quark, THUMBER_REGISTER_ERROR,
-            "Unregistering failed, no conf dir found");
-        return;
-    }
+	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
+		guint z;
+		gchar **o;
 
-    for(dir = mime_dirs; dir; dir = dir->next) {
-        gchar *dirname = dir->data;
-        gchar *cmd_path;
-        gchar *basename;
-        gchar *conf_cmd;
+		o = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+							&length, NULL);
 
-        cmd_path = get_conf_cmd_path(dirname);
-        basename = g_strdup(strrchr(dirname, '/') + 1);
+		if (length > 0) {
+			mimetypes = (gchar **) g_malloc0 (sizeof (gchar *) * length);
 
-        conf_cmd = gconf_client_get_string(client, cmd_path, NULL);
+			z = 0;
 
-        if(conf_cmd) {
-            unquote_mime_dir(basename);
+			for (i = 0; i< length; i++) {
+				if (strcmp (o[i], mime) == 0) {
+					g_key_file_remove_group (keyfile, o[i], NULL);
+				} else {
+					mimetypes[z] = g_strdup (o[i]);
+					z++;
+				}
+			}
+		}
 
-            //g_message("Thumber dir, cmd: %s, %s", basename, conf_cmd);
+		g_strfreev (o);
 
-            if(strcmp(conf_cmd, cmd) == 0) {
-                //g_message("Deleting %s", dirname);
+		if (mimetypes) {
+			g_key_file_set_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", 
+					    (const gchar **) mimetypes, (gsize) length+1);
 
-                gconf_client_unset(client, cmd_path, NULL);
-                gconf_client_unset(client, dirname, NULL);
-            }
+			g_strfreev (mimetypes);
+		}
 
-            g_free(conf_cmd);
-        } else {
-            g_warning("Directory contains no command: %s", dirname);
-        }
+		write_keyfile (config, keyfile);
+	}
 
-        g_free(basename);
-        g_free(dirname);
-        g_free(cmd_path);
-    }
-
-    g_slist_free(mime_dirs);
+	g_free (config);
+	g_key_file_free (keyfile);
 }
 
 int main(int argc, char **argv)
@@ -137,12 +229,12 @@ int main(int argc, char **argv)
     int status = 0;
 
     g_type_init();
-    reg_quark = g_quark_from_static_string("osso-thumber-register");
-
+ 
     if(argc != 3) {
         printf( "Usage:\n"
                 "    osso-thumber-register <handler-cmd> <mime-type>\n"
                 "    osso-thumber-register -u <handler-cmd>\n"
+                "    osso-thumber-register -um <mime>\n"
                 "Options:\n"
                 "    -u : unregister specified thumber command\n"
         );
@@ -151,18 +243,13 @@ int main(int argc, char **argv)
     } else {
         GError *err = NULL;
 
-        if(!init_gconf()) {
-            g_warning("GConf init failed");
-            return 2;
-        }
-
         if(strcmp(argv[1], "-u") == 0) {
             thumber_unregister(argv[2], &err);
+        } else if(strcmp(argv[1], "-um") == 0) {
+            thumber_unregister_mime(argv[2], &err);
         } else {
             thumber_register(argv[1], argv[2], &err);
         }
-
-        destroy_gconf();
 
         if(err) {
             g_warning("Error in osso-thumber-register, code %d: %s",

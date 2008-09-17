@@ -1,0 +1,25 @@
+Put a file like this in 
+
+/usr/share/dbus-1/services :
+
+[D-BUS Service]
+Name=com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer
+Exec=/opt/thumbnailer/libexec/hildon-thumbnailer-plugin-runner -m gdkpixbuf -b com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer -p /com/nokia/hildon/thumbnail/pluginrunner/Thumbnailer
+
+And a file like this in 
+
+/usr/share/thumbnailers/com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer.service :
+
+[D-BUS Thumbnailer]
+Name=com.nokia.hildon.thumbnail.pluginrunner.Thumbnailer
+MimeTypes=image/png;image/jpeg
+Comment=free comment
+
+To test things:
+
+export IMAGE_TO_THUMB=file:///home/pvanhoof/Desktop/Screenshot.png
+
+dbus-send --print-reply --dest=org.freedesktop.thumbnailer \
+	--type=method_call /org/freedesktop/thumbnailer/Generic \
+	org.freedesktop.thumbnailer.Generic.Queue \
+	array:string:"$IMAGE_TO_THUMB" uint32:0

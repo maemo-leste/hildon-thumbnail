@@ -1,3 +1,13 @@
+hildon-thumbnail (3.0.0~unreleased) unstable; urgency=low
+
+  [ Philip Van Hoof ]
+  * Refactored to a daemon
+
+  [ Marius Vollmer ]
+  * Build-depend on libglib2.0-0 (>= 2.16), for GIO.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 17 Sep 2008 14:54:55 +0300
+
 hildon-thumbnail (2.0.0) unstable; urgency=low
 
   * Fixes: MB#M2083

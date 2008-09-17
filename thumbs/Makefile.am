@@ -1,29 +1,50 @@
-# TODO: remove THUMBER_DIR flag, use something better
-# TODO: move common stuff to library?
+generic_includes = \
+	-DLOCALEDIR=\"$(localedir)\" \
+	-I$(top_srcdir) -I. \
+	-I$(top_srcdir)/daemon \
+	$(DBUS_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(GIO_CFLAGS)
 
-CFLAGS += -Wall -std=c99 -pedantic '-DTHUMBER_DIR="$(shell pwd)"' '-DBIN_DIR="$(bindir)"'
+generic_libs = \
+	$(DBUS_LIBS) \
+	$(GLIB_LIBS) \
+	$(GIO_LIBS)
 
-INCLUDES = $(PKG_CFLAGS) -DLOCALEDIR=\"$(localedir)\" \
-    -I$(srcdir)/..
 
-# Binaries
+bin_SCRIPTS = hildon-thumbnailer-wrap.sh
+
+if ENABLE_OSSO
 bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register
 
-hildon_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c
-hildon_thumb_gdk_pixbuf_LDADD = $(PKG_LIBS) libhildonthumbnail.la
+hildon_thumb_gdk_pixbuf_CFLAGS = $(generic_includes)  $(LIBOSSO_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS)
+hildon_thumb_gdk_pixbuf_SOURCES = thumber-gdk-pixbuf.c thumber-common.c
+hildon_thumb_gdk_pixbuf_LDADD = libhildonthumbnail.la $(generic_libs) \
+	$(top_builddir)/daemon/libshared.la $(GDK_PIXBUF_LIBS) \
+	$(LIBOSSO_LIBS)
 
+hildon_thumber_register_CFLAGS = $(generic_includes) $(LIBOSSO_CFLAGS) \
+	-DBIN_PATH=\"$(prefix)/bin\"
 hildon_thumber_register_SOURCES = thumber-register.c
-hildon_thumber_register_LDADD = $(PKG_LIBS) libhildonthumbnail.la
+hildon_thumber_register_LDADD = libhildonthumbnail.la $(generic_libs) \
+	$(top_builddir)/daemon/libshared.la $(LIBOSSO_LIBS)
+endif
 
-# Library
 lib_LTLIBRARIES = libhildonthumbnail.la
 
-libhildonthumbnail_la_LIBADD = $(PKG_LIBS)
-libhildonthumbnail_la_LDFLAGS = -version-info 0:3:0
-libhildonthumbnail_la_SOURCES = \
-    hildon-thumbnail-factory.c hildon-thumbnail-factory.h thumbs-common.c thumbs-private.h \
-    thumber-common.c \
-    md5.c md5.h
+libhildonthumbnail_la_CFLAGS = $(generic_includes) $(GDK_PIXBUF_CFLAGS)
+libhildonthumbnail_la_LIBADD = $(generic_libs) $(GDK_PIXBUF_LIBS) \
+	$(top_builddir)/daemon/libshared.la 
+libhildonthumbnail_la_LDFLAGS = -version-info 0:4:0
+libhildonthumbnail_la_SOURCES = hildon-thumbnail-factory.c \
+	hildon-thumbnail-factory.h thumbnailer-client.h \
+	pixbuf-io-loader.c
+
+%-client.h: $(top_srcdir)/daemon/%.xml
+	$(DBUSBINDINGTOOL) --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $^
+
+BUILT_SOURCES = thumbnailer-client.h
 
 libhildonthumbnaildir=$(includedir)/hildon-thumbnail
 libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h
@@ -33,3 +54,5 @@ install-exec-local:
 	ln -s hildon-thumb-gdk-pixbuf $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf
 	rm -f $(DESTDIR)$(bindir)/osso-thumber-register
 	ln -s hildon-thumber-register $(DESTDIR)$(bindir)/osso-thumber-register
+
+

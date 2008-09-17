@@ -23,7 +23,7 @@
 
 #include "hildon-thumbnail-factory.h"
 #include "hildon-thumber-common.h"
-#include "thumbs-private.h"
+//#include "thumbs-private.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -34,13 +34,99 @@
 #include <glib/gprintf.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gio/gio.h>
 
-#include <libgnomevfs/gnome-vfs.h>
 
-GdkPixbuf* hildon_thumber_create_empty_pixbuf()
+static GdkPixbuf* create_empty_pixbuf ()
 {
-    return create_empty_pixbuf();
+    return gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
 }
+
+#define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
+#define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
+#define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
+#define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
+#define SOFTWARE_OPTION "tEXt::Software"
+
+/* Get length of string array */
+static int str_arr_len(const char **arr)
+{
+    int i = 0;
+    while(arr && *arr++) i++;
+    return i;
+}
+
+/* Copy string array src to dest */
+static char **str_arr_copy(const char **src, char **dest)
+{
+    while(src && *src) {
+        *dest++ = *(char **)src++;
+    }
+
+    return dest;
+}
+
+
+static gboolean save_thumb_file_meta(GdkPixbuf *pixbuf, gchar *file, time_t mtime,
+    const gchar *uri, const gchar **opt_keys, const gchar **opt_values)
+{
+    GError *error = NULL;
+    gboolean ret;
+
+    char mtime_str[64];
+
+    const char *default_keys[] = {
+        URI_OPTION,
+        MTIME_OPTION,
+        SOFTWARE_OPTION,
+        NULL
+    };
+
+    const char *default_values[] = {
+        uri,
+        mtime_str,
+        HILDON_THUMBNAIL_APPLICATION "-" "4.0.0",
+        NULL
+    };
+
+    // Start pointers and iterators
+    char **keys, **ikeys;
+    char **values, **ivalues;
+
+    /* Append optional keys, values to default keys, values */
+    keys = ikeys = g_new0(char *,
+        str_arr_len(default_keys) + str_arr_len(opt_keys) + 1);
+    values = ivalues = g_new0(char *,
+        str_arr_len(default_values) + str_arr_len(opt_values) + 1);
+
+    ikeys = str_arr_copy(default_keys, ikeys);
+    ivalues = str_arr_copy(default_values, ivalues);
+
+    ikeys = str_arr_copy(opt_keys, ikeys);
+    ivalues = str_arr_copy(opt_values, ivalues);
+
+    g_sprintf(mtime_str, "%lu", mtime);
+
+    /*
+    for(int i = 0; keys[i]; i++) {
+        g_print("Saving %s: %s\n", keys[i], values[i]);
+    }
+    */
+
+    ret = gdk_pixbuf_savev(pixbuf, file, "png", keys, values, &error);
+
+    if(error) {
+        g_warning("Error saving pixbuf: %s", error->message);
+        g_clear_error(&error);
+    }
+
+    g_free(keys);
+    g_free(values);
+
+    return ret;
+}
+
+
 
 int hildon_thumber_main(
     int *argc_p, char ***argv_p,
@@ -53,10 +139,11 @@ int hildon_thumber_main(
     guint width, height;
     HildonThumbnailFlags flags;
     gchar *uri, *file, *mime_type, *local_file;
+    gboolean suc = FALSE;
 
     time_t mtime = 0;
     GdkPixbuf *pixbuf;
-    GnomeVFSURI *vfs_uri;
+    GFile *filei;
     GError *error = NULL;
     int status = 0;
 
@@ -80,44 +167,50 @@ int hildon_thumber_main(
     width = atoi(argv[5]);
     height = atoi(argv[6]);
 
-    g_type_init();
+    g_type_init ();
+    g_thread_init (NULL);
 
-    gnome_vfs_init();
-
-    vfs_uri = gnome_vfs_uri_new(uri);
-    if(!vfs_uri) {
+    filei = g_file_new_for_uri (uri);
+    if(!g_file_query_exists (filei, NULL)) {
+        g_object_unref (filei);
         g_warning("Thumber failed to create URI from: %s", uri);
         return 4;
     }
 
-    local_file = gnome_vfs_get_local_path_from_uri(uri);
+    local_file = g_file_get_path (filei);
+
 
     if(local_file && strlen(local_file)) {
-        mtime = get_file_mtime(local_file);
-    } else {
-        gchar *file_uri;
-        GnomeVFSURI *src_uri, *dest_uri;
-
-        // Reuse output file as temporary file
-        file_uri = gnome_vfs_get_uri_from_local_path(file);
-
-        src_uri = gnome_vfs_uri_new(uri);
-        dest_uri = gnome_vfs_uri_new(file_uri);
-
-        gnome_vfs_xfer_uri(src_uri, dest_uri, GNOME_VFS_XFER_DEFAULT,
-                           GNOME_VFS_XFER_ERROR_MODE_ABORT,
-                           GNOME_VFS_XFER_OVERWRITE_MODE_ABORT,
-                           NULL, NULL);
-
-        mtime = get_uri_mtime(uri);
-
-        gnome_vfs_uri_unref(src_uri);
-        gnome_vfs_uri_unref(dest_uri);
-
-        g_free(file_uri);
+        GFileInfo *info = g_file_query_info (filei, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+                                             G_FILE_QUERY_INFO_NONE,
+                                             NULL, &error);
+        if (!error) {
+		suc = TRUE;
+		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+        }
+	g_object_unref (info);
     }
 
-    gnome_vfs_uri_unref(vfs_uri);
+    if (!suc) {
+ 
+	GFile *filed = g_file_new_for_path (file);
+	g_file_copy (filei, filed, G_FILE_COPY_NONE, NULL, NULL, NULL, &error);
+
+	if (!error) {
+ 		GFileInfo *info = g_file_query_info (filed, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+                                             G_FILE_QUERY_INFO_NONE,
+                                             NULL, &error);
+		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		g_object_unref (info);
+		if (local_file)
+		    g_free (local_file);
+		local_file = g_file_get_path (filei);
+	}
+	g_object_unref (filed);
+
+    }
+
+    g_object_unref (filei);
 
     pixbuf = create_thumb(local_file, mime_type,
         width, height, flags, &keys, &values, &error);

@@ -30,11 +30,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Maximum source image height */
-#undef MAX_SRC_HEIGHT
-
-/* Maximum source image width */
-#undef MAX_SRC_WIDTH
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE
