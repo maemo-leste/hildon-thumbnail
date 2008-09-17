@@ -227,6 +227,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 						      g_strdup (mimes[i]), 
 						      info);
 			}
+			g_strfreev (mimes);
 		}
 
 		g_free (fullfilen);
