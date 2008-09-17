@@ -96,6 +96,8 @@ main (int argc, char **argv)
 						       (GDestroyNotify) g_free, 
 						       (GDestroyNotify) NULL);
 
+		/* TODO: Monitor this directory for plugin removals and additions */
+		
 		dir = g_dir_open (PLUGINS_DIR, 0, &error);
 
 		if (dir) {

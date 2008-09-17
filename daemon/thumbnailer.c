@@ -200,7 +200,8 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 }
 
 /* This is the threadpool's function. This means that everything we do is 
- * asynchronous wrt to the mainloop (we aren't blocking it).
+ * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
+ * happens in a thread, we must care about proper locking, too.
  * 
  * Thanks to the pool_sort_compare sorter is this pool a LIFO, which means that
  * new requests get a certain priority over older requests. Note that we are not
@@ -250,8 +251,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 				       0, task->num, 1, error->message);
 			g_error_free (error);
 		} else {
-			// g_print ("M: %s\n", mime_type);
-		  
 			if (mime_type && !has_thumb) {
 				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
 				urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);

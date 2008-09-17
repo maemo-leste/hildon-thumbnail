@@ -78,6 +78,8 @@ manager_add (Manager *object, gchar *mime_type, gchar *name)
 	guint len = strlen (path);
 	guint i;
 
+	/* Not sure if this path stuff makes any sense ... but it works */
+
 	for (i = 0; i< len; i++) {
 		if (path[i] == '.')
 			path[i] = '/';
@@ -98,6 +100,7 @@ manager_add (Manager *object, gchar *mime_type, gchar *name)
 typedef struct {
 	gchar *name;
 	guint64 mtime;
+	gboolean prio;
 } ValueInfo;
 
 static void
@@ -136,6 +139,8 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		GFileInfo *info;
 		GFile *file;
 
+		/* If the file is the 'overrides', skip it (we'll deal with that later) */
+
 		if (strcmp (filen, "overrides") == 0) {
 			has_override = TRUE;
 			continue;
@@ -144,6 +149,8 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		fullfilen = g_build_filename (path, filen, NULL);
 		keyfile = g_key_file_new ();
 
+		/* If we can't parse it as a key-value file, skip */
+	
 		if (!g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
 			g_free (fullfilen);
 			continue;
@@ -151,13 +158,26 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 
 		value = g_key_file_get_string (keyfile, "D-BUS Thumbnailer", "Name", NULL);
 
-		if (!value) 
+		/* If it doesn't have the required things, skip */
+
+		if (!value) {
+			g_free (fullfilen);
+			g_key_file_free (keyfile);
 			continue;
+		}
 
 		values = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "MimeTypes", NULL, NULL);
 
-		if (!values)
+		/* If it doesn't have the required things, skip */
+
+		if (!values) {
+			g_free (fullfilen);
+			g_free (value);
+			g_key_file_free (keyfile);
 			continue;
+		}
+
+		/* Else, get the modificiation time, we'll need it later */
 
 		file = g_file_new_for_path (fullfilen);
 
@@ -167,7 +187,13 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 					  G_FILE_QUERY_INFO_NONE,
 					  NULL, &error);
 
+		/* If that didn't work out, skip */
+
 		if (error) {
+			if (info)
+				g_object_unref (info);
+			if (file)
+				g_object_unref (file);
 			g_free (value);
 			g_strfreev (values);
 			g_key_file_free (keyfile);
@@ -176,15 +202,29 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 
 		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
+		/* And register it in the temporary hashtable that is being formed */
+
 		while (values[i] != NULL) {
 			ValueInfo *info;
 
 			info = g_hash_table_lookup (pre, values[i]);
 
 			if (!info || info->mtime < mtime) {
+
 				info = g_slice_new (ValueInfo);
+
 				info->name = g_strdup (value);
+
+				/* The modification time of the thumbnailer-service file is
+				 * used, as specified, to determine the priority. We simply 
+				 * override older-ones with newer-ones in the hashtable (using 
+				 * replace). */
+
 				info->mtime = mtime;
+
+				/* Only items in overrides are prioritized. */
+
+				info->prio = FALSE;
 
 				g_hash_table_replace (pre, 
 						      g_strdup (values[i]), 
@@ -221,7 +261,14 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 				ValueInfo *info = g_slice_new (ValueInfo);
 
 				info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+
+				/* This is atm unused for items in overrides. */
+
 				info->mtime = time (NULL);
+
+				/* Items in overrides are prioritized. */
+
+				info->prio = TRUE;
 
 				g_hash_table_replace (pre, 
 						      g_strdup (mimes[i]), 
@@ -241,11 +288,22 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		ValueInfo *v = pvalue;
 		gchar *oname = NULL;
 
-		if (!override) {
+		/* If this is a prioritized one, we'll always override the older. If we
+		 * are in overriding mode, we'll also override. We override by looking
+		 * up the service-name for the MIME-type and we put that in oname, which
+		 * stands for original-name. */
+
+		if (!v->prio && !override) {
 			DBusGProxy *proxy = g_hash_table_lookup (priv->handlers, k);
 			if (proxy)
 				oname = (gchar *) dbus_g_proxy_get_bus_name (proxy);
 		}
+
+		/* Now if the original name is set (we'll override) and if the new name
+		 * is different than the original-name (else there's no point in 
+		 * overriding anything, als the proxy will point to the same thing 
+		 * anyway), we add it (adding here means overriding, as replace is used
+		 * on the hashtable). */
 
 		if (!oname || g_ascii_strcasecmp (v->name, oname) != 0)
 			manager_add (object, k, v->name);
@@ -266,7 +324,10 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 		case G_FILE_MONITOR_EVENT_CREATED: {
 			gchar *path = g_file_get_path (file);
 			gboolean override = (strcmp (THUMBNAILERS_DIR, path) == 0);
+
+			/* We override when it's the one in the user's homedir*/
 			manager_check_dir (MANAGER (user_data), path, override);
+
 			g_free (path);
 		} 
 		break;
@@ -287,9 +348,11 @@ manager_check (Manager *object)
 
 	g_mutex_lock (priv->mutex);
 
+	/* We override when it's the one in the user's homedir*/
 	manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
 	manager_check_dir (object, home_thumbnlrs, TRUE);
 
+	/* Monitor the dir for changes */
 	file = g_file_new_for_path (home_thumbnlrs);
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 	g_signal_connect (G_OBJECT (monitor), "changed", 
@@ -298,6 +361,7 @@ manager_check (Manager *object)
 	// g_object_unref (file)
 	// g_object_unref (monitor)
 
+	/* Monitor the dir for changes */
 	file = g_file_new_for_path (THUMBNAILERS_DIR);
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 	g_signal_connect (G_OBJECT (monitor), "changed", 
@@ -328,7 +392,9 @@ service_gone (DBusGProxy *proxy,
 
 	g_mutex_lock (priv->mutex);
 
-	/* This only happens for not-activable ones */
+	/* This only happens for not-activable ones: if the service disappears, we
+	 * unregister it. Note that this is actually only for our plugin-runner to
+	 * work correctly (not to implement any specification related things) */
 
 	g_hash_table_foreach_remove (priv->handlers, 
 				     do_remove_or_not,
@@ -373,6 +439,9 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	dbus_g_method_return (context);
 }
 
+/* A function for letting the manager know what mime-types we already deal with
+ * ourselves outside of the manager's registration procedure (internal plugins) */
+
 void 
 manager_i_have (Manager *object, const gchar *mime_type)
 {
@@ -384,6 +453,9 @@ manager_i_have (Manager *object, const gchar *mime_type)
 	g_mutex_unlock (priv->mutex);
 }
 
+
+/* This is a custom spec addition, for dynamic registration of thumbnailers.
+ * Consult manager.xml for more information about this custom spec addition. */
 
 void
 manager_get_supported (Manager *object, DBusGMethodInvocation *context)
@@ -415,6 +487,7 @@ manager_get_supported (Manager *object, DBusGMethodInvocation *context)
 		copy = g_list_next (copy);
 	}
 	g_mutex_unlock (priv->mutex);
+
 	g_list_free (copy);
 
 	g_hash_table_iter_init (&iter, supported_h);
