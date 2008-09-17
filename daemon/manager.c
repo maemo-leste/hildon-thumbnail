@@ -114,6 +114,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 	GHashTableIter iter;
 	GHashTable *pre;
 	gpointer pkey, pvalue;
+	gboolean has_override = FALSE;
 
 	dir = g_dir_open (path, 0, NULL);
 
@@ -134,6 +135,12 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		guint64 mtime;
 		GFileInfo *info;
 		GFile *file;
+
+		if (strcmp (fullfilen, "override") == 0) {
+			has_override = TRUE;
+			g_free (fullfilen);
+			continue;
+		}
 
 		keyfile = g_key_file_new ();
 
@@ -198,6 +205,33 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 	}
 
 	g_dir_close (dir);
+
+	if (has_override) {
+		GKeyFile *keyfile;
+		gchar *fullfilen = g_build_filename (path, "override", NULL);
+		guint length;
+
+		keyfile = g_key_file_new ();
+
+		if (g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
+			gchar **mimes = g_key_file_get_groups (keyfile, &length);
+			guint i;
+
+			for (i = 0; i< length; i++) {
+				ValueInfo *info = g_slice_new (ValueInfo);
+
+				info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+				info->mtime = time (NULL);
+
+				g_hash_table_replace (pre, 
+						      g_strdup (mimes[i]), 
+						      info);
+			}
+		}
+
+		g_free (fullfilen);
+		g_key_file_free (keyfile);
+	}
 
 	g_hash_table_iter_init (&iter, pre);
 

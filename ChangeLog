@@ -1,3 +1,8 @@
+2008-09-17  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/exec-plugin.c
+	* daemon/manager.c: Respecting the override file
+
 2008-09-16  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Error reporting and a few 

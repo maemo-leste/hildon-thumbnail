@@ -343,17 +343,17 @@ reload_config (const gchar *config)
 	GStrv mimetypes;
 	guint i = 0, length;
 
+	if (!execs)
+		execs = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       (GDestroyNotify) g_free,
+					       (GDestroyNotify) g_free);
+
 	keyfile = g_key_file_new ();
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
 		return;
 	}
-
-	if (!execs)
-		execs = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       (GDestroyNotify) g_free,
-					       (GDestroyNotify) g_free);
 
 	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
 
