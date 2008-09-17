@@ -127,7 +127,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 
 	for (filen = g_dir_read_name (dir); filen; filen = g_dir_read_name (dir)) {
 		GKeyFile *keyfile;
-		gchar *fullfilen = g_build_filename (path, filen, NULL);
+		gchar *fullfilen;
 		gchar *value;
 		GStrv values;
 		GError *error = NULL;
@@ -136,12 +136,12 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		GFileInfo *info;
 		GFile *file;
 
-		if (strcmp (fullfilen, "overrides") == 0) {
+		if (strcmp (filen, "overrides") == 0) {
 			has_override = TRUE;
-			g_free (fullfilen);
 			continue;
 		}
 
+		fullfilen = g_build_filename (path, filen, NULL);
 		keyfile = g_key_file_new ();
 
 		if (!g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
