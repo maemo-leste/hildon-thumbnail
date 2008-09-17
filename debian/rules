@@ -33,7 +33,7 @@ major=2
 #major=`ls src/.libs/lib*.so.* | \
 # awk '{if (match($$0,/\.so\.[0-9]+$$/)) print substr($$0,RSTART+4)}'`
 
-config.status: configure
+config.status:
 	if [ ! -x configure ]; then ./autogen.sh; fi
 	dh_testdir
 # Add here commands to configure the package.
