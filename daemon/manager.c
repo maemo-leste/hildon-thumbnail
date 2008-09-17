@@ -136,7 +136,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		GFileInfo *info;
 		GFile *file;
 
-		if (strcmp (fullfilen, "override") == 0) {
+		if (strcmp (fullfilen, "overrides") == 0) {
 			has_override = TRUE;
 			g_free (fullfilen);
 			continue;
@@ -208,7 +208,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 
 	if (has_override) {
 		GKeyFile *keyfile;
-		gchar *fullfilen = g_build_filename (path, "override", NULL);
+		gchar *fullfilen = g_build_filename (path, "overrides", NULL);
 		guint length;
 
 		keyfile = g_key_file_new ();
