@@ -121,7 +121,6 @@ static void
 on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	Thumbnailer *thumbnailer = user_data;
-	GModule *module = NULL;
 	gchar *path = g_file_get_path (other_file);
 
 	if (path) {

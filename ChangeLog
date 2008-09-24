@@ -1,3 +1,12 @@
+2008-09-24  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* daemon/hildon-thumbnail-daemon.c (on_plugin_changed): Removed
+	unused local variable 'modules'.
+
+	* daemon/thumbnailer.c (WorkTask): Removed poolmax, it is unused.
+	(thumbnailer_move, thumbnailer_copy): Correctly use to_uri for the
+	target thumbnails.
+
 2008-09-24  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* thumbs/hildon-thumbnail-factory.c: Performance improvement when a

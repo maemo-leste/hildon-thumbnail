@@ -28,6 +28,7 @@
 #endif
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 
@@ -147,7 +148,6 @@ typedef struct {
 	Thumbnailer *object;
 	GStrv urls;
 	guint num;
-	gboolean poolmax;
 	gboolean unqueued;
 } WorkTask;
 
@@ -197,8 +197,6 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 	task->num = ++num;
 	task->object = g_object_ref (object);
 	task->urls = g_strdupv (urls);
-	task->poolmax = FALSE;
-
 
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
@@ -439,7 +437,7 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		if (nerror)
 			goto nerror_handler;
 
-		hildon_thumbnail_util_get_thumb_paths (from_uri, &to_large, 
+		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_large, 
 						       &to_normal, 
 						       &to_cropped, &error);
 
@@ -511,7 +509,7 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		if (nerror)
 			goto nerror_handler;
 
-		hildon_thumbnail_util_get_thumb_paths (from_uri, &to_s[0], 
+		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_s[0], 
 						       &to_s[1], 
 						       &to_s[2], &error);
 
