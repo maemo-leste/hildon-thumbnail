@@ -1,5 +1,7 @@
 2008-09-24  Marius Vollmer  <marius.vollmer@nokia.com>
 
+	Released 3.0.1
+	
 	* daemon/hildon-thumbnail-daemon.c (on_plugin_changed): Removed
 	unused local variable 'modules'.
 

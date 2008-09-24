@@ -1,4 +1,4 @@
-hildon-thumbnail (3.0.1~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.1) unstable; urgency=low
 
   [ Philip Van Hoof ]
   * Completed API in the daemon.
