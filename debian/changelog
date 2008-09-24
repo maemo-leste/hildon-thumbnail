@@ -1,3 +1,15 @@
+hildon-thumbnail (3.0.1~unreleased) unstable; urgency=low
+
+  [ Philip Van Hoof ]
+  * Completed API in the daemon.
+  * Monitor plugin directory.
+  * Avoid D-Bus roundtrip for existing thumbnails when using the
+    HildonThumbnailFactory API.
+  * Handle large requests in a separate thread so that small
+    requests are not starved.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 24 Sep 2008 17:35:38 +0300
+
 hildon-thumbnail (3.0.0) unstable; urgency=low
 
   [ Philip Van Hoof ]

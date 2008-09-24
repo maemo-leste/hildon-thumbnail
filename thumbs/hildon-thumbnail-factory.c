@@ -101,25 +101,15 @@ static void thumb_item_free(ThumbsItem* item)
 }
 
 static void
-on_task_finished (DBusGProxy *proxy,
-		  guint       handle,
-		  gpointer    user_data)
+create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar *cropped)
 {
-	gchar *key = g_strdup_printf ("%d", handle);
-	ThumbsItem *item = g_hash_table_lookup (tasks, key);
-
-	if (item) {
-		GdkPixbuf *pixbuf = NULL;
-		gchar *large = NULL, *normal = NULL, *cropped = NULL;
-		GError *error = NULL;
-		gchar *path = NULL;
 		GFile *filei = NULL;
 		GInputStream *stream = NULL;
+		GdkPixbuf *pixbuf = NULL;
+		gchar *path;
+		GError *error = NULL;
 
-		hildon_thumbnail_util_get_thumb_paths (item->uri, &large, &normal, &cropped, &error);
-
-		if (error)
-			goto error_handler;
+		/* Determine the exact type of thumbnail being requested */
 
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = g_strdup (cropped);
@@ -129,20 +119,26 @@ on_task_finished (DBusGProxy *proxy,
 			path = g_strdup (normal);
 		}
 
+		/* Open the original thumbnail as a stream */
 		filei = g_file_new_for_path (path);
 		stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
+		g_free (path);
 
 		if (error)
 			goto error_handler;
 
+		/* Read the stream as a pixbuf at the requested exact scale */
 		pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
 			item->width, item->height, TRUE, 
 			NULL, &error);
 
 		error_handler:
 
+		/* Callback user function, passing the pixbuf and error */
+
 		item->callback (item, item->user_data, pixbuf, error);
 
+		/* Cleanup */
 		if (filei)
 			g_object_unref (filei);
 
@@ -156,11 +152,40 @@ on_task_finished (DBusGProxy *proxy,
 
 		if (pixbuf)
 			gdk_pixbuf_unref (pixbuf);
+}
+
+static void
+on_task_finished (DBusGProxy *proxy,
+		  guint       handle,
+		  gpointer    user_data)
+{
+	gchar *key = g_strdup_printf ("%d", handle);
+	ThumbsItem *item = g_hash_table_lookup (tasks, key);
+
+	if (item) {
+		gchar *large = NULL, *normal = NULL, *cropped = NULL;
+		GError *error = NULL;
+
+		/* Get the large small and cropped path for the original
+		 * URI */
+		
+		hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
+											   &normal, &cropped, 
+											   &error);
+
+		if (error)
+			goto error_handler;
+
+		create_pixbuf_and_callback (item, large, normal, cropped);
+
+		error_handler:
 
 		g_free (cropped);
 		g_free (normal);
 		g_free (large);
 
+		/* Remove the key from the hash, which means that we declare it 
+		 * handled. */
 		g_hash_table_remove (tasks, key);
 	}
 
@@ -185,10 +210,10 @@ read_cache_dir(gchar *path, GPtrArray *files)
 			GError *error = NULL;
 			guint64 mtime, size;
 
-			file_path = g_build_filename(path, file, NULL);
+			file_path = g_build_filename (path, file, NULL);
 
 			if(file[0] == '.' || !g_file_test(file_path, G_FILE_TEST_IS_REGULAR)) {
-				g_free(file_path);
+				g_free (file_path);
 				continue;
 			}
 
@@ -202,6 +227,7 @@ read_cache_dir(gchar *path, GPtrArray *files)
 			if (error) {
 				g_error_free (error);
 				g_object_unref (filei);
+				g_free (file_path);
 				continue;
 			}
 
@@ -226,15 +252,15 @@ read_cache_dir(gchar *path, GPtrArray *files)
 static void
 cache_file_free(ThumbsCacheFile *item)
 {
-	g_free(item->file);
-	g_free(item);
+	g_free (item->file);
+	g_free (item);
 }
 
 static gint 
 cache_file_compare(gconstpointer a, gconstpointer b)
 {
 	ThumbsCacheFile *f1 = *(ThumbsCacheFile**)a,
-			*f2 = *(ThumbsCacheFile**)b;
+			        *f2 = *(ThumbsCacheFile**)b;
 
 	/* Sort in descending order */
 	if(f2->mtime == f1->mtime) {
@@ -251,10 +277,8 @@ cache_file_compare(gconstpointer a, gconstpointer b)
 void 
 hildon_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 {
-
 	GPtrArray *files;
 	int i, size = 0;
-	gboolean deleting = FALSE;
 	gchar *large_dir = g_build_filename (g_get_home_dir (), ".thumbnails", "large", NULL);
 	gchar *normal_dir = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", NULL);
 	gchar *cropped_dir = g_build_filename (g_get_home_dir (), ".thumbnails", "cropped", NULL);
@@ -264,30 +288,25 @@ hildon_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 
 	files = g_ptr_array_new();
 
-	read_cache_dir(fail_dir, files);
-	read_cache_dir(large_dir, files);
-	read_cache_dir(normal_dir, files);
-	read_cache_dir(cropped_dir, files);
+	read_cache_dir (fail_dir, files);
+	read_cache_dir (large_dir, files);
+	read_cache_dir (normal_dir, files);
+	read_cache_dir (cropped_dir, files);
 
-	g_ptr_array_sort(files, cache_file_compare);
+	g_ptr_array_sort (files, cache_file_compare);
 
 	for(i = 0; i < files->len; i++) {
-		ThumbsCacheFile *item = g_ptr_array_index(files, i);
+		ThumbsCacheFile *item = g_ptr_array_index (files, i);
 
 		size += item->size;
-
-		if((max_size >= 0 && size >= max_size) || item->mtime < min_mtime) {
-			deleting = TRUE;
-		}
-
-		if(deleting) {
-			unlink(item->file);
+		if ((max_size >= 0 && size >= max_size) || item->mtime < min_mtime) {
+			unlink (item->file);
 		}
 	}
 
-	g_ptr_array_foreach(files, (GFunc)cache_file_free, NULL);
+	g_ptr_array_foreach (files, (GFunc)cache_file_free, NULL);
+	g_ptr_array_free (files, TRUE);
 
-	g_ptr_array_free(files, TRUE);
 	g_free (fail_dir);
 	g_free (normal_dir);
 	g_free (large_dir);
@@ -300,7 +319,35 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 	ThumbsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
 	item->handle_id = OUT_handle;
+
+	/* Register the item as being handled */
 	g_hash_table_replace (tasks, key, item);
+}
+
+typedef struct {
+	gchar *large, *normal, *cropped;
+	ThumbsItem *item;
+} ThumbsItemAndPaths;
+
+static void
+free_thumbsitem_and_paths (ThumbsItemAndPaths *info) 
+{
+	g_free (info->large);
+	g_free (info->normal);
+	g_free (info->cropped);
+	thumb_item_free (info->item);
+	g_slice_free (ThumbsItemAndPaths, info);
+}
+
+static gboolean
+have_all_cb (gpointer user_data)
+{
+	ThumbsItemAndPaths *info = user_data;
+	ThumbsItem *item = info->item;
+
+	create_pixbuf_and_callback (item, info->large, info->normal, info->cropped);
+
+	return FALSE;
 }
 
 HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
@@ -310,34 +357,42 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 				gpointer user_data, 
 				HildonThumbnailFlags flags, ...)
 {
+	gchar *large, *normal, *cropped;
+	GError *error = NULL;
 	ThumbsItem *item;
-	GStrv uris = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+	GStrv uris;
+	gboolean have_all = FALSE;
 
 	g_return_val_if_fail(uri != NULL && mime_type != NULL && callback != NULL,
 			     NULL);
 
-	init ();
-
-	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
-		gchar *large, *normal, *cropped;
-		GError *error = NULL;
-
-		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
 						       &cropped, &error);
 
+	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
 		if (!error) {
 			g_unlink (large);
 			g_unlink (normal);
 			g_unlink (cropped);
-		} else
-			g_error_free (error);
-
-		g_free (large);
-		g_free (normal);
-		g_free (cropped);
+		}
+	} else {
+		gchar *path;
+		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
+			path = cropped;
+		} else if (item->width > 128) {
+			path = large;
+		} else {
+			path = normal;
+		}
+		have_all = g_file_test (path, G_FILE_TEST_EXISTS);
 	}
 
-	item = g_new(ThumbsItem, 1);
+	if (error)
+		g_error_free (error);
+	else
+		have_all = FALSE;
+
+	item = g_new (ThumbsItem, 1);
 
 	item->uri = g_strdup(uri);
 	item->mime_type = g_strdup(mime_type);
@@ -349,12 +404,34 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	item->canceled = FALSE;
 	item->handle_id = 0;
 
-	uris[0] = g_strdup (uri);
+	if (have_all) {
+		ThumbsItemAndPaths *info = g_slice_new (ThumbsItemAndPaths);
 
-	org_freedesktop_thumbnailer_Generic_queue_async (proxy, (const char **) uris, 0, 
-							 on_got_handle, item);
+		info->item = item;
+		info->normal = g_strdup (normal);
+		info->large = g_strdup (large);
+		info->cropped = g_strdup (cropped);
 
-	g_strfreev (uris);
+		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
+						 (GDestroyNotify) free_thumbsitem_and_paths);
+
+		return;
+	}
+
+	g_free (large);
+	g_free (normal);
+	g_free (cropped);
+
+	if (!have_all) {
+
+		init ();
+		uris = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+		uris[0] = g_strdup (uri);
+		org_freedesktop_thumbnailer_Generic_queue_async (proxy, (const char **) uris, 0, 
+								 on_got_handle, item);
+
+		g_strfreev (uris);
+	}
 
 	return THUMBS_HANDLE (item);
 }
@@ -374,6 +451,8 @@ on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
 {
 	ThumbsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", item->handle_id);
+
+	/* Unregister the item */
 	g_hash_table_remove (tasks, key);
 	g_free (key);
 }
@@ -387,6 +466,7 @@ void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
 	if (item->handle_id == 0)
 		return;
 
+	/* We don't do real canceling, we just do unqueing */
 	org_freedesktop_thumbnailer_Generic_unqueue_async (proxy, item->handle_id, 
 							   on_cancelled, item);
 

@@ -32,6 +32,9 @@
 #include "dbus-utils.h"
 #include "thumbnailer.h"
 
+static GFile *homedir, *thumbdir;
+static GFileMonitor *homemon, *thumbmon;
+
 #define MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_MANAGER, ManagerPrivate))
 
 G_DEFINE_TYPE (Manager, manager, G_TYPE_OBJECT)
@@ -325,7 +328,7 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 			gchar *path = g_file_get_path (file);
 			gboolean override = (strcmp (THUMBNAILERS_DIR, path) == 0);
 
-			/* We override when it's the one in the user's homedir*/
+			/* We override when it's the dir in the user's homedir*/
 			manager_check_dir (MANAGER (user_data), path, override);
 
 			g_free (path);
@@ -341,7 +344,6 @@ manager_check (Manager *object)
 {
 	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
 	GFileMonitor *monitor;
-	GFile *file;
 
 	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
 		"thumbnailers", NULL);
@@ -353,24 +355,18 @@ manager_check (Manager *object)
 	manager_check_dir (object, home_thumbnlrs, TRUE);
 
 	/* Monitor the dir for changes */
-	file = g_file_new_for_path (home_thumbnlrs);
-	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
-	g_signal_connect (G_OBJECT (monitor), "changed", 
+	homedir = g_file_new_for_path (home_thumbnlrs);
+	homemon =  g_file_monitor_directory (homedir, G_FILE_MONITOR_NONE, NULL, NULL);
+	g_signal_connect (G_OBJECT (homemon), "changed", 
 			  G_CALLBACK (on_dir_changed), NULL);
 
-	// g_object_unref (file)
-	// g_object_unref (monitor)
-
 	/* Monitor the dir for changes */
-	file = g_file_new_for_path (THUMBNAILERS_DIR);
-	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
-	g_signal_connect (G_OBJECT (monitor), "changed", 
+	thumbdir = g_file_new_for_path (THUMBNAILERS_DIR);
+	thumbmon =  g_file_monitor_directory (thumbdir, G_FILE_MONITOR_NONE, NULL, NULL);
+	g_signal_connect (G_OBJECT (thumbmon), "changed", 
 			  G_CALLBACK (on_dir_changed), NULL);
 
 	g_mutex_unlock (priv->mutex);
-
-	// g_object_unref (file)
-	// g_object_unref (monitor)
 
 	g_free (home_thumbnlrs);
 }
@@ -600,6 +596,10 @@ manager_init (Manager *object)
 void 
 manager_do_stop (void)
 {
+	g_object_unref (homemon);
+	g_object_unref (thumbmon);
+	g_object_unref (homedir);
+	g_object_unref (thumbdir);
 }
 
 void 

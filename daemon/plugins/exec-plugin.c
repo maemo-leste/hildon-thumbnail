@@ -293,15 +293,17 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 
 		g_free (r_exec);
 
-// TODO
-//		if (on_error) {
-//			if (!errors)
-//				errors = g_string_new ("");
-//			g_string_append_printf (errors, "error msg")
-//		}
-
-
 		nerror_handler:
+
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+								    uri, nerror->message);
+			g_error_free (nerror);
+			nerror = NULL;
+		}
 
 		if (file)
 			g_object_unref (file);

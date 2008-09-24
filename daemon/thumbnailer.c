@@ -39,6 +39,9 @@
 #include "dbus-utils.h"
 #include "utils.h"
 
+#define THUMB_ERROR_DOMAIN	"HildonThumbnailer"
+#define THUMB_ERROR		g_quark_from_static_string (THUMB_ERROR_DOMAIN)
+
 #define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
 
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
@@ -49,7 +52,8 @@ void keep_alive (void);
 typedef struct {
 	Manager *manager;
 	GHashTable *plugins;
-	GThreadPool *pool;
+	GThreadPool *large_pool;
+	GThreadPool *normal_pool;
 	GMutex *mutex;
 	GList *tasks;
 } ThumbnailerPrivate;
@@ -74,11 +78,12 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+	g_mutex_lock (priv->mutex);
 	g_hash_table_insert (priv->plugins, 
 			     g_strdup (mime_type), 
 			     plugin);
 	manager_i_have (priv->manager, mime_type);
-
+	g_mutex_unlock (priv->mutex);
 }
 
 static gboolean 
@@ -94,9 +99,11 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+	g_mutex_lock (priv->mutex);
 	g_hash_table_foreach_remove (priv->plugins, 
 				     do_delete_or_not, 
 				     plugin);
+	g_mutex_unlock (priv->mutex);
 }
 
 
@@ -140,6 +147,7 @@ typedef struct {
 	Thumbnailer *object;
 	GStrv urls;
 	guint num;
+	gboolean poolmax;
 	gboolean unqueued;
 } WorkTask;
 
@@ -189,11 +197,16 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 	task->num = ++num;
 	task->object = g_object_ref (object);
 	task->urls = g_strdupv (urls);
+	task->poolmax = FALSE;
+
 
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
 	priv->tasks = g_list_prepend (priv->tasks, task);
-	g_thread_pool_push (priv->pool, task, NULL);
+	if (g_strv_length (urls) > 10)
+		g_thread_pool_push (priv->large_pool, task, NULL);
+	else
+		g_thread_pool_push (priv->normal_pool, task, NULL);
 	g_mutex_unlock (priv->mutex);
 
 	dbus_g_method_return (context, num);
@@ -342,7 +355,12 @@ do_the_work (WorkTask *task, gpointer user_data)
 		 * plugin have a go at it */
 
 		} else {
-			GModule *module = g_hash_table_lookup (priv->plugins, key);
+			GModule *module;
+
+			g_mutex_lock (priv->mutex);
+			module = g_hash_table_lookup (priv->plugins, key);
+			g_mutex_unlock (priv->mutex);
+
 			if (module) {
 				GError *error = NULL;
 
@@ -393,39 +411,219 @@ unqueued:
 void
 thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
+	guint i = 0;
+	GString *errors = NULL;
+	GError *error = NULL;
+
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
 
 	keep_alive ();
 
-	// TODO
-	
-	dbus_g_method_return (context);
+	while (from_urls[i] != NULL && to_urls[i] != NULL) {
+
+		const gchar *from_uri = from_urls[i];
+		const gchar *to_uri = to_urls[i];
+		GError *nerror = NULL;
+		gchar *from_normal = NULL, 
+		      *from_large = NULL, 
+		      *from_cropped = NULL;
+		gchar *to_normal = NULL, 
+		      *to_large = NULL,
+		      *to_cropped = NULL;
+
+		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_large, 
+						       &from_normal, 
+						       &from_cropped, &error);
+
+		if (nerror)
+			goto nerror_handler;
+
+		hildon_thumbnail_util_get_thumb_paths (from_uri, &to_large, 
+						       &to_normal, 
+						       &to_cropped, &error);
+
+		if (nerror)
+			goto nerror_handler;
+
+
+		g_rename (from_large, to_large);
+		g_rename (from_normal, to_normal);
+		g_rename (from_cropped, to_cropped);
+
+		nerror_handler:
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+						from_urls[i],
+						nerror->message);
+			g_error_free (nerror);
+			nerror = NULL;
+		}
+
+		g_free (from_normal);
+		g_free (from_large);
+		g_free (from_cropped);
+		g_free (to_normal);
+		g_free (to_large);
+		g_free (to_cropped);
+
+		i++;
+	}
+
+	if (errors) {
+		g_set_error (&error, THUMB_ERROR, 0,
+			     errors->str);
+		g_string_free (errors, TRUE);
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
+	} else
+		dbus_g_method_return (context);
 }
 
 void
 thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
+	guint i = 0;
+	GString *errors = NULL;
+	GError *error = NULL;
+
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
 
 	keep_alive ();
 
-	// TODO
-	
-	dbus_g_method_return (context);
+	while (from_urls[i] != NULL && to_urls[i] != NULL) {
+
+		const gchar *from_uri = from_urls[i];
+		const gchar *to_uri = to_urls[i];
+		GError *nerror = NULL;
+		gchar *from_s[3] = { NULL, NULL, NULL };
+		gchar *to_s[3] = { NULL, NULL, NULL };
+		guint n;
+
+		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_s[0], 
+						       &from_s[1], 
+						       &from_s[2], &error);
+
+		if (nerror)
+			goto nerror_handler;
+
+		hildon_thumbnail_util_get_thumb_paths (from_uri, &to_s[0], 
+						       &to_s[1], 
+						       &to_s[2], &error);
+
+		for (n = 0; n<3; n++) {
+			GFile *from, *to;
+
+			if (!from_s[n] || !to_s[n])
+				continue;
+			
+			from = g_file_new_for_path (from_s[n]);
+			to = g_file_new_for_path (to_s[n]);
+
+			/* We indeed ignore copy errors here */
+
+			g_file_copy (from, to, 
+				     G_FILE_COPY_NONE|G_FILE_COPY_OVERWRITE|G_FILE_COPY_ALL_METADATA,
+				     NULL, NULL, NULL,
+				     NULL);
+
+			g_object_unref (from);
+			g_object_unref (to);
+
+		}
+
+		nerror_handler:
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+						from_urls[i],
+						nerror->message);
+			g_error_free (nerror);
+			nerror = NULL;
+		}
+
+		for (n = 0; n<3; n++) {
+			/* These can be NULL, but that's ok for g_free */
+			g_free (from_s[n]);
+			g_free (to_s[n]);
+		}
+
+		i++;
+	}
+
+	if (errors) {
+		g_set_error (&error, THUMB_ERROR, 0,
+			     errors->str);
+		g_string_free (errors, TRUE);
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
+	} else
+		dbus_g_method_return (context);
 }
 
 void
 thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
+	guint i = 0;
+	GString *errors = NULL;
+	GError *error = NULL;
+
 	dbus_async_return_if_fail (urls != NULL, context);
 
 	keep_alive ();
 
-	// TODO
-	
-	dbus_g_method_return (context);
+	while (urls[i] != NULL) {
+
+		const gchar *uri = urls[i];
+		GError *nerror = NULL;
+		gchar *normal = NULL, 
+		      *large = NULL, 
+		      *cropped = NULL;
+
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, 
+						       &normal, 
+						       &cropped, &error);
+
+		if (nerror)
+			goto nerror_handler;
+
+		g_unlink (large);
+		g_unlink (normal);
+		g_unlink (cropped);
+
+		nerror_handler:
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+						urls[i],
+						nerror->message);
+			g_error_free (nerror);
+			nerror = NULL;
+		}
+
+		g_free (normal);
+		g_free (large);
+		g_free (cropped);
+
+		i++;
+	}
+
+	if (errors) {
+		g_set_error (&error, THUMB_ERROR, 0,
+			     errors->str);
+		g_string_free (errors, TRUE);
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
+	} else
+		dbus_g_method_return (context);
 }
 
 static void
@@ -433,7 +631,8 @@ thumbnailer_finalize (GObject *object)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
-	g_thread_pool_free (priv->pool, TRUE, TRUE);
+	g_thread_pool_free (priv->normal_pool, TRUE, TRUE);
+	g_thread_pool_free (priv->large_pool, TRUE, TRUE);
 
 	g_object_unref (priv->manager);
 	g_hash_table_unref (priv->plugins);
@@ -567,11 +766,14 @@ thumbnailer_init (Thumbnailer *object)
 
 	/* We could increase the amount of threads to add some parallelism */
 
-	priv->pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
+	priv->large_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
+	priv->normal_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
 
 	/* This sort function makes the pool a LIFO */
 
-	g_thread_pool_set_sort_function (priv->pool, pool_sort_compare, NULL);
+	g_thread_pool_set_sort_function (priv->large_pool, pool_sort_compare, NULL);
+	g_thread_pool_set_sort_function (priv->normal_pool, pool_sort_compare, NULL);
+
 }
 
 

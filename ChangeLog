@@ -1,3 +1,42 @@
+2008-09-24  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnail-factory.c: Performance improvement when a
+	thumbnail already exists (avoiding a dbus call)
+
+2008-09-23  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/manager.c: Fixed a crash
+
+2008-09-23  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/thumbnailer.c: Adding a thread for large tasks
+
+2008-09-20  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* daemon/plugin-runner.c
+	* daemon/manager.c
+	* daemon/thumbnailer.c: Various comments and leak fixes
+
+2008-09-18  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/hildon-thumbnail-daemon.c: File monitoring the plugins
+
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/manager.c: Using the right kinds of file monitors (dir monitors)
+
+2008-09-17  Philip Van Hoof  <pvanhoof@gnome.org>
+
+	* daemon/plugins/gdkpixbuf-plugin.c:
+	* daemon/plugins/exec-plugin.c:
+	* daemon/plugins/gstreamer-video-plugin.c: Fixed memory leaks when errors occur
+
+	* daemon/thumbnailer.c: Implemented the move, copy, delete hint handlers
+
+2008-09-17  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.0
+
 2008-09-17  Philip Van Hoof  <pvanhoof@gnome.org>
 
 	* daemon/plugins/exec-plugin.c

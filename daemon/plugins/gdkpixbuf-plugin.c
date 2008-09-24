@@ -333,8 +333,9 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 			if (!errors)
 				errors = g_string_new ("");
 			g_string_append_printf (errors, "[`%s': %s] ", 
-						uri,
-						nerror->message);
+								    uri, nerror->message);
+			g_error_free (nerror);
+			nerror = NULL;
 		}
 
 		if (stream)

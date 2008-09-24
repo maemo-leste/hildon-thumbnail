@@ -67,11 +67,38 @@ G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
 
 #define plugin_runner_create daemon_create
 
+
+static gboolean do_shut_down_next_time = TRUE;
+
+static void
+keep_alive (void) 
+{
+	do_shut_down_next_time = FALSE;
+}
+
+static gboolean
+shut_down_after_timeout (gpointer user_data)
+{
+	GMainLoop *main_loop =  user_data;
+	gboolean shut = FALSE;
+
+	if (do_shut_down_next_time) {
+		g_main_loop_quit (main_loop);
+		shut = TRUE;
+	} else
+		do_shut_down_next_time = TRUE;
+
+	return shut;
+}
+
 void 
 daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
 {
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GError *error = NULL;
+
+	keep_alive ();
+
 	hildon_thumbnail_plugin_do_create (priv->module, uris, &error);
 	if (error) {
 		dbus_g_method_return_error (context, error);
@@ -230,6 +257,7 @@ static gchar *module_name;
 static gboolean dynamic_register = FALSE;
 static gchar *bus_name;
 static gchar *bus_path;
+static gint timeout = 600;
 
 static GOptionEntry entries_daemon[] = {
 	{ "module-name", 'm', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_OPTIONAL_ARG, 
@@ -239,6 +267,10 @@ static GOptionEntry entries_daemon[] = {
 	{ "bus-name", 'b', 0, 
 	  G_OPTION_ARG_STRING, &bus_name, 
 	  "Busname to use (eg. com.company.Thumbnailer) ", 
+	  NULL },
+	{ "timeout", 't', 0, 
+	  G_OPTION_ARG_INT, &timeout, 
+	  "Timeout before the specialized thumbnailer dies (use -1 for inlimited)", 
 	  NULL },
 	{ "bus-path", 'p', 0, 
 	  G_OPTION_ARG_STRING, &bus_path, 
@@ -315,6 +347,11 @@ main (int argc, char **argv)
 					     object);
 
 	daemon_start (DAEMON (object), dynamic_register);
+
+	if (timeout > -1)
+		g_timeout_add_seconds (timeout, 
+				       shut_down_after_timeout,
+				       main_loop);
 
 	main_loop = g_main_loop_new (NULL, FALSE);
 	g_main_loop_run (main_loop);
