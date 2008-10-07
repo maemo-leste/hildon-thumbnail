@@ -27,7 +27,7 @@
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 
-#include "manager.h"
+#include "thumbnail-manager.h"
 #include "manager-glue.h"
 #include "dbus-utils.h"
 #include "thumbnailer.h"
@@ -35,9 +35,9 @@
 static GFile *homedir, *thumbdir;
 static GFileMonitor *homemon, *thumbmon;
 
-#define MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_MANAGER, ManagerPrivate))
+#define THUMBNAIL_MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAIL_MANAGER, ThumbnailManagerPrivate))
 
-G_DEFINE_TYPE (Manager, manager, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ThumbnailManager, thumbnail_manager, G_TYPE_OBJECT)
 
 #ifndef dbus_g_method_get_sender
 gchar* dbus_g_method_get_sender (DBusGMethodInvocation *context);
@@ -50,7 +50,7 @@ typedef struct {
 	GHashTable *handlers;
 	GMutex *mutex;
 	GList *thumber_has;
-} ManagerPrivate;
+} ThumbnailManagerPrivate;
 
 enum {
 	PROP_0,
@@ -58,9 +58,9 @@ enum {
 };
 
 DBusGProxy*
-manager_get_handler (Manager *object, const gchar *mime_type)
+thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *proxy;
 
 	g_mutex_lock (priv->mutex);
@@ -73,9 +73,9 @@ manager_get_handler (Manager *object, const gchar *mime_type)
 }
 
 static void
-manager_add (Manager *object, gchar *mime_type, gchar *name)
+thumbnail_manager_add (ThumbnailManager *object, gchar *mime_type, gchar *name)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
 	gchar *path = g_strdup_printf ("/%s", name);
 	guint len = strlen (path);
@@ -96,7 +96,7 @@ manager_add (Manager *object, gchar *mime_type, gchar *name)
 
 	g_hash_table_replace (priv->handlers, 
 			      g_strdup (mime_type),
-			      g_object_ref (mime_proxy));
+			      mime_proxy);
 
 }
 
@@ -108,13 +108,14 @@ typedef struct {
 
 static void
 free_valueinfo (ValueInfo *info) {
+	g_free (info->name);
 	g_slice_free (ValueInfo, info);
 }
 
 static void
-manager_check_dir (Manager *object, gchar *path, gboolean override)
+thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean override)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	const gchar *filen;
 	GDir *dir;
 	GHashTableIter iter;
@@ -309,7 +310,7 @@ manager_check_dir (Manager *object, gchar *path, gboolean override)
 		 * on the hashtable). */
 
 		if (!oname || g_ascii_strcasecmp (v->name, oname) != 0)
-			manager_add (object, k, v->name);
+			thumbnail_manager_add (object, k, v->name);
 	}
 
 	g_hash_table_unref (pre);
@@ -325,11 +326,15 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 		case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
 		case G_FILE_MONITOR_EVENT_DELETED:
 		case G_FILE_MONITOR_EVENT_CREATED: {
+			ThumbnailManager *object = user_data;
+			ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 			gchar *path = g_file_get_path (file);
 			gboolean override = (strcmp (THUMBNAILERS_DIR, path) == 0);
 
+			g_mutex_lock (priv->mutex);
 			/* We override when it's the dir in the user's homedir*/
-			manager_check_dir (MANAGER (user_data), path, override);
+			thumbnail_manager_check_dir (object, path, override);
+			g_mutex_unlock (priv->mutex);
 
 			g_free (path);
 		} 
@@ -340,9 +345,9 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 }
 
 static void
-manager_check (Manager *object)
+thumbnail_manager_check (ThumbnailManager *object)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	GFileMonitor *monitor;
 
 	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
@@ -351,20 +356,20 @@ manager_check (Manager *object)
 	g_mutex_lock (priv->mutex);
 
 	/* We override when it's the one in the user's homedir*/
-	manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
-	manager_check_dir (object, home_thumbnlrs, TRUE);
+	thumbnail_manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
+	thumbnail_manager_check_dir (object, home_thumbnlrs, TRUE);
 
 	/* Monitor the dir for changes */
 	homedir = g_file_new_for_path (home_thumbnlrs);
 	homemon =  g_file_monitor_directory (homedir, G_FILE_MONITOR_NONE, NULL, NULL);
 	g_signal_connect (G_OBJECT (homemon), "changed", 
-			  G_CALLBACK (on_dir_changed), NULL);
+			  G_CALLBACK (on_dir_changed), object);
 
 	/* Monitor the dir for changes */
 	thumbdir = g_file_new_for_path (THUMBNAILERS_DIR);
 	thumbmon =  g_file_monitor_directory (thumbdir, G_FILE_MONITOR_NONE, NULL, NULL);
 	g_signal_connect (G_OBJECT (thumbmon), "changed", 
-			  G_CALLBACK (on_dir_changed), NULL);
+			  G_CALLBACK (on_dir_changed), object);
 
 	g_mutex_unlock (priv->mutex);
 
@@ -382,9 +387,9 @@ do_remove_or_not (gpointer key, gpointer value, gpointer user_data)
 
 static void
 service_gone (DBusGProxy *proxy,
-	      Manager *object)
+	      ThumbnailManager *object)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
 	g_mutex_lock (priv->mutex);
 
@@ -400,12 +405,12 @@ service_gone (DBusGProxy *proxy,
 }
 
 /* This is a custom spec addition, for dynamic registration of thumbnailers.
- * Consult manager.xml for more information about this custom spec addition. */
+ * Consult thumbnail_manager.xml for more information about this custom spec addition. */
 
 void
-manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *context)
+thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, DBusGMethodInvocation *context)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
 	gchar *sender;
 
@@ -420,7 +425,7 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 
 	sender = dbus_g_method_get_sender (context);
 
-	manager_add (object, mime_type, sender);
+	thumbnail_manager_add (object, mime_type, sender);
 
 	g_free (sender);
 
@@ -435,13 +440,13 @@ manager_register (Manager *object, gchar *mime_type, DBusGMethodInvocation *cont
 	dbus_g_method_return (context);
 }
 
-/* A function for letting the manager know what mime-types we already deal with
- * ourselves outside of the manager's registration procedure (internal plugins) */
+/* A function for letting the thumbnail_manager know what mime-types we already deal with
+ * ourselves outside of the thumbnail_manager's registration procedure (internal plugins) */
 
 void 
-manager_i_have (Manager *object, const gchar *mime_type)
+thumbnail_manager_i_have (ThumbnailManager *object, const gchar *mime_type)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
 	g_mutex_lock (priv->mutex);
 	priv->thumber_has = g_list_prepend (priv->thumber_has, 
@@ -451,12 +456,12 @@ manager_i_have (Manager *object, const gchar *mime_type)
 
 
 /* This is a custom spec addition, for dynamic registration of thumbnailers.
- * Consult manager.xml for more information about this custom spec addition. */
+ * Consult thumbnail_manager.xml for more information about this custom spec addition. */
 
 void
-manager_get_supported (Manager *object, DBusGMethodInvocation *context)
+thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation *context)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	GStrv supported;
 	GHashTable *supported_h;
 	GHashTableIter iter;
@@ -503,9 +508,9 @@ manager_get_supported (Manager *object, DBusGMethodInvocation *context)
 }
 
 static void
-manager_finalize (GObject *object)
+thumbnail_manager_finalize (GObject *object)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
 	if (priv->thumber_has) {
 		g_list_foreach (priv->thumber_has, (GFunc) g_free, NULL);
@@ -514,26 +519,26 @@ manager_finalize (GObject *object)
 	g_hash_table_unref (priv->handlers);
 	g_mutex_free (priv->mutex);
 
-	G_OBJECT_CLASS (manager_parent_class)->finalize (object);
+	G_OBJECT_CLASS (thumbnail_manager_parent_class)->finalize (object);
 }
 
 static void 
-manager_set_connection (Manager *object, DBusGConnection *connection)
+thumbnail_manager_set_connection (ThumbnailManager *object, DBusGConnection *connection)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	priv->connection = connection;
 }
 
 
 static void
-manager_set_property (GObject      *object,
+thumbnail_manager_set_property (GObject      *object,
 		      guint         prop_id,
 		      const GValue *value,
 		      GParamSpec   *pspec)
 {
 	switch (prop_id) {
 	case PROP_CONNECTION:
-		manager_set_connection (MANAGER (object),
+		thumbnail_manager_set_connection (THUMBNAIL_MANAGER (object),
 					g_value_get_pointer (value));
 		break;
 	default:
@@ -543,14 +548,14 @@ manager_set_property (GObject      *object,
 
 
 static void
-manager_get_property (GObject    *object,
+thumbnail_manager_get_property (GObject    *object,
 		      guint       prop_id,
 		      GValue     *value,
 		      GParamSpec *pspec)
 {
-	ManagerPrivate *priv;
+	ThumbnailManagerPrivate *priv;
 
-	priv = MANAGER_GET_PRIVATE (object);
+	priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
 	switch (prop_id) {
 	case PROP_CONNECTION:
@@ -562,13 +567,13 @@ manager_get_property (GObject    *object,
 }
 
 static void
-manager_class_init (ManagerClass *klass)
+thumbnail_manager_class_init (ThumbnailManagerClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->finalize = manager_finalize;
-	object_class->set_property = manager_set_property;
-	object_class->get_property = manager_get_property;
+	object_class->finalize = thumbnail_manager_finalize;
+	object_class->set_property = thumbnail_manager_set_property;
+	object_class->get_property = thumbnail_manager_get_property;
 
 	g_object_class_install_property (object_class,
 					 PROP_CONNECTION,
@@ -578,13 +583,13 @@ manager_class_init (ManagerClass *klass)
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
 
-	g_type_class_add_private (object_class, sizeof (ManagerPrivate));
+	g_type_class_add_private (object_class, sizeof (ThumbnailManagerPrivate));
 }
 
 static void
-manager_init (Manager *object)
+thumbnail_manager_init (ThumbnailManager *object)
 {
-	ManagerPrivate *priv = MANAGER_GET_PRIVATE (object);
+	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
 	priv->mutex = g_mutex_new ();
 	priv->thumber_has = NULL;
@@ -594,7 +599,7 @@ manager_init (Manager *object)
 }
 
 void 
-manager_do_stop (void)
+thumbnail_manager_do_stop (void)
 {
 	g_object_unref (homemon);
 	g_object_unref (thumbmon);
@@ -603,7 +608,7 @@ manager_do_stop (void)
 }
 
 void 
-manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
+thumbnail_manager_do_init (DBusGConnection *connection, ThumbnailManager **thumbnail_manager, GError **error)
 {
 	guint result;
 	DBusGProxy *proxy;
@@ -618,11 +623,11 @@ manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, error);
 
-	object = g_object_new (TYPE_MANAGER, 
+	object = g_object_new (TYPE_THUMBNAIL_MANAGER, 
 			       "connection", connection,
 			       NULL);
 
-	manager_check (MANAGER (object));
+	thumbnail_manager_check (THUMBNAIL_MANAGER (object));
 
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
 					 &dbus_glib_manager_object_info);
@@ -631,5 +636,5 @@ manager_do_init (DBusGConnection *connection, Manager **manager, GError **error)
 					     MANAGER_PATH, 
 					     object);
 
-	*manager = MANAGER (object);
+	*thumbnail_manager = THUMBNAIL_MANAGER (object);
 }

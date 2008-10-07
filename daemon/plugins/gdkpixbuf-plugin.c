@@ -226,13 +226,8 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		      *cropped = NULL;
 		gboolean just_crop;
 
-		//g_print ("%s\n", uri);
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, &nerror);
-
-
-		if (nerror)
-			goto nerror_handler;
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped);
 
 		just_crop = (g_file_test (large, G_FILE_TEST_EXISTS) && 
 			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
@@ -244,12 +239,6 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 			g_free (large);
 			continue;
 		}
-
-		//g_print ("L %s\n", large);
-		//g_print ("N %s\n", normal);
-
-		if (nerror)
-			goto nerror_handler;
 
 		file = g_file_new_for_uri (uri);
 

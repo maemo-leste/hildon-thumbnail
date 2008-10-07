@@ -270,7 +270,7 @@ static GOptionEntry entries_daemon[] = {
 	  NULL },
 	{ "timeout", 't', 0, 
 	  G_OPTION_ARG_INT, &timeout, 
-	  "Timeout before the specialized thumbnailer dies (use -1 for inlimited)", 
+	  "Timeout before the specialized thumbnailer dies (use -1 for unlimited)", 
 	  NULL },
 	{ "bus-path", 'p', 0, 
 	  G_OPTION_ARG_STRING, &bus_path, 

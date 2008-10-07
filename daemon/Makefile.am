@@ -6,12 +6,13 @@ INCLUDES = \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
+	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
 
 
 noinst_LTLIBRARIES = libshared.la
 
-libshared_la_SOURCES = md5.c md5.h utils.h utils.c
+libshared_la_SOURCES = utils.h utils.c
 
 libexec_PROGRAMS = hildon-thumbnailerd hildon-thumbnailer-plugin-runner
 
@@ -22,6 +23,12 @@ thumbnailer-marshal.h: thumbnailer-marshal.list
 
 thumbnailer-marshal.c: thumbnailer-marshal.list
 	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --body > $@
+
+albumart-marshal.h: albumart-marshal.list
+	$(GLIB_GENMARSHAL) $< --prefix=albumart_marshal --header > $@
+
+albumart-marshal.c: albumart-marshal.list
+	$(GLIB_GENMARSHAL) $< --prefix=albumart_marshal --body > $@
 
 hildon_thumbnailer_plugin_runner_SOURCES = \
 	plugin-runner.c \
@@ -38,12 +45,18 @@ hildon_thumbnailerd_SOURCES = \
 	thumbnailer.h \
 	thumbnailer-marshal.c \
 	thumbnailer-marshal.h \
-	manager.c \
-	manager.h \
+	thumbnail-manager.c \
+	thumbnail-manager.h \
 	manager-glue.h \
 	thumbnailer-glue.h \
 	dbus-utils.h \
-	dbus-utils.c
+	dbus-utils.c \
+	albumart.c \
+	albumart.h \
+	albumart-marshal.c \
+	albumart-marshal.h \
+	albumart-manager.c \
+	albumart-manager.h
 
 hildon_thumbnailerd_LDADD = \
 	$(top_builddir)/daemon/libshared.la \
@@ -56,6 +69,9 @@ hildon_thumbnailerd_LDADD = \
 org.freedesktop.thumbnailer_servicedir = $(DBUS_SERVICES_DIR)
 org.freedesktop.thumbnailer_service_DATA = org.freedesktop.thumbnailer.service
 
+com.nokia.albumart_servicedir = $(DBUS_SERVICES_DIR)
+com.nokia.albumart_service_DATA = com.nokia.albumart.service
+
 %.service: %.service.in
 	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
 
@@ -63,9 +79,11 @@ org.freedesktop.thumbnailer_service_DATA = org.freedesktop.thumbnailer.service
 	$(DBUSBINDINGTOOL) --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $^
 
 BUILT_SOURCES = manager-glue.h thumbnailer-glue.h plugin-runner-glue.h \
-	thumbnailer-marshal.c thumbnailer-marshal.h
+	thumbnailer-marshal.c thumbnailer-marshal.h albumart-glue.h \
+	albumart-marshal.c albumart-marshal.h
+
 configdir = $(datadir)/hildon-thumbnail
-config_DATA = manager.xml thumbnailer.xml
+config_DATA = manager.xml thumbnailer.xml albumart.xml
 
 EXTRA_DIST = $(BUILT_SOURCES) $(config_DATA) \
 	$(org.freedesktop.thumbnailer_service_DATA) \

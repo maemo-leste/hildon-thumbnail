@@ -1,0 +1,538 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+/*
+ * This file is part of hildon-thumbnail package
+ *
+ * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
+ *
+ * Contact: Marius Vollmer <marius.vollmer@nokia.com>
+ * Author: Philip Van Hoof <pvanhoof@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <string.h>
+#include <glib.h>
+#include <gio/gio.h>
+#include <dbus/dbus-glib-bindings.h>
+
+#include "albumart.h"
+#include "albumart-marshal.h"
+#include "albumart-glue.h"
+#include "dbus-utils.h"
+#include "utils.h"
+
+#define ALBUMART_ERROR_DOMAIN	"HildonAlbumart"
+#define ALBUMART_ERROR		g_quark_from_static_string (ALBUMART_ERROR_DOMAIN)
+
+#define ALBUMART_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_ALBUMART, AlbumartPrivate))
+
+G_DEFINE_TYPE (Albumart, albumart, G_TYPE_OBJECT)
+
+void keep_alive (void);
+
+
+typedef struct {
+	AlbumartManager *manager;
+	GThreadPool *normal_pool;
+	GMutex *mutex;
+	GList *tasks;
+} AlbumartPrivate;
+
+enum {
+	PROP_0,
+	PROP_MANAGER
+};
+
+enum {
+	STARTED_SIGNAL,
+	FINISHED_SIGNAL,
+	READY_SIGNAL,
+	ERROR_SIGNAL,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
+
+
+
+typedef struct {
+	Albumart *object;
+	gchar *album, *artist;
+	gchar *uri;
+	guint num;
+	gboolean unqueued;
+} WorkTask;
+
+
+static gint 
+pool_sort_compare (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	WorkTask *task_a = (WorkTask *) a;
+	WorkTask *task_b = (WorkTask *) b;
+
+	/* This makes pool a LIFO */
+
+	return task_b->num - task_a->num;
+}
+
+static void 
+mark_unqueued (WorkTask *task, guint handle)
+{
+	if (task->num == handle)
+		task->unqueued = TRUE;
+}
+
+void
+albumart_unqueue (Albumart *object, guint handle, DBusGMethodInvocation *context)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
+
+	keep_alive ();
+
+	g_mutex_lock (priv->mutex);
+	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle);
+	g_mutex_unlock (priv->mutex);
+}
+
+void
+albumart_queue (Albumart *object, gchar *artist, gchar *album, gchar *uri, guint handle_to_unqueue, DBusGMethodInvocation *context)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
+	WorkTask *task;
+	static guint num = 0;
+
+	if (uri && strlen (uri) <= 0)
+		uri = NULL;
+
+	if (artist && strlen (artist) <= 0)
+		artist = NULL;
+
+	if (album && strlen (album) <= 0)
+		album = NULL;
+
+	if (!uri && (!album || !artist)) {
+		num++;
+		dbus_g_method_return (context, num);
+		return;
+	}
+
+	task = g_slice_new0 (WorkTask);
+
+	keep_alive ();
+
+	task->unqueued = FALSE;
+	task->num = ++num;
+	task->object = g_object_ref (object);
+
+	if (album && artist) {
+		task->album = g_strdup (album);
+		task->artist = g_strdup (artist);
+	} if (uri)
+		task->uri = g_strdup (uri);
+
+	g_mutex_lock (priv->mutex);
+	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
+	priv->tasks = g_list_prepend (priv->tasks, task);
+	g_thread_pool_push (priv->normal_pool, task, NULL);
+	g_mutex_unlock (priv->mutex);
+
+	dbus_g_method_return (context, num);
+}
+
+#ifndef strcasestr
+char *
+strcasestr (char *haystack, char *needle)
+{
+	char *p, *startn = 0, *np = 0;
+
+	for (p = haystack; *p; p++) {
+		if (np) {
+			if (toupper(*p) == toupper(*np)) {
+				if (!*++np)
+					return startn;
+			} else
+				np = 0;
+		} else if (toupper(*p) == toupper(*needle)) {
+			np = needle + 1;
+			startn = p;
+		}
+	}
+
+	return 0;
+}
+#endif
+
+static gchar*
+find_image_file_in_for (GDir *dir, gchar *filename) 
+{
+	gchar *retval = NULL;
+	const gchar *item;
+	gsize s = (gsize) strlen (filename);
+
+	while (item = g_dir_read_name (dir)) {
+		if ((strcasestr ((char *) item, (char *) ".jpeg") || 
+		     strcasestr ((char *) item, (char *) ".jpg") ) &&
+		    (s == 0 || g_ascii_strncasecmp (item, filename, s) == 0)
+		  ) 
+		{
+			retval = g_strdup (item);
+			break;
+		}
+	}
+
+	g_dir_rewind (dir);
+
+	return retval;
+}
+
+/* This is the threadpool's function. This means that everything we do is 
+ * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
+ * happens in a thread, we must care about proper locking, too.
+ * 
+ * Thanks to the pool_sort_compare sorter is this pool a LIFO, which means that
+ * new requests get a certain priority over older requests. Note that we are not
+ * canceling currently running requests. Also note that the thread count of the 
+ * pool is set to one. We could increase this number to add some parallelism */
+
+static void 
+do_the_work (WorkTask *task, gpointer user_data)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (task->object);
+	gchar *artist = task->artist;
+	gchar *album = task->album;
+	gchar *uri = task->uri;
+	gchar *path;
+
+	g_mutex_lock (priv->mutex);
+	priv->tasks = g_list_remove (priv->tasks, task);
+	if (task->unqueued || (!uri && (!album && !artist))) {
+		g_mutex_unlock (priv->mutex);
+		goto unqueued;
+	}
+	g_mutex_unlock (priv->mutex);
+
+	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
+			task->num);
+
+	hildon_thumbnail_util_get_albumart_path (artist, album, uri, &path);
+
+	if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+		gboolean handled = FALSE;
+		GFile *file = g_file_new_for_uri (task->uri);
+		gchar *dpath = g_file_get_path (file);
+
+		// TODO: Perform copy from embedded (in uri) to path
+
+		g_object_unref (file);
+
+		if (dpath) {
+			gchar *dirn = g_path_get_dirname (dpath);
+			GDir *dir = g_dir_open (dirn, 0, NULL);
+
+			if (dir) {
+				gchar *image;
+
+				image = find_image_file_in_for (dir, album);
+				if (!image)
+					image = find_image_file_in_for (dir, artist);
+				if (!image)
+					image = find_image_file_in_for (dir, "cover");
+				if (!image)
+					image = find_image_file_in_for (dir, "front");
+				if (!image)
+					image = find_image_file_in_for (dir, "album");
+				if (!image)
+					image = find_image_file_in_for (dir, "");
+
+				if (image) {
+					GFile *image_file = g_file_new_for_path (image);
+					GFile *cache_file = g_file_new_for_path (path);
+					g_file_copy (image_file, cache_file, 
+						     G_FILE_COPY_NONE, 
+						     NULL, NULL, NULL, NULL);
+					handled = TRUE;
+					g_object_unref (image_file);
+					g_object_unref (cache_file);
+					g_free (image);
+				}
+
+				g_dir_close (dir);
+			}
+			g_free (dirn);
+			g_free (dpath);
+		}
+		
+		// TODO: Perform heuristics from uri to path
+
+		if (!handled) {
+			GList *proxies, *copy;
+			gboolean handled = FALSE;
+
+			proxies = albumart_manager_get_handlers (priv->manager);
+			copy = proxies;
+
+			while (copy && !handled) {
+				DBusGProxy *proxy = copy->data;
+				GError *error = NULL;
+
+				keep_alive ();
+
+				dbus_g_proxy_call (proxy, "Fetch", &error, 
+						   G_TYPE_STRING, artist,
+						   G_TYPE_STRING, album,
+						   G_TYPE_STRING, uri,
+						   G_TYPE_INVALID, 
+						   G_TYPE_INVALID);
+
+				keep_alive ();
+
+				if (error) {
+					g_signal_emit (task->object, signals[ERROR_SIGNAL],
+						       0, task->num, 1, error->message);
+					g_clear_error (&error);
+				} else {
+					g_signal_emit (task->object, signals[READY_SIGNAL], 
+						       0, artist, album, uri, path);
+					handled = TRUE;
+				}
+
+				copy = g_list_next (copy);
+			} 
+
+			g_list_foreach (proxies, (GFunc) g_object_unref, NULL);
+			if (proxies)
+				g_list_free (proxies);
+		}
+	}
+
+	g_free (path);
+
+	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+			       task->num);
+
+unqueued:
+
+	g_object_unref (task->object);
+	g_free (task->artist);
+	g_free (task->album);
+	g_free (task->uri);
+	g_slice_free (WorkTask, task);
+
+	return;
+}
+
+
+void
+albumart_delete (Albumart *object, gchar *artist, gchar *album, gchar *uri, DBusGMethodInvocation *context)
+{
+	gchar *path;
+
+	keep_alive ();
+
+	hildon_thumbnail_util_get_albumart_path (artist, album, uri, &path);
+
+	g_unlink (path);
+
+	g_free (path);
+
+	dbus_g_method_return (context);
+}
+
+static void
+albumart_finalize (GObject *object)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
+
+	g_thread_pool_free (priv->normal_pool, TRUE, TRUE);
+	g_object_unref (priv->manager);
+	g_mutex_free (priv->mutex);
+
+	G_OBJECT_CLASS (albumart_parent_class)->finalize (object);
+}
+
+static void 
+albumart_set_manager (Albumart *object, AlbumartManager *manager)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
+	if (priv->manager)
+		g_object_unref (priv->manager);
+	priv->manager = g_object_ref (manager);
+}
+
+static void
+albumart_set_property (GObject      *object,
+		      guint         prop_id,
+		      const GValue *value,
+		      GParamSpec   *pspec)
+{
+	switch (prop_id) {
+	case PROP_MANAGER:
+		albumart_set_manager (ALBUMART (object),
+				      g_value_get_object (value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+	}
+}
+
+
+static void
+albumart_get_property (GObject    *object,
+		      guint       prop_id,
+		      GValue     *value,
+		      GParamSpec *pspec)
+{
+	AlbumartPrivate *priv;
+
+	priv = ALBUMART_GET_PRIVATE (object);
+
+	switch (prop_id) {
+	case PROP_MANAGER:
+		g_value_set_object (value, priv->manager);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+	}
+}
+
+static void
+albumart_class_init (AlbumartClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = albumart_finalize;
+	object_class->set_property = albumart_set_property;
+	object_class->get_property = albumart_get_property;
+
+	g_object_class_install_property (object_class,
+					 PROP_MANAGER,
+					 g_param_spec_object ("manager",
+							      "Manager",
+							      "Manager",
+							      TYPE_ALBUMART_MANAGER,
+							      G_PARAM_READWRITE |
+							      G_PARAM_CONSTRUCT));
+
+	signals[READY_SIGNAL] =
+		g_signal_new ("ready",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (AlbumartClass, ready),
+			      NULL, NULL,
+			      albumart_marshal_VOID__STRING_STRING_STRING_STRING,
+			      G_TYPE_NONE,
+			      3,
+			      G_TYPE_STRING,
+			      G_TYPE_STRING,
+			      G_TYPE_STRING,
+			      G_TYPE_STRING);
+
+	signals[STARTED_SIGNAL] =
+		g_signal_new ("started",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (AlbumartClass, ready),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE,
+			      1,
+			      G_TYPE_UINT);
+
+	signals[FINISHED_SIGNAL] =
+		g_signal_new ("finished",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (AlbumartClass, finished),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE,
+			      1,
+			      G_TYPE_UINT);
+	
+	signals[ERROR_SIGNAL] =
+		g_signal_new ("error",
+			      G_OBJECT_CLASS_TYPE (object_class),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (AlbumartClass, error),
+			      NULL, NULL,
+			      albumart_marshal_VOID__UINT_INT_STRING,
+			      G_TYPE_NONE,
+			      3,
+			      G_TYPE_UINT,
+			      G_TYPE_INT,
+			      G_TYPE_STRING);
+
+	g_type_class_add_private (object_class, sizeof (AlbumartPrivate));
+}
+
+static void
+albumart_init (Albumart *object)
+{
+	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
+
+	priv->mutex = g_mutex_new ();
+
+	/* We could increase the amount of threads to add some parallelism */
+
+	priv->normal_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
+
+	/* This sort function makes the pool a LIFO */
+
+	g_thread_pool_set_sort_function (priv->normal_pool, pool_sort_compare, NULL);
+
+}
+
+
+
+void 
+albumart_do_stop (void)
+{
+}
+
+
+void 
+albumart_do_init (DBusGConnection *connection, AlbumartManager *manager, Albumart **albumart, GError **error)
+{
+	guint result;
+	DBusGProxy *proxy;
+	GObject *object;
+
+	proxy = dbus_g_proxy_new_for_name (connection, 
+					   DBUS_SERVICE_DBUS,
+					   DBUS_PATH_DBUS,
+					   DBUS_INTERFACE_DBUS);
+
+	org_freedesktop_DBus_request_name (proxy, ALBUMART_SERVICE,
+					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
+					   &result, error);
+
+	object = g_object_new (TYPE_ALBUMART, 
+			       "manager", manager,
+			       NULL);
+
+	dbus_g_object_type_install_info (G_OBJECT_TYPE (object), 
+					 &dbus_glib_albumart_object_info);
+
+	dbus_g_connection_register_g_object (connection, 
+					     ALBUMART_PATH, 
+					     object);
+
+	*albumart = ALBUMART (object);
+}

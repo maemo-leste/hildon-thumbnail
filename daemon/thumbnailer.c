@@ -32,7 +32,6 @@
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 
-#include "manager.h"
 #include "thumbnailer.h"
 #include "thumbnailer-marshal.h"
 #include "thumbnailer-glue.h"
@@ -51,7 +50,7 @@ void keep_alive (void);
 
 
 typedef struct {
-	Manager *manager;
+	ThumbnailManager *manager;
 	GHashTable *plugins;
 	GThreadPool *large_pool;
 	GThreadPool *normal_pool;
@@ -83,7 +82,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 	g_hash_table_insert (priv->plugins, 
 			     g_strdup (mime_type), 
 			     plugin);
-	manager_i_have (priv->manager, mime_type);
+	thumbnail_manager_i_have (priv->manager, mime_type);
 	g_mutex_unlock (priv->mutex);
 }
 
@@ -131,7 +130,7 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 		g_object_unref (info);
 	}
 
-	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, error);
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped);
 
 	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
 		      g_file_test (normal, G_FILE_TEST_EXISTS) && 
@@ -186,10 +185,12 @@ void
 thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBusGMethodInvocation *context)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
-	WorkTask *task = g_slice_new (WorkTask);
+	WorkTask *task;
 	static guint num = 0;
 
 	dbus_async_return_if_fail (urls != NULL, context);
+
+	task = g_slice_new (WorkTask);
 
 	keep_alive ();
 
@@ -325,7 +326,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		/* If we have a third party thumbnailer for this mime-type, we
 		 * proxy the call */
 
-		proxy = manager_get_handler (priv->manager, mime_type);
+		proxy = thumbnail_manager_get_handler (priv->manager, mime_type);
 		if (proxy) {
 			GError *error = NULL;
 
@@ -410,8 +411,6 @@ void
 thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
 	guint i = 0;
-	GString *errors = NULL;
-	GError *error = NULL;
 
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
@@ -422,7 +421,6 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
-		GError *nerror = NULL;
 		gchar *from_normal = NULL, 
 		      *from_large = NULL, 
 		      *from_cropped = NULL;
@@ -432,34 +430,16 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_large, 
 						       &from_normal, 
-						       &from_cropped, &error);
+						       &from_cropped);
 
-		if (nerror)
-			goto nerror_handler;
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_large, 
 						       &to_normal, 
-						       &to_cropped, &error);
-
-		if (nerror)
-			goto nerror_handler;
-
+						       &to_cropped);
 
 		g_rename (from_large, to_large);
 		g_rename (from_normal, to_normal);
 		g_rename (from_cropped, to_cropped);
-
-		nerror_handler:
-
-		if (nerror) {
-			if (!errors)
-				errors = g_string_new ("");
-			g_string_append_printf (errors, "[`%s': %s] ", 
-						from_urls[i],
-						nerror->message);
-			g_error_free (nerror);
-			nerror = NULL;
-		}
 
 		g_free (from_normal);
 		g_free (from_large);
@@ -471,22 +451,13 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		i++;
 	}
 
-	if (errors) {
-		g_set_error (&error, THUMB_ERROR, 0,
-			     errors->str);
-		g_string_free (errors, TRUE);
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-	} else
-		dbus_g_method_return (context);
+	dbus_g_method_return (context);
 }
 
 void
 thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
 	guint i = 0;
-	GString *errors = NULL;
-	GError *error = NULL;
 
 	dbus_async_return_if_fail (from_urls != NULL, context);
 	dbus_async_return_if_fail (to_urls != NULL, context);
@@ -497,21 +468,17 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
-		GError *nerror = NULL;
 		gchar *from_s[3] = { NULL, NULL, NULL };
 		gchar *to_s[3] = { NULL, NULL, NULL };
 		guint n;
 
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_s[0], 
 						       &from_s[1], 
-						       &from_s[2], &error);
-
-		if (nerror)
-			goto nerror_handler;
+						       &from_s[2]);
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_s[0], 
 						       &to_s[1], 
-						       &to_s[2], &error);
+						       &to_s[2]);
 
 		for (n = 0; n<3; n++) {
 			GFile *from, *to;
@@ -534,18 +501,6 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		}
 
-		nerror_handler:
-
-		if (nerror) {
-			if (!errors)
-				errors = g_string_new ("");
-			g_string_append_printf (errors, "[`%s': %s] ", 
-						from_urls[i],
-						nerror->message);
-			g_error_free (nerror);
-			nerror = NULL;
-		}
-
 		for (n = 0; n<3; n++) {
 			/* These can be NULL, but that's ok for g_free */
 			g_free (from_s[n]);
@@ -555,22 +510,13 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		i++;
 	}
 
-	if (errors) {
-		g_set_error (&error, THUMB_ERROR, 0,
-			     errors->str);
-		g_string_free (errors, TRUE);
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-	} else
-		dbus_g_method_return (context);
+	dbus_g_method_return (context);
 }
 
 void
 thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context)
 {
 	guint i = 0;
-	GString *errors = NULL;
-	GError *error = NULL;
 
 	dbus_async_return_if_fail (urls != NULL, context);
 
@@ -579,33 +525,19 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	while (urls[i] != NULL) {
 
 		const gchar *uri = urls[i];
-		GError *nerror = NULL;
 		gchar *normal = NULL, 
 		      *large = NULL, 
 		      *cropped = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, 
 						       &normal, 
-						       &cropped, &error);
-
-		if (nerror)
-			goto nerror_handler;
+						       &cropped);
 
 		g_unlink (large);
 		g_unlink (normal);
 		g_unlink (cropped);
 
 		nerror_handler:
-
-		if (nerror) {
-			if (!errors)
-				errors = g_string_new ("");
-			g_string_append_printf (errors, "[`%s': %s] ", 
-						urls[i],
-						nerror->message);
-			g_error_free (nerror);
-			nerror = NULL;
-		}
 
 		g_free (normal);
 		g_free (large);
@@ -614,14 +546,7 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		i++;
 	}
 
-	if (errors) {
-		g_set_error (&error, THUMB_ERROR, 0,
-			     errors->str);
-		g_string_free (errors, TRUE);
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-	} else
-		dbus_g_method_return (context);
+	dbus_g_method_return (context);
 }
 
 static void
@@ -640,7 +565,7 @@ thumbnailer_finalize (GObject *object)
 }
 
 static void 
-thumbnailer_set_manager (Thumbnailer *object, Manager *manager)
+thumbnailer_set_manager (Thumbnailer *object, ThumbnailManager *manager)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	if (priv->manager)
@@ -698,7 +623,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 					 g_param_spec_object ("manager",
 							      "Manager",
 							      "Manager",
-							      TYPE_MANAGER,
+							      TYPE_THUMBNAIL_MANAGER,
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
 
@@ -743,7 +668,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      NULL, NULL,
 			      thumbnailer_marshal_VOID__UINT_INT_STRING,
 			      G_TYPE_NONE,
-			      2,
+			      3,
 			      G_TYPE_UINT,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
@@ -783,7 +708,7 @@ thumbnailer_do_stop (void)
 
 
 void 
-thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer **thumbnailer, GError **error)
+thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thumbnailer **thumbnailer, GError **error)
 {
 	guint result;
 	DBusGProxy *proxy;

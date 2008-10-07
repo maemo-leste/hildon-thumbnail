@@ -1,6 +1,6 @@
 AC_INIT(Makefile.am)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(hildon-thumbnail, 3.0.2)
+AM_INIT_AUTOMAKE(hildon-thumbnail, 3.0.3)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -13,6 +13,9 @@ AC_PROG_LIBTOOL
 
 AC_HEADER_STDC
 
+PKG_CHECK_MODULES(XML, libxml-2.0)
+AC_SUBST(XML_CFLAGS)
+AC_SUBST(XML_LIBS)
 
 PKG_CHECK_MODULES(DBUS, dbus-1 dbus-glib-1)
 AC_SUBST(DBUS_CFLAGS)
@@ -32,6 +35,11 @@ PKG_CHECK_MODULES(GMODULE, gmodule-2.0)
 AC_SUBST(GMODULE_CFLAGS)
 AC_SUBST(GMODULE_LIBS)
 
+PKG_CHECK_MODULES(GTK, gtk+-2.0, [have_gtk=yes], [have_gtk=no])
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
+AM_CONDITIONAL(HAVE_MGTK, test "$have_gtk" = "yes")
 
 ####################################################################
 # DBus Service
@@ -95,6 +103,8 @@ else
 fi
 
 AC_CHECK_PROG(GTKDOC, gtkdoc-mkdb, true, false)
+
+AC_PATH_PROG(VALAC, valac, valac)
 
 gtk_doc_min_version=0.10
 if $GTKDOC ; then
@@ -160,5 +170,7 @@ AC_OUTPUT(Makefile \
 	  tests/Makefile \
 	  daemon/Makefile \
 	  daemon/plugins/Makefile \
-          thumbs/Makefile \
+	  thumbs/Makefile \
+          albumart-providers/Makefile \
+          albumart-providers/googleimages/Makefile \
           hildon-thumbnail.pc)

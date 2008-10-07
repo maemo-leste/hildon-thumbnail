@@ -27,7 +27,7 @@
 
 #include <gmodule.h>
 
-#include "manager.h"
+#include "thumbnail-manager.h"
 
 #define THUMBNAILER_SERVICE      "org.freedesktop.thumbnailer"
 #define THUMBNAILER_PATH         "/org/freedesktop/thumbnailer/Generic"
@@ -51,7 +51,7 @@ struct ThumbnailerClass {
 
 	void (*finished) (Thumbnailer *object, guint handle);
 	void (*started) (Thumbnailer *object, guint handle);
-	void (*ready) (Thumbnailer *object, guint handle);
+	void (*ready) (Thumbnailer *object, GStrv uris);
 	void (*error) (Thumbnailer *object, guint handle, gchar *reason);
 };
 
@@ -67,6 +67,6 @@ void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, G
 void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
 
 void thumbnailer_do_stop (void);
-void thumbnailer_do_init (DBusGConnection *connection, Manager *manager, Thumbnailer **thumbnailer, GError **error);
+void thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thumbnailer **thumbnailer, GError **error);
 
 #endif

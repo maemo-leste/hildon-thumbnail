@@ -170,11 +170,7 @@ on_task_finished (DBusGProxy *proxy,
 		 * URI */
 		
 		hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
-											   &normal, &cropped, 
-											   &error);
-
-		if (error)
-			goto error_handler;
+											   &normal, &cropped);
 
 		create_pixbuf_and_callback (item, large, normal, cropped);
 
@@ -367,14 +363,12 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 			     NULL);
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-						       &cropped, &error);
+						       &cropped);
 
 	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
-		if (!error) {
-			g_unlink (large);
-			g_unlink (normal);
-			g_unlink (cropped);
-		}
+		g_unlink (large);
+		g_unlink (normal);
+		g_unlink (cropped);
 	} else {
 		gchar *path;
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
@@ -408,9 +402,9 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		ThumbsItemAndPaths *info = g_slice_new (ThumbsItemAndPaths);
 
 		info->item = item;
-		info->normal = g_strdup (normal);
-		info->large = g_strdup (large);
-		info->cropped = g_strdup (cropped);
+		info->normal = normal;
+		info->large = large;
+		info->cropped = cropped;
 
 		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
 						 (GDestroyNotify) free_thumbsitem_and_paths);

@@ -269,10 +269,7 @@ hildon_thumbnail_plugin_create (GStrv uris, GError **error)
 		content_type = g_file_info_get_content_type (info);
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-						       &cropped, &nerror);
-
-		if (nerror)
-			goto nerror_handler;
+						       &cropped);
 
 		mime_type = g_strdup (content_type);
 		mime_type_at = g_strdup (content_type);

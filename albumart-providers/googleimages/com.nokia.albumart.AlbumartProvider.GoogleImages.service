@@ -1,0 +1,3 @@
+[D-BUS Album art provider]
+Name=com.nokia.albumart.GoogleImages
+Priority=10

@@ -1,0 +1,46 @@
+SUBDIRS = .
+
+INCLUDES = -I$(srcdir)/../thumbs -I$(srcdir)/.. $(PKG_CFLAGS) \
+	$(DBUS_CFLAGS) $(GLIB_CFLAGS) $(GMODULE_CFLAGS) $(GIO_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS)
+
+NULL = 
+BUILT_SOURCES = my.vala.stamp
+
+EXTRA_DIST = $(BUILT_SOURCES) \
+	$(com.nokia.albumart.GoogleImages_service_DATA)
+
+libexec_PROGRAMS = hildon-google-images-art-downloaderd
+
+hildon_google_images_art_downloaderd_VALASOURCES = \
+	google-images-art-downloader.vala
+
+hildon_google_images_art_downloaderd_SOURCES = \
+	my.vala.stamp \
+	$(hildon_google_images_art_downloaderd_VALASOURCES:.vala=.c) \
+	$(hildon_google_images_art_downloaderd_VALASOURCES:.vala=.h) \
+	$(NULL)
+
+google-images-art-downloader.vala my.vala.stamp: $(hildon_google_images_art_downloaderd_VALASOURCES)
+	$(VALAC) -C --basedir $(top_srcdir) \
+	--pkg=gio-2.0 \
+	--pkg=dbus-glib-1 \
+	$^
+	touch $@
+
+hildon_google_images_art_downloaderd_LDADD = \
+	$(DBUS_LIBS) $(GLIB_LIBS) $(GMODULE_LIBS) $(GIO_LIBS)
+
+# Services
+com.nokia.albumart.GoogleImages_servicedir = $(DBUS_SERVICES_DIR)
+com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.service
+
+%.service: %.service.in
+	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
+
+CLEANFILES = $(BUILT_SOURCES) \
+	$(com.nokia.albumart.GoogleImages_service_DATA)
+
+albartdowndir = /usr/share/albumart-providers
+albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
+

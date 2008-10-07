@@ -39,15 +39,17 @@ libhildonthumbnail_la_LIBADD = $(generic_libs) $(GDK_PIXBUF_LIBS) \
 libhildonthumbnail_la_LDFLAGS = -version-info 0:4:0
 libhildonthumbnail_la_SOURCES = hildon-thumbnail-factory.c \
 	hildon-thumbnail-factory.h thumbnailer-client.h \
-	pixbuf-io-loader.c
+	pixbuf-io-loader.c hildon-albumart-factory.c \
+	hildon-albumart-factory.h albumart-client.h
 
 %-client.h: $(top_srcdir)/daemon/%.xml
 	$(DBUSBINDINGTOOL) --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $^
 
-BUILT_SOURCES = thumbnailer-client.h
+BUILT_SOURCES = thumbnailer-client.h albumart-client.h
 
 libhildonthumbnaildir=$(includedir)/hildon-thumbnail
-libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h
+libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h \
+	hildon-albumart-factory.h
 
 install-exec-local:
 	rm -f $(DESTDIR)$(bindir)/osso-thumb-gdk-pixbuf

@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE@
-Description: LGPL-licensed thumbs library stuff
+Description: LGPL-licensed thumbs and albumart library
 Requires: dbus-glib-1
 Version: @VERSION@
 Libs: -L${libdir} -lhildonthumbnail

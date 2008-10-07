@@ -23,38 +23,15 @@
  */
 
 #include <string.h>
-#include "md5.h"
 #include "utils.h"
 
-static void 
-md5_digest_to_ascii(guchar digest[16], gchar str[33])
-{
-	gint i;
-	gchar *cursor = str;
-	for(i = 0; i < 16; i++) {
-		g_sprintf(cursor, "%02x", digest[i]);
-		cursor += 2;
-	}
-}
-
-static void 
-md5_c_string(const gchar *str, gchar ascii_digest[33])
-{
-	md5_state_t md5;
-	guchar digest[16];
-
-	md5_init(&md5);
-	md5_append(&md5, (const unsigned char *)str, strlen(str));
-	md5_finish(&md5, digest);
-	md5_digest_to_ascii(digest, ascii_digest);
-}
 
 void
-hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, GError **error)
+hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped)
 {
-	gchar ascii_digest[33];
-	gchar thumb_filename[128];
-	gchar cropped_filename[128];
+	gchar *ascii_digest;
+	gchar *thumb_filename;
+	gchar *cropped_filename;
 
 	static gchar *large_dir = NULL;
 	static gchar *normal_dir = NULL;
@@ -83,13 +60,57 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	if(!g_file_test (cropped_dir, G_FILE_TEST_EXISTS))
 		g_mkdir_with_parents (cropped_dir, 0770);
 
-	md5_c_string (uri, ascii_digest);
-
-	g_sprintf (thumb_filename, "%s.png", ascii_digest);
-	g_sprintf (cropped_filename, "%s.jpg", ascii_digest);
+	ascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, uri, -1);
+	thumb_filename = g_strdup_printf ("%s.png", ascii_digest);
+	cropped_filename = g_strdup_printf ("%s.jpeg", ascii_digest);
 
 	*large = g_build_filename (large_dir, thumb_filename, NULL);
 	*normal = g_build_filename (normal_dir, thumb_filename, NULL);
 	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
 
+	g_free (thumb_filename);
+	g_free (cropped_filename);
+	g_free (ascii_digest);
+}
+
+
+void
+hildon_thumbnail_util_get_albumart_path (const gchar *artist, const gchar *album, const gchar *uri, gchar **path)
+{
+	gchar *art_filename, *str;
+	static gchar *dir = NULL;
+	gchar *down;
+	
+	if (album && artist) {
+		gchar *_tmp14, *_tmp13;
+		down = g_utf8_strdown (_tmp14 = (g_strconcat ((_tmp13 = g_strconcat (artist, " ", NULL)), album, NULL)),-1);
+		g_free (_tmp14);
+		g_free (_tmp13);
+	} else if (uri)
+		down = g_strdup (uri);
+	else {
+		*path = NULL;
+		return;
+	}
+
+	/* I know we leak, but it's better than doing memory fragementation on 
+	 * these strings ... */
+
+	if (!dir)
+		dir = g_build_filename (g_get_home_dir (), ".album_art", NULL);
+
+	*path = NULL;
+
+	if(!g_file_test (dir, G_FILE_TEST_EXISTS))
+		g_mkdir_with_parents (dir, 0770);
+
+	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
+
+	art_filename = g_strdup_printf ("%s.jpeg", str);
+
+	*path = g_build_filename (dir, art_filename, NULL);
+
+	g_free (str);
+	g_free (art_filename);
+	g_free (down);
 }

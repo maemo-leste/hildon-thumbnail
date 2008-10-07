@@ -30,7 +30,9 @@
 #include "hildon-thumbnail-plugin.h"
 
 #include "thumbnailer.h"
-#include "manager.h"
+#include "albumart.h"
+#include "thumbnail-manager.h"
+#include "albumart-manager.h"
 
 static GHashTable *registrations;
 static gboolean do_shut_down_next_time = TRUE;
@@ -69,9 +71,6 @@ init_plugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
 	regs = g_hash_table_new_full (g_str_hash, g_str_equal,
 				      (GDestroyNotify) g_free, 
 				      (GDestroyNotify) NULL);
-
-
-	/* TODO: Monitor this directory for plugin removals and additions */
 
 	dir = g_dir_open (PLUGINS_DIR, 0, &error);
 
@@ -181,14 +180,19 @@ main (int argc, char **argv)
 	else {
 		GMainLoop *main_loop;
 		GError *error = NULL;
-		Manager *manager;
+		ThumbnailManager *manager;
+		AlbumartManager *a_manager;
 		Thumbnailer *thumbnailer;
+		Albumart *arter;
 		DBusGProxy *manager_proxy;
 		GFile *file;
 		GFileMonitor *monitor;
 
-		manager_do_init (connection, &manager, &error);
+		thumbnail_manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
+
+		albumart_manager_do_init (connection, &a_manager, &error);
+		albumart_do_init (connection, a_manager, &arter, &error);
 
 		manager_proxy = dbus_g_proxy_new_for_name (connection, 
 					   MANAGER_SERVICE,
@@ -217,8 +221,15 @@ main (int argc, char **argv)
 
 		g_hash_table_unref (registrations);
 
+		albumart_do_stop ();
 		thumbnailer_do_stop ();
-		manager_do_stop ();
+		thumbnail_manager_do_stop ();
+		albumart_manager_do_stop ();
+
+		g_object_unref (thumbnailer);
+		g_object_unref (manager);
+		g_object_unref (arter);
+		g_object_unref (a_manager);
 
 		g_main_loop_unref (main_loop);
 	}
