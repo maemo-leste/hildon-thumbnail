@@ -76,6 +76,7 @@ HildonThumbnailRequest*
 	 hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 									 const gchar *uri,
 									 guint width, guint height,
+									 gboolean cropped,
 									 HildonThumbnailRequestCallback callback,
 									 gpointer user_data,
 									 GDestroyNotify destroy);

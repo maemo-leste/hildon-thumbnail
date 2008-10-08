@@ -1,6 +1,12 @@
 2008-10-08  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-thumbnail-factory.h: Added support for cropped thumbs
+	to the new API
+
+2008-10-08  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/Makefile.am
 	* thumbs/hildon-thumbnail-factory.h
 	* thumbs/hildon-albumart-obj.c

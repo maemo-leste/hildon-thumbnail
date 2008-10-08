@@ -265,6 +265,7 @@ HildonThumbnailRequest*
 hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 				  const gchar *uri,
 				  guint width, guint height,
+				  gboolean cropped,
 				  HildonThumbnailRequestCallback callback,
 				  gpointer user_data,
 				  GDestroyNotify destroy)
@@ -288,6 +289,7 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 	r_priv->user_data = user_data;
 	r_priv->callback = callback;
 	r_priv->destroy = destroy;
+	r_priv->cropped = cropped;
 
 	if (!have) {
 		org_freedesktop_thumbnailer_Generic_queue_async (f_priv->proxy, 
