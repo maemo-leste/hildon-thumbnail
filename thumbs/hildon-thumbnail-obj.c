@@ -28,6 +28,7 @@
 
 #include "hildon-thumbnail-factory.h"
 #include "thumbnailer-client.h"
+#include "utils.h"
 
 #define THUMBNAILER_SERVICE      "org.freedesktop.thumbnailer"
 #define THUMBNAILER_PATH         "/org/freedesktop/thumbnailer/Generic"
