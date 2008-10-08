@@ -31,7 +31,60 @@
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+
+#define HILDON_TYPE_THUMBNAIL_FACTORY             (hildon_thumbnail_factory_get_type())
+#define HILDON_THUMBNAIL_FACTORY(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), HILDON_TYPE_THUMBNAIL_FACTORY, HildonThumbnailFactory))
+#define HILDON_THUMBNAIL_FACTORY_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), HILDON_TYPE_THUMBNAIL_FACTORY, HildonThumbnailFactoryClass))
+#define HILDON_THUMBNAIL_FACTORY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), HILDON_TYPE_THUMBNAIL_FACTORY, HildonThumbnailFactoryClass))
+
+#define HILDON_TYPE_THUMBNAIL_REQUEST             (hildon_thumbnail_request_get_type())
+#define HILDON_THUMBNAIL_REQUEST(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), HILDON_TYPE_THUMBNAIL_REQUEST, HildonThumbnailRequest))
+#define HILDON_THUMBNAIL_REQUEST_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), HILDON_TYPE_THUMBNAIL_REQUEST, HildonThumbnailRequestClass))
+#define HILDON_THUMBNAIL_REQUEST_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), HILDON_TYPE_THUMBNAIL_REQUEST, HildonThumbnailRequestClass))
+
 G_BEGIN_DECLS
+
+typedef struct _HildonThumbnailFactory HildonThumbnailFactory;
+typedef struct _HildonThumbnailRequest HildonThumbnailRequest;
+
+typedef struct _HildonThumbnailFactoryClass HildonThumbnailFactoryClass;
+typedef struct _HildonThumbnailRequestClass HildonThumbnailRequestClass;
+
+struct _HildonThumbnailFactory {
+	GObject *parent;
+};
+
+struct _HildonThumbnailFactoryClass {
+	GObjectClass *parent_class;
+};
+
+struct _HildonThumbnailRequest {
+	GObject *parent;
+};
+
+struct _HildonThumbnailRequestClass {
+	GObjectClass *parent_class;
+};
+
+GType hildon_thumbnail_factory_get_type (void);
+GType hildon_thumbnail_request_get_type (void);
+
+typedef void (*HildonThumbnailRequestCallback)	(HildonThumbnailFactory *self,
+		GdkPixbuf *thumbnail, GError *error, gpointer user_data);
+
+HildonThumbnailRequest*
+	 hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
+									 const gchar *uri,
+									 guint width, guint height,
+									 HildonThumbnailRequestCallback callback,
+									 gpointer user_data,
+									 GDestroyNotify destroy);
+
+void hildon_thumbnail_factory_join (HildonThumbnailFactory *self);
+
+void hildon_thumbnail_request_unqueue (HildonThumbnailRequest *self);
+
+void hildon_thumbnail_request_join (HildonThumbnailRequest *self);
 
 typedef gpointer HildonThumbnailFactoryHandle;
 

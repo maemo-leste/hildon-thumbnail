@@ -31,8 +31,59 @@
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+
+#define HILDON_TYPE_ALBUMART_FACTORY             (hildon_albumart_factory_get_type())
+#define HILDON_ALBUMART_FACTORY(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), HILDON_TYPE_ALBUMART_FACTORY, HildonAlbumartFactory))
+#define HILDON_ALBUMART_FACTORY_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), HILDON_TYPE_ALBUMART_FACTORY, HildonAlbumartFactoryClass))
+#define HILDON_ALBUMART_FACTORY_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), HILDON_TYPE_ALBUMART_FACTORY, HildonAlbumartFactoryClass))
+
+#define HILDON_TYPE_ALBUMART_REQUEST             (hildon_albumart_request_get_type())
+#define HILDON_ALBUMART_REQUEST(o)               (G_TYPE_CHECK_INSTANCE_CAST ((o), HILDON_TYPE_ALBUMART_REQUEST, HildonAlbumartRequest))
+#define HILDON_ALBUMART_REQUEST_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), HILDON_TYPE_ALBUMART_REQUEST, HildonAlbumartRequestClass))
+#define HILDON_ALBUMART_REQUEST_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), HILDON_TYPE_ALBUMART_REQUEST, HildonAlbumartRequestClass))
+
 G_BEGIN_DECLS
 
+typedef struct _HildonAlbumartFactory HildonAlbumartFactory;
+typedef struct _HildonAlbumartRequest HildonAlbumartRequest;
+
+typedef struct _HildonAlbumartFactoryClass HildonAlbumartFactoryClass;
+typedef struct _HildonAlbumartRequestClass HildonAlbumartRequestClass;
+
+struct _HildonAlbumartFactory {
+	GObject *parent;
+};
+
+struct _HildonAlbumartFactoryClass {
+	GObjectClass *parent_class;
+};
+
+struct _HildonAlbumartRequest {
+	GObject *parent;
+};
+
+struct _HildonAlbumartRequestClass {
+	GObjectClass *parent_class;
+};
+
+GType hildon_albumart_factory_get_type (void);
+GType hildon_albumart_request_get_type (void);
+
+typedef void (*HildonAlbumartRequestCallback)	(HildonAlbumartFactory *self,
+		GdkPixbuf *albumart, GError *error, gpointer user_data);
+
+HildonAlbumartRequest*
+	 hildon_albumart_factory_queue (HildonAlbumartFactory *self,
+									 const gchar *artist, const gchar *album, const gchar *uri,
+									 HildonAlbumartRequestCallback callback,
+									 gpointer user_data,
+									 GDestroyNotify destroy);
+
+void hildon_albumart_factory_join (HildonAlbumartFactory *self);
+
+void hildon_albumart_request_unqueue (HildonAlbumartRequest *self);
+
+void hildon_albumart_request_join (HildonAlbumartRequest *self);
 
 typedef gpointer HildonAlbumartFactoryHandle;
 

@@ -40,7 +40,8 @@ libhildonthumbnail_la_LDFLAGS = -version-info 0:4:0
 libhildonthumbnail_la_SOURCES = hildon-thumbnail-factory.c \
 	hildon-thumbnail-factory.h thumbnailer-client.h \
 	pixbuf-io-loader.c hildon-albumart-factory.c \
-	hildon-albumart-factory.h albumart-client.h
+	hildon-albumart-factory.h albumart-client.h \
+	hildon-thumbnail-obj.c hildon-albumart-obj.c
 
 %-client.h: $(top_srcdir)/daemon/%.xml
 	$(DBUSBINDINGTOOL) --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $^
