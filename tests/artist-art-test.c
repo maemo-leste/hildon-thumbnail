@@ -26,7 +26,7 @@ on_button_clicked (GtkButton *button, gpointer user_data)
 	album = gtk_entry_get_text (btext);
 	artist = gtk_entry_get_text (atext);
 
-	hildon_albumart_factory_load(artist, album, NULL, on_art_back, NULL);
+	hildon_albumart_factory_load(artist, album, "album", on_art_back, NULL);
 }
 
 int

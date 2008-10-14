@@ -80,7 +80,7 @@ hildon_albumart_factory_class_init (HildonAlbumartFactoryClass *klass)
 
 HildonAlbumartRequest*
 hildon_albumart_factory_queue (HildonAlbumartFactory *self,
-			       const gchar *artist, const gchar *album, const gchar *uri,
+			       const gchar *artist_or_title, const gchar *album, const gchar *kind,
 			       HildonAlbumartRequestCallback callback,
 			       gpointer user_data,
 			       GDestroyNotify destroy)

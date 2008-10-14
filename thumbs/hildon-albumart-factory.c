@@ -47,7 +47,7 @@
 
 
 typedef struct {
-	gchar *uri, *album, *artist;
+	gchar *kind, *album, *artist;
 	HildonAlbumartFactoryFinishedCallback callback;
 	gpointer user_data;
 	gboolean canceled;
@@ -90,7 +90,7 @@ typedef struct {
 
 static void thumb_item_free(ArtsItem* item)
 {
-	g_free(item->uri);
+	g_free(item->kind);
 	g_free(item->artist);
 	g_free(item->album);
 	g_free(item);
@@ -153,7 +153,7 @@ on_task_finished (DBusGProxy *proxy,
 
 		hildon_thumbnail_util_get_albumart_path (item->artist, 
 												 item->album, 
-												 item->uri, &path);
+												 item->kind, &path);
 
 		create_pixbuf_and_callback (item, path);
 
@@ -317,25 +317,26 @@ have_all_cb (gpointer user_data)
 }
 
 HildonAlbumartFactoryHandle hildon_albumart_factory_load(
-				const gchar *artist,
+				const gchar *artist_or_title,
 				const gchar *album,
-				const gchar *uri,
+				const gchar *kind,
 				HildonAlbumartFactoryFinishedCallback callback,
 				gpointer user_data)
 {
+	const gchar *artist = artist_or_title;
 	gchar *path;
 	GError *error = NULL;
 	ArtsItem *item;
 	gboolean have_all = FALSE;
 
-	hildon_thumbnail_util_get_albumart_path (artist, album, uri, &path);
+	hildon_thumbnail_util_get_albumart_path (artist, album, kind, &path);
 
 	have_all = g_file_test (path, G_FILE_TEST_EXISTS);
 
 	item = g_new0 (ArtsItem, 1);
 
-	if (uri)
-		item->uri = g_strdup(uri);
+	if (kind)
+		item->kind = g_strdup(kind);
 	if (album)
 		item->album = g_strdup(album);
 	if (artist)
@@ -365,7 +366,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 
 		com_nokia_albumart_Requester_queue_async (proxy, artist, 
 												  album, 
-												  uri, 0, 
+												  kind, 0, 
 												  on_got_handle,
 												  item);
 
@@ -416,15 +417,16 @@ static void file_opp_reply  (DBusGProxy *proxy, GError *error, gpointer userdata
 {
 }
 
-void hildon_albumart_factory_remove(const gchar *artist, const gchar *album, const gchar *uri)
+void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *album, const gchar *kind)
 {
+	const gchar *artist = artist_or_title;
 
 	init();
 
 	com_nokia_albumart_Requester_delete_async (proxy, 
 											   artist, 
 											   album, 
-											   uri, 
+											   kind, 
 											   file_opp_reply, NULL);
 
 }

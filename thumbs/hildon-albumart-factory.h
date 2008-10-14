@@ -74,7 +74,7 @@ typedef void (*HildonAlbumartRequestCallback)	(HildonAlbumartFactory *self,
 
 HildonAlbumartRequest*
 	 hildon_albumart_factory_queue (HildonAlbumartFactory *self,
-									 const gchar *artist, const gchar *album, const gchar *uri,
+									 const gchar *artist_or_title, const gchar *album, const gchar *kind,
 									 HildonAlbumartRequestCallback callback,
 									 gpointer user_data,
 									 GDestroyNotify destroy);
@@ -123,7 +123,7 @@ typedef void (*HildonAlbumartFactoryFinishedCallback)(HildonAlbumartFactoryHandl
  *  a critical error
  */
 HildonAlbumartFactoryHandle hildon_albumart_factory_load(
-            const gchar *artist, const gchar *album, const gchar *uri,
+            const gchar *artist_or_title, const gchar *album, const gchar *kind,
             HildonAlbumartFactoryFinishedCallback callback,
             gpointer user_data);
 
@@ -143,7 +143,7 @@ void hildon_albumart_factory_cancel(HildonAlbumartFactoryHandle handle);
  *
  * Call to indicate the a file was removed and the albumart cache should be updated
  */
-void hildon_albumart_factory_remove(const gchar *artist, const gchar *album, const gchar *uri);
+void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *album, const gchar *kind);
 
 /**
  * hildon_albumart_factory_wait:

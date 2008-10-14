@@ -118,7 +118,7 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 	WorkTask *task;
 	static guint num = 0;
 
-	if (!kind)
+	if (!kind || strlen (album) == 0)
 		kind = "album";
 
 	if (artist_or_title && strlen (artist_or_title) <= 0)

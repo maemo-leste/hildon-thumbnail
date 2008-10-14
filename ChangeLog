@@ -1,5 +1,14 @@
 2008-10-14  Philip Van Hoof  <philip@codeminded.be>
 
+	* tests/artist-art-test.c
+	* thumbs/hildon-albumart-factory.c
+	* thumbs/hildon-albumart-obj.c
+	* thumbs/hildon-albumart-factory.h
+	* daemon/albumart.c: Bugfixes and added support for the new mediaart
+	storage spec in the client library for albumart downloading
+
+2008-10-14  Philip Van Hoof  <philip@codeminded.be>
+
 	* albumart-providers/googleimages/google-images-art-downloader.vala
 	* daemon/utils.c
 	* daemon/utils.h
