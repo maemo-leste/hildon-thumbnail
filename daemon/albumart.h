@@ -57,9 +57,9 @@ struct AlbumartClass {
 
 GType albumart_get_type (void);
 
-void albumart_queue (Albumart *object, gchar *artist, gchar *album, gchar *uri, guint handle_to_unqueue, DBusGMethodInvocation *context);
+void albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *kind, guint handle_to_unqueue, DBusGMethodInvocation *context);
 void albumart_unqueue (Albumart *object, guint handle, DBusGMethodInvocation *context);
-void albumart_delete (Albumart *object, gchar *artist, gchar *album, gchar *uri, DBusGMethodInvocation *context);
+void albumart_delete (Albumart *object, gchar *artist_or_title, gchar *album, gchar *kind, DBusGMethodInvocation *context);
 
 void albumart_do_stop (void);
 void albumart_do_init (DBusGConnection *connection, AlbumartManager *manager, Albumart **albumart, GError **error);

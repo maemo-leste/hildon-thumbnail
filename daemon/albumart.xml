@@ -4,9 +4,9 @@
 
     <method name="Queue">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
-      <arg type="s" name="artist" direction="in" />
+      <arg type="s" name="artist_or_title" direction="in" />
       <arg type="s" name="album" direction="in" />
-      <arg type="s" name="uri" direction="in" />
+      <arg type="s" name="kind" direction="in" />
       <arg type="u" name="handle_to_unqueue" direction="in" />
       <arg type="u" name="handle" direction="out" />
     </method>
@@ -39,9 +39,9 @@
 
     <method name="Delete">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
-      <arg type="s" name="artist" direction="in" />
+      <arg type="s" name="artist_or_title" direction="in" />
       <arg type="s" name="album" direction="in" />
-      <arg type="s" name="uri" direction="in" />
+      <arg type="s" name="kind" direction="in" />
     </method>
 
   </interface>

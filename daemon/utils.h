@@ -29,7 +29,7 @@
 #include <gio/gio.h>
 
 void hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped);
-void hildon_thumbnail_util_get_albumart_path (const gchar *artist, const gchar *album, const gchar *uri, gchar **path);
+void hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path);
 
 #ifndef g_sprintf
 gint g_sprintf (gchar *string, gchar const *format, ...);

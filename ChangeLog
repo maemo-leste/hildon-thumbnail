@@ -1,3 +1,14 @@
+2008-10-14  Philip Van Hoof  <philip@codeminded.be>
+
+	* albumart-providers/googleimages/google-images-art-downloader.vala
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/albumart.c
+	* daemon/albumart.h
+	* daemon/albumart.xml: Support for the new mediaart storage spec:
+	http://live.gnome.org/MediaArtStorageSpec. Note that this spec is
+	still very volatile.
+
 2008-10-08  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c: Memory leak oeps, fix

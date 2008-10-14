@@ -75,7 +75,7 @@ static guint signals[LAST_SIGNAL] = { 0, };
 typedef struct {
 	Albumart *object;
 	gchar *album, *artist;
-	gchar *uri;
+	gchar *kind;
 	guint num;
 	gboolean unqueued;
 } WorkTask;
@@ -112,22 +112,22 @@ albumart_unqueue (Albumart *object, guint handle, DBusGMethodInvocation *context
 }
 
 void
-albumart_queue (Albumart *object, gchar *artist, gchar *album, gchar *uri, guint handle_to_unqueue, DBusGMethodInvocation *context)
+albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *kind, guint handle_to_unqueue, DBusGMethodInvocation *context)
 {
 	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
 	WorkTask *task;
 	static guint num = 0;
 
-	if (uri && strlen (uri) <= 0)
-		uri = NULL;
+	if (!kind)
+		kind = "album";
 
-	if (artist && strlen (artist) <= 0)
-		artist = NULL;
+	if (artist_or_title && strlen (artist_or_title) <= 0)
+		artist_or_title = NULL;
 
 	if (album && strlen (album) <= 0)
 		album = NULL;
 
-	if (!uri && (!album || !artist)) {
+	if (!artist_or_title && !album) {
 		num++;
 		dbus_g_method_return (context, num);
 		return;
@@ -141,11 +141,9 @@ albumart_queue (Albumart *object, gchar *artist, gchar *album, gchar *uri, guint
 	task->num = ++num;
 	task->object = g_object_ref (object);
 
-	if (album && artist) {
-		task->album = g_strdup (album);
-		task->artist = g_strdup (artist);
-	} if (uri)
-		task->uri = g_strdup (uri);
+	task->album = g_strdup (album);
+	task->artist = g_strdup (artist_or_title);
+	task->kind = g_strdup (kind);
 
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
@@ -217,12 +215,12 @@ do_the_work (WorkTask *task, gpointer user_data)
 	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (task->object);
 	gchar *artist = task->artist;
 	gchar *album = task->album;
-	gchar *uri = task->uri;
+	gchar *kind = task->kind;
 	gchar *path;
 
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
-	if (task->unqueued || (!uri && (!album && !artist))) {
+	if (task->unqueued) {
 		g_mutex_unlock (priv->mutex);
 		goto unqueued;
 	}
@@ -231,94 +229,45 @@ do_the_work (WorkTask *task, gpointer user_data)
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
 			task->num);
 
-	hildon_thumbnail_util_get_albumart_path (artist, album, uri, &path);
+	hildon_thumbnail_util_get_albumart_path (artist, album, kind, &path);
 
 	if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+		GList *proxies, *copy;
 		gboolean handled = FALSE;
-		GFile *file = g_file_new_for_uri (task->uri);
-		gchar *dpath = g_file_get_path (file);
 
-		// TODO: Perform copy from embedded (in uri) to path
+		proxies = albumart_manager_get_handlers (priv->manager);
+		copy = proxies;
 
-		g_object_unref (file);
+		while (copy && !handled) {
+			DBusGProxy *proxy = copy->data;
+			GError *error = NULL;
 
-		if (dpath) {
-			gchar *dirn = g_path_get_dirname (dpath);
-			GDir *dir = g_dir_open (dirn, 0, NULL);
+			keep_alive ();
 
-			if (dir) {
-				gchar *image;
+			dbus_g_proxy_call (proxy, "Fetch", &error, 
+					   G_TYPE_STRING, artist,
+					   G_TYPE_STRING, album,
+					   G_TYPE_STRING, kind,
+					   G_TYPE_INVALID, 
+					   G_TYPE_INVALID);
 
-				image = find_image_file_in_for (dir, album);
-				if (!image)
-					image = find_image_file_in_for (dir, artist);
-				if (!image)
-					image = find_image_file_in_for (dir, "cover");
-				if (!image)
-					image = find_image_file_in_for (dir, "front");
-				if (!image)
-					image = find_image_file_in_for (dir, "album");
-				if (!image)
-					image = find_image_file_in_for (dir, "");
+			keep_alive ();
 
-				if (image) {
-					GFile *image_file = g_file_new_for_path (image);
-					GFile *cache_file = g_file_new_for_path (path);
-					g_file_copy (image_file, cache_file, 
-						     G_FILE_COPY_NONE, 
-						     NULL, NULL, NULL, NULL);
-					handled = TRUE;
-					g_object_unref (image_file);
-					g_object_unref (cache_file);
-					g_free (image);
-				}
-
-				g_dir_close (dir);
-			}
-			g_free (dirn);
-			g_free (dpath);
-		}
-		
-		// TODO: Perform heuristics from uri to path
-
-		if (!handled) {
-			GList *proxies, *copy;
-			gboolean handled = FALSE;
-
-			proxies = albumart_manager_get_handlers (priv->manager);
-			copy = proxies;
-
-			while (copy && !handled) {
-				DBusGProxy *proxy = copy->data;
-				GError *error = NULL;
-
-				keep_alive ();
-
-				dbus_g_proxy_call (proxy, "Fetch", &error, 
-						   G_TYPE_STRING, artist,
-						   G_TYPE_STRING, album,
-						   G_TYPE_STRING, uri,
-						   G_TYPE_INVALID, 
-						   G_TYPE_INVALID);
-
-				keep_alive ();
-
-				if (error) {
-					g_signal_emit (task->object, signals[ERROR_SIGNAL],
-						       0, task->num, 1, error->message);
-					g_clear_error (&error);
-				} else {
+			if (error) {
+				g_signal_emit (task->object, signals[ERROR_SIGNAL],
+					       0, task->num, 1, error->message);
+				g_clear_error (&error);
+			} else {
 					g_signal_emit (task->object, signals[READY_SIGNAL], 
-						       0, artist, album, uri, path);
-					handled = TRUE;
-				}
+					       0, artist, album, kind, path);
+				handled = TRUE;
+			}
 
-				copy = g_list_next (copy);
-			} 
+			copy = g_list_next (copy);
 
-			g_list_foreach (proxies, (GFunc) g_object_unref, NULL);
-			if (proxies)
-				g_list_free (proxies);
+		g_list_foreach (proxies, (GFunc) g_object_unref, NULL);
+		if (proxies)
+			g_list_free (proxies);
 		}
 	}
 
@@ -332,7 +281,7 @@ unqueued:
 	g_object_unref (task->object);
 	g_free (task->artist);
 	g_free (task->album);
-	g_free (task->uri);
+	g_free (task->kind);
 	g_slice_free (WorkTask, task);
 
 	return;
@@ -340,13 +289,13 @@ unqueued:
 
 
 void
-albumart_delete (Albumart *object, gchar *artist, gchar *album, gchar *uri, DBusGMethodInvocation *context)
+albumart_delete (Albumart *object, gchar *artist_or_title, gchar *album, gchar *kind, DBusGMethodInvocation *context)
 {
 	gchar *path;
 
 	keep_alive ();
 
-	hildon_thumbnail_util_get_albumart_path (artist, album, uri, &path);
+	hildon_thumbnail_util_get_albumart_path (artist_or_title, album, kind, &path);
 
 	g_unlink (path);
 

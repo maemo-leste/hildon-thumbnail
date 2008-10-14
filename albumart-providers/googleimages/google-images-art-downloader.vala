@@ -4,7 +4,7 @@ using GLib;
 
 [DBus (name = "com.nokia.albumart.Provider")]
 public interface Provider {
-	public abstract void Fetch (string artist, string album, string uri);
+	public abstract void Fetch (string artist, string album, string kind);
 }
 
 // Sample implementation of com.nokia.albumart.Provider that uses Google 
@@ -14,11 +14,20 @@ public interface Provider {
 
 public class GoogleImages : Object, Provider {
 
-	public void Fetch (string artist, string album, string uri) {
+	public void Fetch (string artist, string album, string kind) {
 		uint u = 0, hread = 0;
 		string [] pieces = artist.split (" ", -1);
 		string stitched = "";
 		bool first = true;
+
+		if (kind == null)
+			kind = "album";
+
+		if (album == null)
+			album = "";
+
+		if (artist == null)
+			artist = "";
 
 		// Convert the album and artist into something that will work for Google images
 
@@ -79,14 +88,14 @@ public class GoogleImages : Object, Provider {
 
 				string cache_path;
 
-				string cache_dir = Path.build_filename (Environment.get_home_dir(),
-								  ".album_art",
+				string cache_dir = Path.build_filename (Environment.get_user_cache_dir(),
+								  "media-art",
 								  null);
 
 				// Define cache path = ~/.album_art/MD5 (down (albumartist)).jpeg
 
-				cache_path = Path.build_filename (Environment.get_home_dir(),
-								  ".album_art",
+				cache_path = Path.build_filename (Environment.get_user_cache_dir(),
+								  "media-art", kind + "-" +
 								  Checksum.compute_for_string (
 										   ChecksumType.MD5, 
 										   (artist + " " + album).down (), 

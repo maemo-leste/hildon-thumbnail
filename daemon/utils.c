@@ -75,29 +75,36 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 
 
 void
-hildon_thumbnail_util_get_albumart_path (const gchar *artist, const gchar *album, const gchar *uri, gchar **path)
+hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
 	gchar *art_filename, *str;
 	static gchar *dir = NULL;
-	gchar *down;
-	
-	if (album && artist) {
-		gchar *_tmp14, *_tmp13;
-		down = g_utf8_strdown (_tmp14 = (g_strconcat ((_tmp13 = g_strconcat (artist, " ", NULL)), album, NULL)),-1);
-		g_free (_tmp14);
-		g_free (_tmp13);
-	} else if (uri)
-		down = g_strdup (uri);
-	else {
+	gchar *_tmp14, *_tmp13, *down;
+
+	if (!prefix)
+		prefix = "album";
+
+	if (!a && !b) {
 		*path = NULL;
 		return;
 	}
+
+	if (!a)
+		a = "";
+
+	if (!b)
+		b = "";
+
+	down = g_utf8_strdown (_tmp14 = (g_strconcat ((_tmp13 = g_strconcat (a, " ", NULL)), b, NULL)),-1);
+
+	g_free (_tmp14);
+	g_free (_tmp13);
 
 	/* I know we leak, but it's better than doing memory fragementation on 
 	 * these strings ... */
 
 	if (!dir)
-		dir = g_build_filename (g_get_home_dir (), ".album_art", NULL);
+		dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
 	*path = NULL;
 
@@ -106,7 +113,7 @@ hildon_thumbnail_util_get_albumart_path (const gchar *artist, const gchar *album
 
 	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
 
-	art_filename = g_strdup_printf ("%s.jpeg", str);
+	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix, str);
 
 	*path = g_build_filename (dir, art_filename, NULL);
 
