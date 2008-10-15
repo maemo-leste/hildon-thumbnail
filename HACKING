@@ -37,7 +37,7 @@ Here is the general procedure:
   svn add `tar tzf TARBALL | sed 's,[^/]*/,,'`
   svn commit -m "Complete VERSION tag"
 
-There'll be a script to do this.
+See the included "svn-fill-tag" script for one way to automate this.
 
 Making releases
 ---------------
