@@ -1,37 +1,29 @@
-hildon-thumbnail (3.0.4~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.5~unreleased) unstable; urgency=low
 
- * Various improvements
-
- -- Philip Van Hoof <pvanhoof@gnome.org>  Wed, 15 Oct 2008 11:45:00 +0200
-
-hildon-thumbnail (3.0.4~unreleased) unstable; urgency=low
-
+  [ Philip Van Hoof ]
+  * Various improvements
+  * Support for album art downloading
   * Uses new MediaArtStorageSpec
 
- -- Philip Van Hoof <pvanhoof@gnome.org>  Wed, 15 Oct 2008 10:27:00 +0200
+  [ Marius Vollmer ]
+  * Disabled "doc" and "tests" sub-directories for good.  Added
+    instructions for making tags and releases.
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 15 Oct 2008 16:35:28 +0300
 
-hildon-thumbnail (3.0.3~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.1) unstable; urgency=low
 
-  * Experimental package for testing Nokia Music Store and Google Images album
-    providers. No more music-store support since 3.0.2
+  [ Philip Van Hoof ]
+  * Completed API in the daemon.
+  * Monitor plugin directory.
+  * Avoid D-Bus roundtrip for existing thumbnails when using the
+    HildonThumbnailFactory API.
+  * Handle large requests in a separate thread so that small
+    requests are not starved.
 
- -- Philip Van Hoof <pvanhoof@gnome.org>  Thu, 3 Oct 2008 12:11:00 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 24 Sep 2008 17:35:38 +0300
 
-hildon-thumbnail (3.0.2~unreleased) unstable; urgency=low
-
-  * Experimental package for testing Nokia Music Store and Google Images album
-    providers. Various fixes since 3.0.1
-
- -- Philip Van Hoof <philip@codeminded.be>  Thu, 2 Oct 2008 14:04:00 +0200
-
-hildon-thumbnail (3.0.1~unreleased) unstable; urgency=low
-
-  * Experimental package for testing Nokia Music Store and Google Images album
-    providers
-
- -- Philip Van Hoof <philip@codeminded.be>  Thu, 2 Oct 2008 14:04:00 +0200
-
-hildon-thumbnail (3.0.0~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.0) unstable; urgency=low
 
   [ Philip Van Hoof ]
   * Refactored to a daemon
