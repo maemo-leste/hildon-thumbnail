@@ -37,8 +37,6 @@
 #define REQUEST_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_THUMBNAIL_REQUEST, HildonThumbnailRequestPrivate))
 #define FACTORY_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_THUMBNAIL_FACTORY, HildonThumbnailFactoryPrivate))
 
-extern DBusGProxy *thumb_proxy;
-
 typedef struct {
 	GStrv uris;
 	gchar *key;
@@ -56,13 +54,6 @@ typedef struct {
 	GHashTable *tasks;
 } HildonThumbnailFactoryPrivate;
 
-
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf* gdk_pixbuf_new_from_stream_at_scale (GInputStream *stream, gint width,
-			gint height, gboolean preserve_aspect_ratio,
-			GCancellable *cancellable, GError **error);
-#endif
 
 #ifndef gdk_pixbuf_new_from_stream
 /* It's implemented in pixbuf-io-loader.c in this case */
