@@ -1,0 +1,73 @@
+Generated files
+---------------
+
+No generated file should be committed to trunk or a branch.  After
+checking out (or exporting) trunk or a branch, running "./autogen.sh"
+will get the tree into a shape where "configure; make" or
+"dpkg-buildpackage" will work.
+
+Tags are different.  Read on.
+
+Making a tag
+------------
+
+No generated file should be committed to trunk or a branch, but tags
+should be buildable with "dpkg-buildpackage" right away after
+exporting them, without the need to run autogen.sh.
+
+In general, a tag should (at least) contain all the files that would
+be in a distribution tarball produced by "make dist".
+
+Here is the general procedure:
+
+- Make a copy of trunk or the branch in SVN:
+
+  svn copy https://.../trunk https://.../tags/VERSION -m "Prepare VERSION tag"
+
+- Check the tag out:
+
+  cd .../tags/ && svn update VERSION
+
+- Build a dist tarball:
+
+  ./autogen.sh && ./configure && make && make dist
+
+- Add the files to SVN that are in the dist tarball
+
+  svn add `tar tzf TARBALL | sed 's,[^/]*/,,'`
+  svn commit -m "Complete VERSION tag"
+
+There'll be a script to do this.
+
+Making releases
+---------------
+
+Version numbers are bumped post-release: configure.ac always contains
+the version that is going to be released next and debian/changelog
+contains a prepared entry for the next release with a "~unreleased"
+suffix.
+
+That suffix is there to reduce confusion when you build a Debian
+package from trunk for testing purposes.  Those packages will be
+clearly marked to be 'unreleased', and can not be confused with the
+real releases.  Do not distribute these unreleased packages to other
+people.
+
+If you do want to label multiple intermediate non-releases, use
+suffixes of the form "~unreleasedN".  Do this by changing the existing
+debian/changelog entry in place.  Do not create a new entry.
+
+As a rule, the topmost entry of the debian/changelog in trunk or in a
+branch should always have a "~unreleased" or "~unreleasedN" suffix,
+and no other entry should have such a suffix.  In contrast, a
+debian/changelog file in a tag should not have a ~unreleased suffix.
+
+When making the release, remove the "~unreleased" suffix in trunk (or
+in the branch) and add a entry of the form "Released VERSION" in
+ChangeLog.  Commit these changes.
+
+Then make a tag as described above.
+
+In trunk or the branch, bump the version in configure.ac and create a
+new debian/changelog (with the "~unreleased" suffix) in
+debian/changelog and commit these changes.
