@@ -1,0 +1,29 @@
+#! /bin/sh
+
+# svn-fill-tag -- turn a skeleton source tree that is appropriate for
+#                 trunk or a branch into a full source tree that is
+#                 appropriate for a tag.
+# 
+# We do this by building a dist tarball as a reference and add all
+# files that end up in that tarball to subversion.
+# 
+# You either need to run this inside Scratchbox, or have your
+# Scratchbox set up so that "scratchbox -d $PWD make" works.
+
+sb () {
+  echo $@
+  if [ -d /targets ]; then
+    "$@"
+  else
+    scratchbox -d "$PWD" "$@"
+  fi
+}
+
+set -e
+
+sb ./autogen.sh
+sb ./configure
+sb make
+sb make dist distdir=tagfill
+svn add `tar tzf tagfill.tar.gz | sed s,^tagfill/,,`
+svn commit -m "Filled tag."
