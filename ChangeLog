@@ -1,5 +1,10 @@
 2008-10-15  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-albumart-factory.c
+	* thumbs/hildon-albumart-factory.h: API changed and improved documentation
+
+2008-10-15  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-albumart-obj.c: New client API for album art downloading
 

@@ -90,33 +90,27 @@ typedef gpointer HildonAlbumartFactoryHandle;
 /**
  * HildonAlbumartFactoryFinishedCallback:
  * @handle: Handle of the albumart that was completed
- * @user_data: User-supplied data when callback was registered
- * @albumart: A pixbuf containing the albumart or %NULL. If application wishes to keep
+ * @user_data: (null-ok): User-supplied data when callback was registered
+ * @albumart: (null-ok): A pixbuf containing the albumart or %NULL. If application wishes to keep
  *      the structure, it must call g_object_ref() on it. The library does not cache
  *      returned pixbufs.
- *      The pixbuf may contain various options, which are prefixed with
- *      HILDON_ALBUMART_OPTION_PREFIX. The various options may be "Noimage" if there
- *      is no image but only metadata, "Title", "Artist" etc. To get the options,
- *      use gdk_pixbuf_get_option(albumart, HILDON_ALBUMART_OPTION_PREFIX "Option").
- * @error: The error or %NULL if there was none. Freed after callback returns.
+ * @error: (null-ok): The error or %NULL if there was none. Freed after callback returns.
  *
- * Called when the albumarting process finishes or there is an error
+ * Called when the albumart process finishes or there is an error
  */
 typedef void (*HildonAlbumartFactoryFinishedCallback)(HildonAlbumartFactoryHandle handle,
     gpointer user_data, GdkPixbuf *albumart, GError *error);
 
 /**
  * hildon_albumart_factory_load:
- * @uri: Albumart will be created for this URI
- * @mime_type: MIME type of the resource the URI points to
- * @width: Desired albumart width
- * @height: Desired albumart height
- * @callback: Function to call when albumart creation finished or there was an error
- * @user_data: Optional data passed to the callback
+ * @artist_or_title: (null-ok): Artist or media title
+ * @album: (null-ok): Album of the media or NULL if not applicable 
+ * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
+ * @callback: (null-ok): Function to call when albumart creation finished or there was an error
+ * @user_data: (null-ok): Optional data passed to the callback
  *
- * This function requests for the library to create a albumart, or load if from cache
- * if possible. The process is asynchronous, the function returns immediately. Right now
- * most processing is done in the idle callback and albumarting in a separate process.
+ * This function requests for the library to create albumart, or load if from cache
+ * if possible. The process is asynchronous, the function returns immediately.
  * If the process fails, the callback is called with the error.
  *
  * Returns: A #HildonAlbumartFactoryHandle if request succeeded or %NULL if there was
@@ -128,6 +122,35 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
             gpointer user_data);
 
 
+
+/**
+ * hildon_albumart_is_cached:
+ * @artist_or_title: (null-ok): Artist or media title
+ * @album: (null-ok): Album of the media or NULL if not applicable 
+ * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
+ *
+ * Gives you the absolute predicted path to the art for this media. This function
+ * cares about the media having been downloaded (cached) already or not, if the
+ * art is not yet cached then it will return NULL. Else it will return the path
+ * to the cached art.
+ *
+ * Returns: (caller-owns) (null-ok): the path to the media. If not NULL, you must free this.
+ **/
+
+gchar * hildon_albumart_is_cached (const gchar *artist_or_title, const gchar *album, const gchar *kind);
+
+/**
+ * hildon_albumart_get_path:
+ * @artist_or_title: (null-ok): Artist or media title
+ * @album: (null-ok): Album of the media or NULL if not applicable 
+ * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
+ *
+ * Gives you the absolute predicted path to the art for this media. This function
+ * doesn't care about the media having been downloaded (cached) already or not,
+ * it just returns the predicted path.
+ *
+ * Returns: (caller-owns): the path to the media. You must free this.
+ **/
 gchar * hildon_albumart_get_path (const gchar *artist_or_title, const gchar *album, const gchar *kind);
 
 

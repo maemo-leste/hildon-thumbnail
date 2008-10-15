@@ -96,6 +96,20 @@ static void thumb_item_free(ArtsItem* item)
 	g_free(item);
 }
 
+gchar *
+hildon_albumart_is_cached (const gchar *artist_or_title, const gchar *album, const gchar *kind)
+{
+	gchar *path;
+
+	hildon_thumbnail_util_get_albumart_path (artist_or_title, album, kind, &path);
+
+	if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+		g_free (path);
+		path = NULL;
+	}
+
+	return path;
+}
 
 gchar * 
 hildon_albumart_get_path (const gchar *artist_or_title, const gchar *album, const gchar *kind)
