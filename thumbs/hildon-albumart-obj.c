@@ -30,9 +30,9 @@
 #include "albumart-client.h"
 #include "utils.h"
 
-#define ALBUMARTER_SERVICE      "org.freedesktop.albumarter"
-#define ALBUMARTER_PATH         "/org/freedesktop/albumarter/Generic"
-#define ALBUMARTER_INTERFACE    "org.freedesktop.albumarter.Generic"
+#define ALBUMARTER_SERVICE      "com.nokia.albumart"
+#define ALBUMARTER_PATH         "/com/nokia/albumart/Requester"
+#define ALBUMARTER_INTERFACE    "com.nokia.albumart.Requester"
 
 #define REQUEST_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_ALBUMART_REQUEST, HildonAlbumartRequestPrivate))
 #define FACTORY_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_ALBUMART_FACTORY, HildonAlbumartFactoryPrivate))
