@@ -1,4 +1,4 @@
-hildon-thumbnail (3.0.5~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.5) unstable; urgency=low
 
   [ Philip Van Hoof ]
   * Various improvements
@@ -9,7 +9,7 @@ hildon-thumbnail (3.0.5~unreleased) unstable; urgency=low
   * Disabled "doc" and "tests" sub-directories for good.  Added
     instructions for making tags and releases.
   
- -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 15 Oct 2008 16:35:28 +0300
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 15 Oct 2008 17:57:04 +0300
 
 hildon-thumbnail (3.0.1) unstable; urgency=low
 
