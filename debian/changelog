@@ -1,5 +1,11 @@
 hildon-thumbnail (3.0.4~unreleased) unstable; urgency=low
 
+ * Various improvements
+
+ -- Philip Van Hoof <pvanhoof@gnome.org>  Wed, 15 Oct 2008 11:45:00 +0200
+
+hildon-thumbnail (3.0.4~unreleased) unstable; urgency=low
+
   * Uses new MediaArtStorageSpec
 
  -- Philip Van Hoof <pvanhoof@gnome.org>  Wed, 15 Oct 2008 10:27:00 +0200
