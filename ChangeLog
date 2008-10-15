@@ -1,3 +1,8 @@
+2008-10-15  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-albumart-factory.c
+	* thumbs/hildon-albumart-factory.h: API change
+
 2008-10-14  Philip Van Hoof  <philip@codeminded.be>
 
 	* tests/artist-art-test.c

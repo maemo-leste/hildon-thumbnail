@@ -128,6 +128,8 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
             gpointer user_data);
 
 
+gchar * hildon_albumart_get_path (const gchar *artist_or_title, const gchar *album, const gchar *kind);
+
 
 /**
  * hildon_albumart_factory_cancel:

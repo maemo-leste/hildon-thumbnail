@@ -96,6 +96,17 @@ static void thumb_item_free(ArtsItem* item)
 	g_free(item);
 }
 
+
+gchar * 
+hildon_albumart_get_path (const gchar *artist_or_title, const gchar *album, const gchar *kind)
+{
+	gchar *path;
+
+	hildon_thumbnail_util_get_albumart_path (artist_or_title, album, kind, &path);
+
+	return path;
+}
+
 static void
 create_pixbuf_and_callback (ArtsItem *item, gchar *path)
 {
