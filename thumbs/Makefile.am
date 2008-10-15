@@ -11,8 +11,9 @@ generic_libs = \
 	$(GLIB_LIBS) \
 	$(GIO_LIBS)
 
-
 bin_SCRIPTS = hildon-thumbnailer-wrap.sh
+
+EXTRA_DIST = hildon-thumbnailer-wrap.sh
 
 if ENABLE_OSSO
 bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register

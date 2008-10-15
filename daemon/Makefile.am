@@ -87,8 +87,9 @@ config_DATA = manager.xml thumbnailer.xml albumart.xml
 
 EXTRA_DIST = $(BUILT_SOURCES) $(config_DATA) \
 	$(org.freedesktop.thumbnailer_service_DATA) \
-	thumbnailer-marshal.list
-
+	thumbnailer-marshal.list \
+	$(com.nokia.albumart_service_DATA) \
+	albumart-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES) \
 	$(org.freedesktop.thumbnailer_service_DATA)
