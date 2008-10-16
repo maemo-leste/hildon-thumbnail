@@ -403,7 +403,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
 						 (GDestroyNotify) free_thumbsitem_and_paths);
 
-		return;
+		return item;
 	}
 
 	g_free (large);
