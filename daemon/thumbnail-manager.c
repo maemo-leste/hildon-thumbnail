@@ -348,7 +348,6 @@ static void
 thumbnail_manager_check (ThumbnailManager *object)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
-	GFileMonitor *monitor;
 
 	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
 		"thumbnailers", NULL);

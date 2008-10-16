@@ -1,5 +1,8 @@
 2008-10-16  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-albumart-obj.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnail-manager.c
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-albumart-factory.c

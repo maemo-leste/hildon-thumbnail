@@ -537,8 +537,6 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		g_unlink (normal);
 		g_unlink (cropped);
 
-		nerror_handler:
-
 		g_free (normal);
 		g_free (large);
 		g_free (cropped);

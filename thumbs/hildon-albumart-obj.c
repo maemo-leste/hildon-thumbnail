@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <glib/gfileutils.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <stdlib.h>
 
 #include "hildon-albumart-factory.h"
 #include "albumart-client.h"
@@ -114,7 +115,6 @@ on_task_finished (DBusGProxy *proxy,
 		  guint       handle,
 		  gpointer    user_data)
 {
-	HildonAlbumartFactory *self = user_data;
 	HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (user_data);
 	gchar *key = g_strdup_printf ("%d", handle);
 	HildonAlbumartRequest *request = g_hash_table_lookup (f_priv->tasks, key);
@@ -199,7 +199,6 @@ static void
 hildon_albumart_request_finalize (GObject *object)
 {
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (object);
-	guint i;
 
 	g_free (r_priv->artist_or_title);
 	g_free (r_priv->album);
