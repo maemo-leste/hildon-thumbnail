@@ -6,6 +6,9 @@ INCLUDES = -I$(top_srcdir)/../thumbs -I$(top_srcdir) -I. -I.. -I$(top_srcdir)/..
 
 NULL = 
 
+albartdowndir = /usr/share/albumart-providers
+albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
+
 BUILT_SOURCES = my.vala.stamp google-images-art-downloader.c \
 	google-images-art-downloader.h \
 	$(com.nokia.albumart.GoogleImages_service_DATA) \
@@ -41,10 +44,8 @@ com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.s
 %.service: %.service.in
 	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
 
-CLEANFILES = $(BUILT_SOURCES) \
-	$(com.nokia.albumart.GoogleImages_service_DATA) \
-	$(albartdown_DATA)
+# CLEANFILES = $(BUILT_SOURCES) \
+#	$(com.nokia.albumart.GoogleImages_service_DATA) \
+#	$(albartdown_DATA)
 
-albartdowndir = /usr/share/albumart-providers
-albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
 

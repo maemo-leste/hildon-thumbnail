@@ -354,7 +354,6 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 				HildonThumbnailFlags flags, ...)
 {
 	gchar *large, *normal, *cropped;
-	GError *error = NULL;
 	ThumbsItem *item;
 	GStrv uris;
 	gboolean have_all = FALSE;
@@ -380,11 +379,6 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		}
 		have_all = g_file_test (path, G_FILE_TEST_EXISTS);
 	}
-
-	if (error)
-		g_error_free (error);
-	else
-		have_all = FALSE;
 
 	item = g_new (ThumbsItem, 1);
 
