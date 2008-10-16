@@ -164,7 +164,6 @@ on_task_finished (DBusGProxy *proxy,
 
 	if (item) {
 		gchar *large = NULL, *normal = NULL, *cropped = NULL;
-		GError *error = NULL;
 
 		/* Get the large small and cropped path for the original
 		 * URI */
@@ -173,8 +172,6 @@ on_task_finished (DBusGProxy *proxy,
 											   &normal, &cropped);
 
 		create_pixbuf_and_callback (item, large, normal, cropped);
-
-		error_handler:
 
 		g_free (cropped);
 		g_free (normal);

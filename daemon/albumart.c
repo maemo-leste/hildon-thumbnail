@@ -28,6 +28,7 @@
 #endif
 
 #include <string.h>
+#include <ctype.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -177,28 +178,6 @@ strcasestr (char *haystack, char *needle)
 }
 #endif
 
-static gchar*
-find_image_file_in_for (GDir *dir, gchar *filename) 
-{
-	gchar *retval = NULL;
-	const gchar *item;
-	gsize s = (gsize) strlen (filename);
-
-	while (item = g_dir_read_name (dir)) {
-		if ((strcasestr ((char *) item, (char *) ".jpeg") || 
-		     strcasestr ((char *) item, (char *) ".jpg") ) &&
-		    (s == 0 || g_ascii_strncasecmp (item, filename, s) == 0)
-		  ) 
-		{
-			retval = g_strdup (item);
-			break;
-		}
-	}
-
-	g_dir_rewind (dir);
-
-	return retval;
-}
 
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 

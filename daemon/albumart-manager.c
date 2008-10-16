@@ -109,7 +109,6 @@ static void
 albumart_manager_add (AlbumartManager *object, ValueInfo *info)
 {
 	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
-	DBusGProxy *proxy;
 	gchar *path = g_strdup_printf ("/%s", info->name);
 	guint len = strlen (path);
 	guint i;
@@ -142,7 +141,6 @@ albumart_manager_add (AlbumartManager *object, ValueInfo *info)
 static void
 albumart_manager_check_dir (AlbumartManager *object, gchar *path, gboolean override)
 {
-	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
 	const gchar *filen;
 	GDir *dir;
 
@@ -156,7 +154,6 @@ albumart_manager_check_dir (AlbumartManager *object, gchar *path, gboolean overr
 		gchar *fullfilen;
 		gchar *value;
 		GError *error = NULL;
-		guint i = 0;
 		guint64 mtime;
 		GFileInfo *info;
 		GFile *file;
@@ -264,7 +261,6 @@ static void
 albumart_manager_check (AlbumartManager *object)
 {
 	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
-	GFileMonitor *monitor;
 
 	g_mutex_lock (priv->mutex);
 

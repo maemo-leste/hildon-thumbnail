@@ -35,6 +35,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "hildon-thumbnail-plugin.h"
+#include "utils.h"
 
 #define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"
 #define GSTP_ERROR		g_quark_from_static_string (GSTP_ERROR_DOMAIN)
@@ -80,6 +81,12 @@ typedef struct {
 
 
 static gboolean callback_bus(GstBus *bus, GstMessage *message, VideoThumbnailer *thumber);
+
+#ifndef g_sprintf
+gint                g_sprintf                           (gchar *string,
+                                                         gchar const *format,
+                                                         ...);
+#endif
 
 static gboolean 
 save_thumb_file_meta (GdkPixbuf *pixbuf, const gchar *file, guint64 mtime, const gchar *uri, GError **error)
@@ -399,8 +406,6 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
-	GstFormatDefinition def;
-	GstIterator *iter;
 
 /* 	iter = gst_format_iterate_definitions(); */
 	

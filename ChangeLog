@@ -1,3 +1,12 @@
+2008-10-16  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-albumart-factory.c
+	* daemon/plugins/gstreamer-video-plugin.c
+      	* daemon/albumart.c
+	* daemon/albumart-manager.c: Making things -Wall warning free
+
 2008-10-15  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.5

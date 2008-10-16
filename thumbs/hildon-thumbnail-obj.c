@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <glib/gfileutils.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <stdlib.h>
 
 #include "hildon-thumbnail-factory.h"
 #include "thumbnailer-client.h"
@@ -61,6 +62,17 @@ GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
 			    GError       **error);
 #endif 
+
+#ifndef gdk_pixbuf_new_from_stream_at_scale
+/* It's implemented in pixbuf-io-loader.c in this case */
+GdkPixbuf *
+gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
+				     gint	    width,
+				     gint 	    height,
+				     gboolean       preserve_aspect_ratio,
+				     GCancellable  *cancellable,
+		  	    	     GError       **error);
+#endif
 
 
 static void
@@ -126,7 +138,6 @@ on_task_finished (DBusGProxy *proxy,
 		  guint       handle,
 		  gpointer    user_data)
 {
-	HildonThumbnailFactory *self = user_data;
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (user_data);
 	gchar *key = g_strdup_printf ("%d", handle);
 	HildonThumbnailRequest *request = g_hash_table_lookup (f_priv->tasks, key);

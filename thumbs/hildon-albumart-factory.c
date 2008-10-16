@@ -170,7 +170,6 @@ on_task_finished (DBusGProxy *proxy,
 	ArtsItem *item = g_hash_table_lookup (tasks, key);
 
 	if (item) {
-		GError *error = NULL;
 		gchar *path;
 
 		/* Get the large small and cropped path for the original
@@ -181,8 +180,6 @@ on_task_finished (DBusGProxy *proxy,
 												 item->kind, &path);
 
 		create_pixbuf_and_callback (item, path);
-
-		error_handler:
 
 		g_free (path);
 
@@ -350,7 +347,6 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 {
 	const gchar *artist = artist_or_title;
 	gchar *path;
-	GError *error = NULL;
 	ArtsItem *item;
 	gboolean have_all = FALSE;
 
@@ -380,7 +376,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
 						 (GDestroyNotify) free_thumbsitem_and_paths);
 
-		return;
+		return item;
 	}
 
 	g_free (path);
