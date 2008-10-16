@@ -1,14 +1,17 @@
 SUBDIRS = .
 
-INCLUDES = -I$(srcdir)/../thumbs -I$(srcdir)/.. $(PKG_CFLAGS) \
+INCLUDES = -I$(top_srcdir)/../thumbs -I$(top_srcdir) -I. -I.. -I$(top_srcdir)/.. $(PKG_CFLAGS) \
 	$(DBUS_CFLAGS) $(GLIB_CFLAGS) $(GMODULE_CFLAGS) $(GIO_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS)
 
 NULL = 
-BUILT_SOURCES = my.vala.stamp
 
-EXTRA_DIST = $(BUILT_SOURCES) \
-	$(com.nokia.albumart.GoogleImages_service_DATA)
+BUILT_SOURCES = my.vala.stamp google-images-art-downloader.c \
+	google-images-art-downloader.h \
+	$(com.nokia.albumart.GoogleImages_service_DATA) \
+	$(albartdown_DATA)
+
+EXTRA_DIST = $(BUILT_SOURCES) google-images-art-downloader.vala 
 
 libexec_PROGRAMS = hildon-google-images-art-downloaderd
 
@@ -39,7 +42,8 @@ com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.s
 	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
 
 CLEANFILES = $(BUILT_SOURCES) \
-	$(com.nokia.albumart.GoogleImages_service_DATA)
+	$(com.nokia.albumart.GoogleImages_service_DATA) \
+	$(albartdown_DATA)
 
 albartdowndir = /usr/share/albumart-providers
 albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
