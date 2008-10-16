@@ -372,7 +372,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		gchar *path;
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = cropped;
-		} else if (item->width > 128) {
+		} else if (width > 128) {
 			path = large;
 		} else {
 			path = normal;
