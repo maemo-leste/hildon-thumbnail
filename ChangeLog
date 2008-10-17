@@ -1,3 +1,8 @@
+2008-10-17  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* thumbs/thumber-register.c (thumber_unregister_mime): Initialize
+	mimetypes.
+
 2008-10-17  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-factory.c
