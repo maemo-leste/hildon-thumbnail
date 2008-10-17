@@ -296,36 +296,18 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			guint i;
 
 			for (i = 0; i< length; i++) {
-				GStrv VFS_ids;
-				guint o = 0;
 
-				VFS_ids = g_key_file_get_string_list (keyfile, mimes[i], "SupportedVFS", NULL, NULL);
-
-				if (VFS_ids) {
-					while (VFS_ids[o] != NULL) {
-						ValueInfo *info = g_slice_new (ValueInfo);
-						info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
-						/* This is atm unused for items in overrides. */
-						info->mtime = time (NULL);
-						/* Items in overrides are prioritized. */
-						info->prio = TRUE;
-						g_hash_table_replace (pre, 
-									  g_strdup_printf ("%s-%s", mimes[i], VFS_ids[o]), 
-									  info);
-						o++;
-					}
-				} else {
-						ValueInfo *info = g_slice_new (ValueInfo);
-						info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
-						/* This is atm unused for items in overrides. */
-						info->mtime = time (NULL);
-						/* Items in overrides are prioritized. */
-						info->prio = TRUE;
-						g_hash_table_replace (pre, 
-									  g_strdup (mimes[i]), 
-									  info);
-				}
+				ValueInfo *info = g_slice_new (ValueInfo);
+				info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+				/* This is atm unused for items in overrides. */
+				info->mtime = time (NULL);
+				/* Items in overrides are prioritized. */
+				info->prio = TRUE;
+				g_hash_table_replace (pre, 
+							  g_strdup (mimes[i]), 
+							  info);
 			}
+
 			g_strfreev (mimes);
 		}
 
