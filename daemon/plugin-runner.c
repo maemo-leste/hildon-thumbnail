@@ -98,14 +98,14 @@ shut_down_after_timeout (gpointer user_data)
 }
 
 void 
-daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
+daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, gchar *VFS_id, DBusGMethodInvocation *context)
 {
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GError *error = NULL;
 
 	keep_alive ();
 
-	hildon_thumbnail_plugin_do_create (priv->module, uris, &error);
+	hildon_thumbnail_plugin_do_create (priv->module, uris, mime_hint, VFS_id, &error);
 	if (error) {
 		dbus_g_method_return_error (context, error);
 		g_error_free (error);

@@ -355,6 +355,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 			dbus_g_proxy_call (proxy, "Create", &error, 
 					   G_TYPE_STRV, urlss,
+					   G_TYPE_STRING, mime_type,
+					   G_TYPE_STRING, VFS_id,
 					   G_TYPE_INVALID, 
 					   G_TYPE_INVALID);
 
@@ -390,7 +392,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 				keep_alive ();
 
-				hildon_thumbnail_plugin_do_create (module, urlss, &error);
+				hildon_thumbnail_plugin_do_create (module, urlss, mime_type, VFS_id, &error);
 
 				keep_alive ();
 

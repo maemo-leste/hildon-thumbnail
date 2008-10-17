@@ -419,7 +419,7 @@ hildon_thumbnail_plugin_supported (void)
 }
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
 {
 	VideoThumbnailer *thumber;
 	gchar *large    = NULL;

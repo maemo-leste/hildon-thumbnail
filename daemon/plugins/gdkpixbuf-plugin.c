@@ -206,7 +206,7 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 }
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
 {
 	guint i = 0;
 	GString *errors = NULL;

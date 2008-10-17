@@ -4,6 +4,8 @@
     <method name="Create">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
       <arg type="as" name="uris" direction="in" />
+      <arg type="s" name="mime_hint" direction="in" />
+      <arg type="s" name="VFS_id" direction="in" />
     </method>
   </interface>
 </node>

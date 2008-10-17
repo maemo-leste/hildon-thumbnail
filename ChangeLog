@@ -5,6 +5,18 @@
 
 2008-10-17  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
+	* daemon/plugin-runner.xml
+	* daemon/hildon-thumbnail-plugin.c: Passing MIME and VFS hinting to the
+	specialized thumbnailers and plugins
+
+2008-10-17  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-thumbnail-factory.h

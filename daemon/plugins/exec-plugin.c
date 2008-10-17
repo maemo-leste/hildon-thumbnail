@@ -234,7 +234,7 @@ string_replace (const gchar *in, const gchar *uri, const gchar *large, const gch
 
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
 {
 	guint i = 0;
 	GString *errors = NULL;

@@ -78,14 +78,14 @@ hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, register_f
 	}
 }
 
-typedef void (*CreateFunc) (GStrv uris, GError **error);
+typedef void (*CreateFunc) (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error);
 
 void 
-hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, GError **error)
+hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
 {
 	CreateFunc func;
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_create", (gpointer *) &func)) {
-		(func) (uris, error);
+		(func) (uris, mime_hint, VFS_id, error);
 	}
 }
 

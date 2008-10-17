@@ -42,6 +42,8 @@ void        hildon_thumbnail_plugin_do_init       (GModule *module,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
 						   GStrv uris, 
+						   gchar *mime_hint, 
+						   gchar *VFS_id,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_stop       (GModule *module);
 
