@@ -181,7 +181,7 @@ thumber_unregister_mime (char *mime, GError **err)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
-	gchar **mimetypes;
+	gchar **mimetypes = NULL;
 	guint i = 0, length;
 
 	keyfile = g_key_file_new ();
