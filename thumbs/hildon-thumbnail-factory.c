@@ -353,6 +353,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	gchar *large, *normal, *cropped;
 	ThumbsItem *item;
 	GStrv uris;
+	GStrv mimes;
 	gboolean have_all = FALSE;
 
 	g_return_val_if_fail(uri != NULL && mime_type != NULL && callback != NULL,
@@ -379,8 +380,11 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 
 	item = g_new (ThumbsItem, 1);
 
-	item->uri = g_strdup(uri);
-	item->mime_type = g_strdup(mime_type);
+	item->uri = g_strdup (uri);
+	if (mime_type)
+		item->mime_type = g_strdup (mime_type);
+	else
+		item->mime_type = NULL;
 	item->width = width;
 	item->height = height;
 	item->callback = callback;
@@ -412,10 +416,22 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		init ();
 		uris = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
 		uris[0] = g_strdup (uri);
-		org_freedesktop_thumbnailer_Generic_queue_async (proxy, (const char **) uris, 0, 
-								 on_got_handle, item);
+
+		if (mime_type) {
+			mimes = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+			mimes[0] = g_strdup (mime_type);
+		} else
+			mimes = NULL;
+
+		org_freedesktop_thumbnailer_Generic_queue_async (proxy, 
+														 (const char **) uris, 
+														 (const char **) mimes,
+														 "GIO", 0, 
+								 						 on_got_handle, item);
 
 		g_strfreev (uris);
+		if (mimes)
+			g_strfreev (mimes);
 	}
 
 	return THUMBS_HANDLE (item);

@@ -77,6 +77,7 @@ HildonThumbnailRequest*
 									 const gchar *uri,
 									 guint width, guint height,
 									 gboolean cropped,
+									 const gchar *mime_type,
 									 HildonThumbnailRequestCallback callback,
 									 gpointer user_data,
 									 GDestroyNotify destroy);

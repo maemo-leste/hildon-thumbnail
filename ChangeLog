@@ -1,3 +1,20 @@
+2008-10-17  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-thumbnail-factory.h
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/thumbnail-manager.h
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml
+	* daemon/thumbnail-manager.c: VFS and MimeType hinting
+
 2008-10-16  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-albumart-obj.c

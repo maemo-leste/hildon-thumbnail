@@ -74,13 +74,13 @@ enum {
 static guint signals[LAST_SIGNAL] = { 0, };
 
 void 
-thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin)
+thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, const gchar *VFS_id, GModule *plugin)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
 	g_mutex_lock (priv->mutex);
 	g_hash_table_insert (priv->plugins, 
-			     g_strdup (mime_type), 
+			     VFS_id?g_strdup_printf ("%s-%s", mime_type, VFS_id):g_strdup (mime_type), 
 			     plugin);
 	thumbnail_manager_i_have (priv->manager, mime_type);
 	g_mutex_unlock (priv->mutex);
@@ -108,7 +108,7 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 
 
 static void
-get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, GError **error)
+get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, gboolean *has_thumb, GError **error)
 {
 	const gchar *content_type;
 	GFileInfo *info;
@@ -126,7 +126,12 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 
 	if (info) {
 		content_type = g_file_info_get_content_type (info);
-		*mime_type = content_type?g_strdup (content_type):g_strdup ("unknown/unknown");
+		if (content_type)
+			*mime_type = g_strdup (content_type);
+		else if (mime_hint)
+			content_type = g_strdup (mime_hint);
+		else 
+			content_type = g_strdup ("unknown/unknown");
 		g_object_unref (info);
 	}
 
@@ -145,7 +150,8 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gboolean *has_thumb, G
 
 typedef struct {
 	Thumbnailer *object;
-	GStrv urls;
+	GStrv urls, mime_types;
+	gchar *VFS_id;
 	guint num;
 	gboolean unqueued;
 } WorkTask;
@@ -182,13 +188,16 @@ thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *c
 }
 
 void
-thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBusGMethodInvocation *context)
+thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, gchar *VFS_id, guint handle_to_unqueue, DBusGMethodInvocation *context)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	WorkTask *task;
 	static guint num = 0;
 
 	dbus_async_return_if_fail (urls != NULL, context);
+
+	if (mime_hints)
+		dbus_async_return_if_fail (g_strv_length (urls) == g_strv_length (mime_hints), context);
 
 	task = g_slice_new (WorkTask);
 
@@ -198,6 +207,16 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBu
 	task->num = ++num;
 	task->object = g_object_ref (object);
 	task->urls = g_strdupv (urls);
+
+	if (mime_hints)
+		task->mime_types = g_strdupv (mime_hints);
+	else
+		task->mime_types = NULL;
+
+	if (VFS_id)
+		task->VFS_id = g_strdup (VFS_id);
+	else
+		task->VFS_id = NULL;
 
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
@@ -226,6 +245,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
 	GHashTable *hash;
 	GStrv urls = task->urls;
+	GStrv mime_types = task->mime_types;
+	gchar *VFS_id = task->VFS_id;
 	guint i;
 	GHashTableIter iter;
 	gpointer key, value;
@@ -255,7 +276,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		gboolean has_thumb = FALSE;
 		GError *error = NULL;
 
-		get_some_file_infos (urls[i], &mime_type, &has_thumb, &error);
+		get_some_file_infos (urls[i], &mime_type, mime_types?mime_types[i]:NULL, &has_thumb, &error);
 
 		if (error) {
 			
@@ -326,7 +347,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		/* If we have a third party thumbnailer for this mime-type, we
 		 * proxy the call */
 
-		proxy = thumbnail_manager_get_handler (priv->manager, mime_type);
+		proxy = thumbnail_manager_get_handler (priv->manager, mime_type, VFS_id);
 		if (proxy) {
 			GError *error = NULL;
 
@@ -355,9 +376,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 		} else {
 			GModule *module;
+			gchar *query = NULL;
+
+			if (VFS_id)
+				query = g_strdup_printf ("%s-%s", mime_type, VFS_id);
 
 			g_mutex_lock (priv->mutex);
-			module = g_hash_table_lookup (priv->plugins, key);
+			module = g_hash_table_lookup (priv->plugins, query?query:key);
 			g_mutex_unlock (priv->mutex);
 
 			if (module) {
@@ -402,6 +427,10 @@ unqueued:
 
 	g_object_unref (task->object);
 	g_strfreev (task->urls);
+	if (task->mime_types)
+		g_strfreev (task->mime_types);
+	g_free (task->VFS_id);
+
 	g_slice_free (WorkTask, task);
 
 	return;

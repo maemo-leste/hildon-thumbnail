@@ -57,13 +57,13 @@ struct ThumbnailerClass {
 
 GType thumbnailer_get_type (void);
 
-void thumbnailer_queue (Thumbnailer *object, GStrv urls, guint handle_to_unqueue, DBusGMethodInvocation *context);
+void thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, gchar *VFS_id, guint handle_to_unqueue, DBusGMethodInvocation *context);
 void thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *context);
 void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
 
-void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin);
+void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, const gchar *VFS_id, GModule *plugin);
 void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
 
 void thumbnailer_do_stop (void);

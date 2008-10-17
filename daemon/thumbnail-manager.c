@@ -58,22 +58,28 @@ enum {
 };
 
 DBusGProxy*
-thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type)
+thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type, const gchar *VFS_id)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *proxy;
+	gchar *query = NULL;
+
+	if (VFS_id)
+		query = g_strdup_printf ("%s-%s", mime_type, VFS_id);
 
 	g_mutex_lock (priv->mutex);
-	proxy = g_hash_table_lookup (priv->handlers, mime_type);
+	proxy = g_hash_table_lookup (priv->handlers, query?query:mime_type);
 	if (proxy)
 		g_object_ref (proxy);
 	g_mutex_unlock (priv->mutex);
+
+	g_free (query);
 
 	return proxy;
 }
 
 static void
-thumbnail_manager_add (ThumbnailManager *object, gchar *mime_type, gchar *name)
+thumbnail_manager_add (ThumbnailManager *object, gchar *key, gchar *name)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
@@ -95,7 +101,7 @@ thumbnail_manager_add (ThumbnailManager *object, gchar *mime_type, gchar *name)
 	g_free (path);
 
 	g_hash_table_replace (priv->handlers, 
-			      g_strdup (mime_type),
+			      g_strdup (key),
 			      mime_proxy);
 
 }
@@ -136,9 +142,9 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		GKeyFile *keyfile;
 		gchar *fullfilen;
 		gchar *value;
-		GStrv values;
+		GStrv values, VFS_ids;
+		GList *all = NULL, *copy;
 		GError *error = NULL;
-		guint i = 0;
 		guint64 mtime;
 		GFileInfo *info;
 		GFile *file;
@@ -181,6 +187,29 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			continue;
 		}
 
+		VFS_ids = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "SupportedVFS", NULL, NULL);
+
+		if (VFS_ids) {
+			guint t = 0, y;
+			while (VFS_ids[t] != NULL) {
+				y = 0;
+				while (values[y] != NULL) {
+					gchar *key = g_strdup_printf ("%s-%s", values[y], VFS_ids[t]);
+					all = g_list_prepend (all, key);
+					y++;
+				}
+				t++;
+			}
+			g_strfreev (VFS_ids);
+		} else {
+				guint y = 0;
+				while (values[y] != NULL) {
+					gchar *key = g_strdup (values[y]);
+					all = g_list_prepend (all, key);
+					y++;
+				}
+		}
+
 		/* Else, get the modificiation time, we'll need it later */
 
 		file = g_file_new_for_path (fullfilen);
@@ -208,10 +237,12 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 
 		/* And register it in the temporary hashtable that is being formed */
 
-		while (values[i] != NULL) {
+		copy = all;
+
+		while (copy) {
 			ValueInfo *info;
 
-			info = g_hash_table_lookup (pre, values[i]);
+			info = g_hash_table_lookup (pre, copy->data);
 
 			if (!info || info->mtime < mtime) {
 
@@ -231,12 +262,15 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 				info->prio = FALSE;
 
 				g_hash_table_replace (pre, 
-						      g_strdup (values[i]), 
+						      g_strdup (copy->data), 
 						      info);
 			}
 
-			i++;
+			copy = g_list_next (copy);
 		}
+
+		g_list_foreach (all, (GFunc) g_free, NULL);
+		g_list_free (all);
 
 		if (info)
 			g_object_unref (info);
@@ -262,21 +296,35 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			guint i;
 
 			for (i = 0; i< length; i++) {
-				ValueInfo *info = g_slice_new (ValueInfo);
+				GStrv VFS_ids;
+				guint o = 0;
 
-				info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+				VFS_ids = g_key_file_get_string_list (keyfile, mimes[i], "SupportedVFS", NULL, NULL);
 
-				/* This is atm unused for items in overrides. */
-
-				info->mtime = time (NULL);
-
-				/* Items in overrides are prioritized. */
-
-				info->prio = TRUE;
-
-				g_hash_table_replace (pre, 
-						      g_strdup (mimes[i]), 
-						      info);
+				if (VFS_ids) {
+					while (VFS_ids[o] != NULL) {
+						ValueInfo *info = g_slice_new (ValueInfo);
+						info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+						/* This is atm unused for items in overrides. */
+						info->mtime = time (NULL);
+						/* Items in overrides are prioritized. */
+						info->prio = TRUE;
+						g_hash_table_replace (pre, 
+									  g_strdup_printf ("%s-%s", mimes[i], VFS_ids[o]), 
+									  info);
+						o++;
+					}
+				} else {
+						ValueInfo *info = g_slice_new (ValueInfo);
+						info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+						/* This is atm unused for items in overrides. */
+						info->mtime = time (NULL);
+						/* Items in overrides are prioritized. */
+						info->prio = TRUE;
+						g_hash_table_replace (pre, 
+									  g_strdup (mimes[i]), 
+									  info);
+				}
 			}
 			g_strfreev (mimes);
 		}
@@ -407,7 +455,7 @@ service_gone (DBusGProxy *proxy,
  * Consult thumbnail_manager.xml for more information about this custom spec addition. */
 
 void
-thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, DBusGMethodInvocation *context)
+thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, gchar *VFS_id, DBusGMethodInvocation *context)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;

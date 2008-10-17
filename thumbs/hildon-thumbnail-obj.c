@@ -273,6 +273,7 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 				  const gchar *uri,
 				  guint width, guint height,
 				  gboolean cropped,
+				  const gchar *mime_type,
 				  HildonThumbnailRequestCallback callback,
 				  gpointer user_data,
 				  GDestroyNotify destroy)
@@ -282,6 +283,7 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
 	guint i;
 	gboolean have = TRUE;
+	GStrv mime_types = NULL;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &r_priv->paths[0], 
 					       &r_priv->paths[1], 
@@ -298,9 +300,16 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 	r_priv->destroy = destroy;
 	r_priv->cropped = cropped;
 
+	if (mime_type) {
+		mime_types = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+		mime_types[0] = g_strdup (mime_type);
+	}
+
 	if (!have) {
 		org_freedesktop_thumbnailer_Generic_queue_async (f_priv->proxy, 
-								 (const char **) r_priv->uris, 0, 
+								 (const char **) r_priv->uris, 
+								 (const char **) mime_types,
+								 "GIO", 0, 
 								 on_got_handle, 
 								 g_object_ref (request));
 	} else {
@@ -308,6 +317,9 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 				 (GSourceFunc) g_object_ref (request),
 				 (GDestroyNotify) g_object_unref);
 	}
+
+	if (mime_types) 
+		g_strfreev (mime_types);
 
 	return request;
 }

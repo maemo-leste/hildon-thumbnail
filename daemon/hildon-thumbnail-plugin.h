@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module);
+typedef void (*register_func) (gpointer self, const gchar *mime_type, const gchar *VFS_id, GModule *module);
 
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
 GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
