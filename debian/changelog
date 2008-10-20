@@ -1,3 +1,9 @@
+hildon-thumbnail (3.0.7~unreleased) unstable; urgency=low
+
+  * 
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 20 Oct 2008 17:14:49 +0300
+
 hildon-thumbnail (3.0.6) unstable; urgency=low
 
   * Bugfixes and code cleanups.  Make shortcut within
