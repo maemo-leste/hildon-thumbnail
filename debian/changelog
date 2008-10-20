@@ -1,8 +1,9 @@
-hildon-thumbnail (3.0.6~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.6) unstable; urgency=low
 
-  * 
+  * Bugfixes and code cleanups.  Make shortcut within
+    HildonThumbnailFactory work.  Added VFS and mime type hints to APIs.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 15 Oct 2008 18:06:27 +0300
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 16 Oct 2008 17:54:27 +0300
 
 hildon-thumbnail (3.0.5) unstable; urgency=low
 

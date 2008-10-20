@@ -1,5 +1,7 @@
 2008-10-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
+	Released 3.0.6
+	
 	* thumbs/thumber-register.c (thumber_unregister_mime): Initialize
 	mimetypes.
 
