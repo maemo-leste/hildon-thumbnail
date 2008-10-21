@@ -137,15 +137,12 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
  * @album: (null-ok): Album of the media or NULL if not applicable 
  * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
  *
- * Gives you the absolute predicted path to the art for this media. This function
- * cares about the media having been downloaded (cached) already or not, if the
- * art is not yet cached then it will return NULL. Else it will return the path
- * to the cached art.
+ * Determines whether or not the album art is already cached.
  *
- * Returns: (caller-owns) (null-ok): the path to the media. If not NULL, you must free this.
+ * Returns: Whether or not the album art is cached already
  **/
 
-gchar * hildon_albumart_is_cached (const gchar *artist_or_title, const gchar *album, const gchar *kind);
+gboolean hildon_albumart_is_cached (const gchar *artist_or_title, const gchar *album, const gchar *kind);
 
 /**
  * hildon_albumart_get_path:

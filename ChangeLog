@@ -1,5 +1,11 @@
 2008-10-21  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-albumart-factory.c
+	* thumbs/hildon-albumart-factory.h: Returning caller-owns for a boolean
+	based API is unconvenient in the C world (that has no GC).
+
+2008-10-21  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-albumart-obj.c
 	* thumbs/hildon-albumart-factory.h: Introduction to a convenience API
