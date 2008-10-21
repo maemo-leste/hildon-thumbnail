@@ -105,6 +105,8 @@ typedef gpointer HildonAlbumartFactoryHandle;
  * @error: (null-ok): The error or %NULL if there was none. Freed after callback returns.
  *
  * Called when the albumart process finishes or there is an error
+ *
+ * Deprecated use hildon_albumart_factory_queue and HildonAlbumartRequestCallback instead
  */
 typedef void (*HildonAlbumartFactoryFinishedCallback)(HildonAlbumartFactoryHandle handle,
     gpointer user_data, GdkPixbuf *albumart, GError *error);
@@ -123,6 +125,8 @@ typedef void (*HildonAlbumartFactoryFinishedCallback)(HildonAlbumartFactoryHandl
  *
  * Returns: A #HildonAlbumartFactoryHandle if request succeeded or %NULL if there was
  *  a critical error
+ *
+ * Deprecated use hildon_albumart_factory_queue instead 
  */
 HildonAlbumartFactoryHandle hildon_albumart_factory_load(
             const gchar *artist_or_title, const gchar *album, const gchar *kind,
@@ -164,6 +168,8 @@ gchar * hildon_albumart_get_path (const gchar *artist_or_title, const gchar *alb
  * @handle: Handle to cancel
  *
  * Removes specified albumart request from the queue
+ *
+ * Deprecated use hildon_albumart_request_unqueue instead
  */
 void hildon_albumart_factory_cancel(HildonAlbumartFactoryHandle handle);
 
@@ -179,6 +185,8 @@ void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *a
  * hildon_albumart_factory_wait:
  *
  * Wait until all albumarting processes have finished
+ *
+ * Deprecated use hildon_albumart_factory_join instead
  */
 void hildon_albumart_factory_wait();
 
