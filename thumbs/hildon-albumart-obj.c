@@ -28,7 +28,9 @@
 #include <stdlib.h>
 
 #include "hildon-albumart-factory.h"
+#include "hildon-thumbnail-factory.h"
 #include "albumart-client.h"
+
 #include "utils.h"
 
 #define ALBUMARTER_SERVICE      "com.nokia.albumart"
@@ -49,6 +51,7 @@ typedef struct {
 	GDestroyNotify destroy;
 	HildonAlbumartFactory *factory;
 	gpointer user_data;
+	HildonAlbumartRequest *real;
 } HildonAlbumartRequestPrivate;
 
 typedef struct {
@@ -183,6 +186,7 @@ hildon_albumart_request_init (HildonAlbumartRequest *self)
 	r_priv->callback = NULL;
 	r_priv->destroy = NULL;
 	r_priv->user_data = NULL;
+	r_priv->real = NULL;
 }
 
 
@@ -207,6 +211,8 @@ hildon_albumart_request_finalize (GObject *object)
 	g_free (r_priv->key);
 	if (r_priv->factory)
 		g_object_unref (r_priv->factory);
+	if (r_priv->real)
+		g_object_unref (r_priv->real);
 }
 
 static void
@@ -272,6 +278,90 @@ hildon_albumart_factory_request (HildonAlbumartFactory *self,
 	return request;
 }
 
+typedef struct {
+	HildonAlbumartRequest *request;
+	guint width;
+	guint height;
+} ArtReqInfo;
+
+
+static void 
+thumb_callback (HildonThumbnailFactoryHandle handle, gpointer user_data, GdkPixbuf *thumbnail, GError *error)
+{
+	ArtReqInfo *info = user_data;
+	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (info->request);
+
+	if (r_priv->callback) 
+		r_priv->callback (r_priv->factory, thumbnail, error, r_priv->user_data);
+
+	if (r_priv->destroy)
+		r_priv->destroy (r_priv->user_data);
+
+	g_object_unref (info->request);
+
+	g_slice_free (ArtReqInfo, info);
+}
+
+static void 
+intercept_callback (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *error, gpointer user_data)
+{
+	ArtReqInfo *info = user_data;
+	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (info->request);
+
+	if (!error) {
+		gchar *uri, *path;
+
+		hildon_thumbnail_util_get_albumart_path (r_priv->artist_or_title, 
+							 r_priv->album, r_priv->kind, 
+							 &path);
+
+		uri = g_strdup_printf ("file://%s", path);
+
+		hildon_thumbnail_factory_load (uri, "image/jpeg",
+					       info->width, info->height,
+					       thumb_callback, 
+					       info);
+
+		g_free (path);
+		g_free (uri);
+	}
+
+}
+
+HildonAlbumartRequest*
+hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
+					  const gchar *artist_or_title, const gchar *album, const gchar *kind,
+					  guint width, guint height,
+					  HildonAlbumartRequestCallback callback,
+					  gpointer user_data,
+					  GDestroyNotify destroy)
+{
+	ArtReqInfo *info = g_slice_new (ArtReqInfo);
+	HildonAlbumartRequest *request = g_object_new (HILDON_TYPE_ALBUMART_REQUEST, NULL);
+	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
+
+	r_priv->artist_or_title = g_strdup (artist_or_title);
+	r_priv->album = g_strdup (album);
+	r_priv->kind = g_strdup (kind);
+	r_priv->factory = g_object_ref (self);
+	r_priv->user_data = user_data;
+	r_priv->callback = callback;
+	r_priv->destroy = destroy;
+
+	info->request = g_object_ref (request);
+	info->width = width;
+	info->height = height;
+
+	r_priv->real = hildon_albumart_factory_request (self, artist_or_title, 
+							album, kind,
+							intercept_callback,
+							info,
+							NULL);
+
+	return request;
+}
+
+
 void 
 hildon_albumart_factory_join (HildonAlbumartFactory *self)
 {
@@ -297,24 +387,33 @@ void
 hildon_albumart_request_unqueue (HildonAlbumartRequest *self)
 {
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (self);
-	HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
-	guint handle = atoi (r_priv->key);
 
-	com_nokia_albumart_Requester_unqueue_async (f_priv->proxy, handle,
-						    on_unqueued, 
-						    g_object_ref (self));
+	if (r_priv->real) {
+		hildon_albumart_request_unqueue (r_priv->real);
+	} else {
+		HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+		guint handle = atoi (r_priv->key);
+		com_nokia_albumart_Requester_unqueue_async (f_priv->proxy, handle,
+							    on_unqueued, 
+							    g_object_ref (self));
+	}
 }
 
 void 
 hildon_albumart_request_join (HildonAlbumartRequest *self)
 {
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (self);
-	HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
-	HildonAlbumartRequest *found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 
-	while (found) {
-		g_main_context_iteration (NULL, TRUE);
-		found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
+	if (r_priv->real) {
+		hildon_albumart_request_join (r_priv->real);
+	} else {
+		HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+		HildonAlbumartRequest *found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
+
+		while (found) {
+			g_main_context_iteration (NULL, TRUE);
+			found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
+		}
 	}
 }
 

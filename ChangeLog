@@ -1,5 +1,13 @@
 2008-10-21  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-albumart-obj.c
+	* thumbs/hildon-albumart-factory.h: Introduction to a convenience API
+	for requesting a thumbnail for media art (not just media art, a thumb
+	for it): hildon_albumart_factory_queue_thumbnail
+
+2008-10-21  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c
 	* daemon/hildon-thumbnail-plugin.h

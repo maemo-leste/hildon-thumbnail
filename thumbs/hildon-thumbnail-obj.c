@@ -282,7 +282,7 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
 	guint i;
-	gboolean have = TRUE;
+	gboolean have = FALSE;
 	GStrv mime_types = NULL;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &r_priv->paths[0], 

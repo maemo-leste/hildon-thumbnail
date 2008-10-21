@@ -79,6 +79,14 @@ HildonAlbumartRequest*
 									 gpointer user_data,
 									 GDestroyNotify destroy);
 
+HildonAlbumartRequest*
+	 hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
+									 const gchar *artist_or_title, const gchar *album, const gchar *kind,
+									 guint width, guint height,
+									 HildonAlbumartRequestCallback callback,
+									 gpointer user_data,
+									 GDestroyNotify destroy);
+
 void hildon_albumart_factory_join (HildonAlbumartFactory *self);
 
 void hildon_albumart_request_unqueue (HildonAlbumartRequest *self);
