@@ -156,7 +156,7 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 }
 
 #ifndef strcasestr
-char *
+static char *
 strcasestr (char *haystack, char *needle)
 {
 	char *p, *startn = 0, *np = 0;

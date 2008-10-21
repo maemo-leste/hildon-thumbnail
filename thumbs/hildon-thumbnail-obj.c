@@ -309,7 +309,7 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 		org_freedesktop_thumbnailer_Generic_queue_async (f_priv->proxy, 
 								 (const char **) r_priv->uris, 
 								 (const char **) mime_types,
-								 "GIO", 0, 
+								 0, 
 								 on_got_handle, 
 								 g_object_ref (request));
 	} else {

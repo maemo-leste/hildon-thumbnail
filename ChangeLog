@@ -1,3 +1,23 @@
+2008-10-21  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/thumbnail-manager.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/albumart.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/plugin-runner.xml
+	* daemon/manager.xml
+	* daemon/thumbnailer.xml
+	* daemon/hildon-thumbnail-plugin.c
+	* daemon/thumbnail-manager.c: No more VFS_id stuff, adapted to new
+	spec
+
 2008-10-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.6

@@ -50,11 +50,11 @@ GType thumbnail_manager_get_type (void);
 #define manager_register thumbnail_manager_register
 #define manager_get_supported thumbnail_manager_get_supported
 
-void thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, gchar *VFS_id, DBusGMethodInvocation *context);
+void thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, DBusGMethodInvocation *context);
 void thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation *context);
 
 void thumbnail_manager_i_have (ThumbnailManager *object, const gchar *mime_type);
-DBusGProxy* thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type, const gchar *VFS_id);
+DBusGProxy* thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type);
 
 void thumbnail_manager_do_stop (void);
 void thumbnail_manager_do_init (DBusGConnection *connection, ThumbnailManager **thumbnail_manager, GError **error);

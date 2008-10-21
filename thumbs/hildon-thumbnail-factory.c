@@ -426,7 +426,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		org_freedesktop_thumbnailer_Generic_queue_async (proxy, 
 														 (const char **) uris, 
 														 (const char **) mimes,
-														 "GIO", 0, 
+														 0, 
 								 						 on_got_handle, item);
 
 		g_strfreev (uris);

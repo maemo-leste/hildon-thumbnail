@@ -48,6 +48,7 @@
 
 static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
+static gboolean do_vidthumbs = TRUE;
 static GFileMonitor *monitor = NULL;
 
 typedef struct {
@@ -419,7 +420,7 @@ hildon_thumbnail_plugin_supported (void)
 }
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 {
 	VideoThumbnailer *thumber;
 	gchar *large    = NULL;
@@ -502,6 +503,8 @@ reload_config (const gchar *config)
 	}
 
 	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
+	do_vidthumbs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoVideoThumbnails", NULL);
+
 	g_key_file_free (keyfile);
 }
 
@@ -540,7 +543,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		supported = hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], "GIO", module);
+				func (thumbnailer, supported[i], module);
 				i++;
 			}
 		}

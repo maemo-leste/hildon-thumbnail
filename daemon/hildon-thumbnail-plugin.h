@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-typedef void (*register_func) (gpointer self, const gchar *mime_type, const gchar *VFS_id, GModule *module);
+typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module);
 
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
 GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
@@ -42,8 +42,7 @@ void        hildon_thumbnail_plugin_do_init       (GModule *module,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
 						   GStrv uris, 
-						   gchar *mime_hint, 
-						   gchar *VFS_id,
+						   gchar *mime_hint,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_stop       (GModule *module);
 

@@ -234,7 +234,7 @@ string_replace (const gchar *in, const gchar *uri, const gchar *large, const gch
 
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, gchar *VFS_id, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 {
 	guint i = 0;
 	GString *errors = NULL;
@@ -399,7 +399,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		supported = hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], "GIO", module);
+				func (thumbnailer, supported[i], module);
 				i++;
 			}
 		}

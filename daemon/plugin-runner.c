@@ -38,12 +38,6 @@
 #define DAEMON_CLASS(c)         (G_TYPE_CHECK_CLASS_CAST ((c), TYPE_DAEMON, DaemonClass))
 #define DAEMON_GET_CLASS(o)     (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_DAEMON, DaemonClass))
 
-static gchar *module_name;
-static gboolean dynamic_register = FALSE;
-static gchar *bus_name;
-static gchar *bus_path;
-static gint timeout = 600;
-
 typedef struct Daemon Daemon;
 typedef struct DaemonClass DaemonClass;
 
@@ -98,14 +92,14 @@ shut_down_after_timeout (gpointer user_data)
 }
 
 void 
-daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, gchar *VFS_id, DBusGMethodInvocation *context)
+daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, DBusGMethodInvocation *context)
 {
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GError *error = NULL;
 
 	keep_alive ();
 
-	hildon_thumbnail_plugin_do_create (priv->module, uris, mime_hint, VFS_id, &error);
+	hildon_thumbnail_plugin_do_create (priv->module, uris, mime_hint, &error);
 	if (error) {
 		dbus_g_method_return_error (context, error);
 		g_error_free (error);
@@ -216,13 +210,13 @@ daemon_init (Daemon *object)
 
 
 static void 
-daemon_register_func (gpointer self, const gchar *mime_type, const gchar *VFS_id, GModule *module)
+daemon_register_func (gpointer self, const gchar *mime_type, GModule *module)
 {
 	GError *nerror = NULL;
 
 	dbus_g_proxy_call (self, "Register",
 			   &nerror, G_TYPE_STRING,
-			   mime_type, VFS_id,
+			   mime_type,
 			   G_TYPE_INVALID,
 			   G_TYPE_INVALID);
 
@@ -245,7 +239,7 @@ daemon_start (Daemon *object, gboolean do_register)
 						   MANAGER_PATH,
 						   MANAGER_INTERFACE);
 
-	hildon_thumbnail_plugin_do_init (module, &priv->cropping,
+	hildon_thumbnail_plugin_do_init (module, &priv->cropping, 
 					 daemon_register_func, 
 					 manager_proxy, &error);
 
@@ -259,6 +253,11 @@ daemon_start (Daemon *object, gboolean do_register)
 
 }
 
+static gchar *module_name;
+static gboolean dynamic_register = FALSE;
+static gchar *bus_name;
+static gchar *bus_path;
+static gint timeout = 600;
 
 static GOptionEntry entries_daemon[] = {
 	{ "module-name", 'm', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_OPTIONAL_ARG, 
