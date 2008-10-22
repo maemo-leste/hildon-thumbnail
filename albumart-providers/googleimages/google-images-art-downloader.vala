@@ -107,7 +107,7 @@ public class GoogleImages : Object, Provider {
 				DirUtils.create_with_parents (cache_dir, 0770);
 
 				File online_image = File.new_for_uri (url.str);
-				File cache_image = File.new_for_path (cache_path);
+				File cache_image = File.new_for_path (cache_path + ".part");
 
 				// Copy from Google images to local cache
 
@@ -115,6 +115,8 @@ public class GoogleImages : Object, Provider {
 								   FileCopyFlags.NONE, 
 								   null, 
 								   null);
+
+				FileUtils.rename (cache_path + ".part", cache_path);
 			}
 
 		} catch (GLib.Error error) {

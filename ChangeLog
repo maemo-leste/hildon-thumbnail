@@ -1,9 +1,14 @@
+2008-10-22  Philip Van Hoof  <philip@codeminded.be>
+
+	* albumart-providers/googleimages/google-images-art-downloader.vala:
+	Using .part files
+
 2008-10-22  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.7
 
 2008-10-22  Philip Van Hoof  <philip@codeminded.be>
-
+	
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-thumbnail-factory.h
 	* thumbs/hildon-albumart-obj.c
