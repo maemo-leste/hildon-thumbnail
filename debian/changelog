@@ -1,6 +1,7 @@
-hildon-thumbnail (3.0.7~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.7) unstable; urgency=low
 
-  * 
+  * No more VFS hints.  Introduction to a convenience API for requesting a
+    thumbnail for media art.  API documentation.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 20 Oct 2008 17:14:49 +0300
 
