@@ -69,9 +69,47 @@ struct _HildonThumbnailRequestClass {
 GType hildon_thumbnail_factory_get_type (void);
 GType hildon_thumbnail_request_get_type (void);
 
+/** 
+ * HildonThumbnailRequestCallback:
+ * @self: the factory
+ * @thumbnail: (allow-none): A pixbuf containing the thumbnail or %NULL. If application wishes to keep the structure, it must call g_object_ref() on it. The library does not cache returned pixbufs.
+ * @error: (allow-none): The error or %NULL if there was none. Freed after callback returns.
+ * @user_data: (allow-none): User-supplied data when thumbnail was requested
+ *
+ * Called when the thumbnailing process finishes or there is an error
+ **/
 typedef void (*HildonThumbnailRequestCallback)	(HildonThumbnailFactory *self,
 		GdkPixbuf *thumbnail, GError *error, gpointer user_data);
 
+/**
+ * hildon_thumbnail_factory_get_instance:
+ *
+ * Request the factory singleton. You need to unref when finished with what got
+ * returned to you.
+ *
+ * Returns: (transfer full): the factory
+ **/
+HildonThumbnailFactory* hildon_thumbnail_factory_get_instance (void);
+
+/**
+ * hildon_thumbnail_factory_request:
+ * @self: the factory
+ * @uri: an URI to the file which you want to request a thumbnail for
+ * @width: Wanted width of the thumbnail
+ * @height: Wanted height of the thumbnail
+ * @mime_type: (allow-none): A MIME type hint for @uri
+ * @callback: (allow-none): A callback that will be executed when the thumbnail is ready
+ * @user_data: (allow-none): User-supplied data for @callback and @destroy
+ * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
+ *
+ * Request the preparation, if needed, of a thumbnail and return it in @callback
+ * as a #GdkPixbuf as soon as it's ready. This operation is asynchronous, the
+ * creation of the thumbnail will not affect your running mainloop unless you
+ * use one of the join methods on either #HildonThumbnailFactory or the 
+ * #HildonThumbnailRequest being returned.
+ *
+ * Returns: (transfer full): A handle for the request that got created on a queue
+ **/
 HildonThumbnailRequest*
 	 hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 									 const gchar *uri,
@@ -82,10 +120,29 @@ HildonThumbnailRequest*
 									 gpointer user_data,
 									 GDestroyNotify destroy);
 
+/**
+ * hildon_thumbnail_factory_join:
+ * @self: the factory
+ *
+ * Waits until all queued requests in @self are completed.
+ **/
 void hildon_thumbnail_factory_join (HildonThumbnailFactory *self);
 
+/**
+ * hildon_thumbnail_request_unqueue:
+ * @self: the request
+ *
+ * Attempts to unqueue a request. If the request is already active, then this
+ * method has no guaranteed effect.
+ **/
 void hildon_thumbnail_request_unqueue (HildonThumbnailRequest *self);
 
+/**
+ * hildon_thumbnail_request_join:
+ * @self: the request
+ *
+ * Waits until the queued requests is completed.
+ **/
 void hildon_thumbnail_request_join (HildonThumbnailRequest *self);
 
 typedef gpointer HildonThumbnailFactoryHandle;
@@ -114,6 +171,8 @@ typedef enum {
  * @error: The error or %NULL if there was none. Freed after callback returns.
  *
  * Called when the thumbnailing process finishes or there is an error
+ *
+ * Decprecated use hildon_thumbnail_factory_request and HildonThumbnailRequestCallback instead
  */
 typedef void (*HildonThumbnailFactoryFinishedCallback)(HildonThumbnailFactoryHandle handle,
     gpointer user_data, GdkPixbuf *thumbnail, GError *error);
@@ -134,6 +193,8 @@ typedef void (*HildonThumbnailFactoryFinishedCallback)(HildonThumbnailFactoryHan
  *
  * Returns: A #HildonThumbnailFactoryHandle if request succeeded or %NULL if there was
  *  a critical error
+ *
+ * Decprecated use hildon_thumbnail_factory_request instead
  */
 HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
             const gchar *uri, const gchar *mime_type,
@@ -148,6 +209,8 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
  * Same as hildon_thumbnail_factory_load, but with custom options for thumbnail creation.
  * Argument list ends with key-value pairs for customizing.
  * Terminate argument list with -1.
+ *
+ * Decprecated use hildon_thumbnail_factory_request instead
  */
 HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
             const gchar *uri, const gchar *mime_type,
@@ -161,6 +224,8 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
  * @handle: Handle to cancel
  *
  * Removes specified thumbnail request from the queue
+ *
+ * Deprecated use hildon_thumbnail_request_unqueue
  */
 void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle);
 
@@ -217,6 +282,8 @@ void hildon_thumbnail_factory_move_front_all_from(HildonThumbnailFactoryHandle h
  * hildon_thumbnail_factory_wait:
  *
  * Wait until all thumbnailing processes have finished
+ *
+ * Deprecated use hildon_thumbnail_factory_join instead
  */
 void hildon_thumbnail_factory_wait();
 

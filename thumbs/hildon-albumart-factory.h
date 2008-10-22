@@ -69,9 +69,47 @@ struct _HildonAlbumartRequestClass {
 GType hildon_albumart_factory_get_type (void);
 GType hildon_albumart_request_get_type (void);
 
+/** 
+ * HildonAlbumartRequestCallback:
+ * @self: the factory
+ * @albumart: (allow-none): A pixbuf containing the albumart or %NULL. If application wishes to keep the structure, it must call g_object_ref() on it. The library does not cache returned pixbufs.
+ * @error: (allow-none): The error or %NULL if there was none. Freed after callback returns.
+ * @user_data: (allow-none): User-supplied data when thumbnail was requested
+ *
+ * Called when the album art preparation finishes or there is an error
+ **/
 typedef void (*HildonAlbumartRequestCallback)	(HildonAlbumartFactory *self,
 		GdkPixbuf *albumart, GError *error, gpointer user_data);
 
+/**
+ * hildon_albumart_factory_get_instance:
+ *
+ * Request the factory singleton. You need to unref when finished with what got
+ * returned to you.
+ *
+ * Returns: (transfer full): the factory
+ **/
+HildonAlbumartFactory* hildon_albumart_factory_get_instance (void);
+
+
+/**
+ * hildon_albumart_factory_queue:
+ * @self: the factory
+ * @artist_or_title: (allow-none): The artist or the title of the feed
+ * @album: (allow-none): The album
+ * @kind: (allow-none) (default "album"): Usually "album", "podcast" or "radio"
+ * @callback: (allow-none): A callback that will be executed when the art is ready
+ * @user_data: (allow-none): User-supplied data for @callback and @destroy
+ * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
+ *
+ * Request the preparation, if needed, of album art and return it in @callback
+ * as a #GdkPixbuf as soon as it's ready. This operation is asynchronous, the
+ * creation of the art will not affect your running mainloop unless you
+ * use one of the join methods on either #HildonAlbumartFactory or the 
+ * #HildonAlbumartRequest being returned.
+ *
+ * Returns: (transfer full): A handle for the request that got created on a queue
+ **/
 HildonAlbumartRequest*
 	 hildon_albumart_factory_queue (HildonAlbumartFactory *self,
 									 const gchar *artist_or_title, const gchar *album, const gchar *kind,
@@ -79,6 +117,26 @@ HildonAlbumartRequest*
 									 gpointer user_data,
 									 GDestroyNotify destroy);
 
+/**
+ * hildon_albumart_factory_queue_thumbnail:
+ * @self: the factory
+ * @artist_or_title: (allow-none): The artist or the title of the feed
+ * @album: (allow-none): The album
+ * @kind: (allow-none) (default "album"): Usually "album", "podcast" or "radio"
+ * @width: Wanted width
+ * @height: Wanted height
+ * @callback: (allow-none): A callback that will be executed when the art is ready
+ * @user_data: (allow-none): User-supplied data for @callback and @destroy
+ * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
+ *
+ * Request the preparation, if needed, of album art and return a thumbnail of it 
+ * in @callback as a #GdkPixbuf as soon as it's ready. This operation is 
+ * asynchronous, the creation of the thumbnail will not affect your running 
+ * mainloop unless you use one of the join methods on either #HildonAlbumartFactory
+ * or the #HildonAlbumartRequest being returned.
+ *
+ * Returns: (transfer full): A handle for the request that got created on a queue
+ **/
 HildonAlbumartRequest*
 	 hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 									 const gchar *artist_or_title, const gchar *album, const gchar *kind,
@@ -87,10 +145,29 @@ HildonAlbumartRequest*
 									 gpointer user_data,
 									 GDestroyNotify destroy);
 
+/**
+ * hildon_albumart_factory_join:
+ * @self: the factory
+ *
+ * Waits until all queued requests in @self are completed.
+ **/
 void hildon_albumart_factory_join (HildonAlbumartFactory *self);
 
+/**
+ * hildon_albumart_request_unqueue:
+ * @self: the request
+ *
+ * Attempts to unqueue a request. If the request is already active, then this
+ * method has no guaranteed effect.
+ **/
 void hildon_albumart_request_unqueue (HildonAlbumartRequest *self);
 
+/**
+ * hildon_albumart_request_join:
+ * @self: the request
+ *
+ * Waits until the queued requests is completed.
+ **/
 void hildon_albumart_request_join (HildonAlbumartRequest *self);
 
 typedef gpointer HildonAlbumartFactoryHandle;
