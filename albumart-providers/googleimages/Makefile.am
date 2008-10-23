@@ -6,6 +6,10 @@ INCLUDES = -I$(top_srcdir)/../thumbs -I$(top_srcdir) -I. -I.. -I$(top_srcdir)/..
 
 NULL = 
 
+BUILT_SOURCES = my.vala.stamp                     \
+                google-images-art-downloader.c    \
+	        google-images-art-downloader.h
+
 EXTRA_DIST = my.vala.stamp                     \
              google-images-art-downloader.vala \
              google-images-art-downloader.c    \
