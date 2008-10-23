@@ -1,9 +1,9 @@
-hildon-thumbnail (3.0.8~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.8) unstable; urgency=low
 
   * Fixed "make dist" to not include files that depend on how configure is
     run.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 22 Oct 2008 17:56:53 +0300
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 23 Oct 2008 17:18:37 +0300
 
 hildon-thumbnail (3.0.7) unstable; urgency=low
 
