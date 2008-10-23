@@ -85,7 +85,7 @@ BUILT_SOURCES = manager-glue.h thumbnailer-glue.h plugin-runner-glue.h \
 configdir = $(datadir)/hildon-thumbnail
 config_DATA = manager.xml thumbnailer.xml albumart.xml
 
-EXTRA_DIST = $(config_DATA) \
+EXTRA_DIST = $(BUILT_SOURCES) $(config_DATA) \
         org.freedesktop.thumbnailer.service.in \
         com.nokia.albumart.service.in \
 	thumbnailer-marshal.list \

@@ -5,8 +5,8 @@
 
 	* daemon/Makefile.am, albumart-providers/googleimages/Makefile.am:
 	Use BUILT_SOURCES only for things that will not be build anyway
-	because of dependencies.  Do not distribute BUILT_SOURCES, but
-	clean them.
+	because of dependencies.  Do not distribute all BUILT_SOURCES,
+	only the marshallers and the glue.
 
 2008-10-22  Philip Van Hoof  <philip@codeminded.be>
 
