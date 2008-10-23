@@ -6,15 +6,15 @@ INCLUDES = -I$(top_srcdir)/../thumbs -I$(top_srcdir) -I. -I.. -I$(top_srcdir)/..
 
 NULL = 
 
-albartdowndir = /usr/share/albumart-providers
-albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
+EXTRA_DIST = my.vala.stamp                     \
+             google-images-art-downloader.vala \
+             google-images-art-downloader.c    \
+	     google-images-art-downloader.h    \
+             com.nokia.albumart.GoogleImages.service.in \
+             com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
-BUILT_SOURCES = my.vala.stamp google-images-art-downloader.c \
-	google-images-art-downloader.h \
-	$(com.nokia.albumart.GoogleImages_service_DATA) \
-	$(albartdown_DATA)
-
-EXTRA_DIST = $(BUILT_SOURCES) google-images-art-downloader.vala 
+CLEANFILES = $(com.nokia.albumart.GoogleImages_service_DATA) \
+	     $(albartdown_DATA)
 
 libexec_PROGRAMS = hildon-google-images-art-downloaderd
 
@@ -41,11 +41,8 @@ hildon_google_images_art_downloaderd_LDADD = \
 com.nokia.albumart.GoogleImages_servicedir = $(DBUS_SERVICES_DIR)
 com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.service
 
+albartdowndir = /usr/share/albumart-providers
+albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
+
 %.service: %.service.in
-	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
-
-# CLEANFILES = $(BUILT_SOURCES) \
-#	$(com.nokia.albumart.GoogleImages_service_DATA) \
-#	$(albartdown_DATA)
-
-
+	sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@

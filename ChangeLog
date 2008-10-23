@@ -1,3 +1,13 @@
+2008-10-23  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* configure.ac: Modernized initialization.  Use 'tar-ustar' since
+	we have very long filenames.
+
+	* daemon/Makefile.am, albumart-providers/googleimages/Makefile.am:
+	Use BUILT_SOURCES only for things that will not be build anyway
+	because of dependencies.  Do not distribute BUILT_SOURCES, but
+	clean them.
+
 2008-10-22  Philip Van Hoof  <philip@codeminded.be>
 
 	* albumart-providers/googleimages/google-images-art-downloader.vala:
@@ -8,7 +18,7 @@
 	Released 3.0.7
 
 2008-10-22  Philip Van Hoof  <philip@codeminded.be>
-	
+
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-thumbnail-factory.h
 	* thumbs/hildon-albumart-obj.c

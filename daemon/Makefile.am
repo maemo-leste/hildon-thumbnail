@@ -73,9 +73,9 @@ com.nokia.albumart_servicedir = $(DBUS_SERVICES_DIR)
 com.nokia.albumart_service_DATA = com.nokia.albumart.service
 
 %.service: %.service.in
-	@sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
+	sed -e "s|@libexecdir[@]|${libexecdir}|" $< > $@
 
-%-glue.h: $(top_srcdir)/daemon/%.xml
+%-glue.h: %.xml
 	$(DBUSBINDINGTOOL) --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $^
 
 BUILT_SOURCES = manager-glue.h thumbnailer-glue.h plugin-runner-glue.h \
@@ -85,14 +85,12 @@ BUILT_SOURCES = manager-glue.h thumbnailer-glue.h plugin-runner-glue.h \
 configdir = $(datadir)/hildon-thumbnail
 config_DATA = manager.xml thumbnailer.xml albumart.xml
 
-EXTRA_DIST = $(BUILT_SOURCES) $(config_DATA) \
-	$(org.freedesktop.thumbnailer_service_DATA) \
+EXTRA_DIST = $(config_DATA) \
+        org.freedesktop.thumbnailer.service.in \
+        com.nokia.albumart.service.in \
 	thumbnailer-marshal.list \
-	$(com.nokia.albumart_service_DATA) \
 	albumart-marshal.list
 
-CLEANFILES = $(BUILT_SOURCES) \
-	$(org.freedesktop.thumbnailer_service_DATA)
-
-
-
+CLEANFILES = $(BUILT_SOURCES)				\
+	$(org.freedesktop.thumbnailer_service_DATA)	\
+	$(com.nokia.albumart_service_DATA)
