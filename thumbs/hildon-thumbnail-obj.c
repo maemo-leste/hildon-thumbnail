@@ -79,43 +79,38 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 static void
 create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 {
-	GFile *filei = NULL;
+	GFile *filei = NULL, *local = NULL;
 	GInputStream *stream = NULL;
 	GdkPixbuf *pixbuf = NULL;
-	gchar *path;
 	GError *error = NULL;
-	gboolean uris = FALSE;
-	
+
 	/* Determine the exact type of thumbnail being requested */
 
 	if (r_priv->cropped) {
-		if (!g_file_test (r_priv->lpaths[2], G_FILE_TEST_EXISTS))
-			path = r_priv->paths[2];
-		else {
-			path = r_priv->lpaths[2];
-			uris = TRUE;
+		local = g_file_new_for_uri (r_priv->lpaths[2]);
+		if (!g_file_query_exists (local, NULL)) {
+			filei = g_file_new_for_path (r_priv->paths[2]);
+			g_object_unref (local);
+		} else {
+			filei = local;
 		}
 	} else if (r_priv->width > 128) {
-		if (!g_file_test (r_priv->lpaths[1], G_FILE_TEST_EXISTS))
-			path = r_priv->paths[1];
-		else {
-			path = r_priv->lpaths[1];
-			uris = TRUE;
+		local = g_file_new_for_uri (r_priv->lpaths[1]);
+		if (!g_file_query_exists (local, NULL)) {
+			filei = g_file_new_for_path (r_priv->paths[1]);
+			g_object_unref (local);
+		} else {
+			filei = local;
 		}
 	} else {
-		if (!g_file_test (r_priv->lpaths[0], G_FILE_TEST_EXISTS))
-			path = r_priv->paths[0];
-		else {
-			path = r_priv->lpaths[0];
-			uris = TRUE;
+		local = g_file_new_for_uri (r_priv->lpaths[0]);
+		if (!g_file_query_exists (local, NULL)) {
+			filei = g_file_new_for_path (r_priv->paths[0]);
+			g_object_unref (local);
+		} else {
+			filei = local;
 		}
 	}
-
-	/* Open the original thumbnail as a stream */
-	if (uris)
-		filei = g_file_new_for_uri (path);
-	else
-		filei = g_file_new_for_path (path);
 
 	stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
 
