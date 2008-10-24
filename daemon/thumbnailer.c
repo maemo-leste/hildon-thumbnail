@@ -274,11 +274,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
-	static gchar *remotefss[11] = { 
+	static gchar *remotefss[8] = { 
 		"smb://", "file:///media", 
 		"file:///mnt", "ftp://", 
-		"ftps://", "http://", "https://",
-		"imap://", "imaps://", "dav://", 
+		"ftps://", "dav://", "nfs://",
 		NULL };
 
 	g_mutex_lock (priv->mutex);
@@ -298,7 +297,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 	hash = g_hash_table_new (g_str_hash, g_str_equal);
 
 	i = 0;
-
 
 
 	while (urls[i] != NULL) {
