@@ -461,24 +461,28 @@ do_the_work (WorkTask *task, gpointer user_data)
 				gchar *from[4] = { NULL, NULL, NULL, NULL };
 				gchar *to[4] = { NULL, NULL, NULL, NULL };
 				guint z = 0;
+				GError *error = NULL;
 
 				hildon_thumbnail_util_get_thumb_paths (urlss[i], &from[0], &from[1], &from[2], 
 								       &to[0], &to[1], &to[2]);
 
-				for (z = 0; z < 3; z++) {
+				for (z = 0; z < 3 && !error; z++) {
 					GFile *from_file, *to_file;
 
 					from_file = g_file_new_for_path (from[z]);
 					to_file = g_file_new_for_uri (to[z]);
 
 					g_file_copy (from_file, to_file, 0, NULL, 
-						     NULL, NULL, NULL);
+						     NULL, NULL, &error);
 
 					g_object_unref (from_file);
 					g_object_unref (to_file);
 					g_free (from[z]);
 					g_free (to[z]);
 				}
+
+				if (error)
+					g_error_free (error);
 			}
 			i++;
 		}
