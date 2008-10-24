@@ -1,5 +1,10 @@
 2008-10-24  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/thumbnailer.c: Copying to removable devices in .localthumbs
+	when possible
+
+2008-10-24  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c
 	* daemon/utils.c

@@ -108,15 +108,13 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 
 
 static void
-get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, gboolean *has_thumb, GError **error)
+get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, GError **error)
 {
 	const gchar *content_type;
 	GFileInfo *info;
 	GFile *file;
-	gchar *normal = NULL, *large = NULL, *cropped = NULL;
 
 	*mime_type = NULL;
-	*has_thumb = FALSE;
 
 	file = g_file_new_for_uri (uri);
 	info = g_file_query_info (file,
@@ -134,17 +132,6 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, gboo
 			content_type = g_strdup ("unknown/unknown");
 		g_object_unref (info);
 	}
-
-	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, 
-					       NULL, NULL, NULL);
-
-	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
-		      g_file_test (normal, G_FILE_TEST_EXISTS) && 
-		      g_file_test (cropped, G_FILE_TEST_EXISTS));
-
-	g_free (normal);
-	g_free (large);
-	g_free (cropped);
 
 	g_object_unref (file);
 }
@@ -225,6 +212,46 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 	dbus_g_method_return (context, num);
 }
 
+
+
+
+#ifndef strcasestr
+static char *
+strcasestr (char *haystack, char *needle)
+{
+	char *p, *startn = 0, *np = 0;
+
+	for (p = haystack; *p; p++) {
+		if (np) {
+			if (toupper(*p) == toupper(*np)) {
+				if (!*++np)
+					return startn;
+			} else
+				np = 0;
+		} else if (toupper(*p) == toupper(*needle)) {
+			np = needle + 1;
+			startn = p;
+		}
+	}
+
+	return 0;
+}
+#endif
+
+static gboolean 
+strv_contains (GStrv list, gchar *uri)
+{
+	guint i = 0;
+	gboolean found = FALSE;
+	while (list[i] != NULL && !found) {
+		/* We indeed search the full URI for the piece */ 
+		if (strcasestr ((char *) uri, (char *) list[i]) != NULL)
+			found = TRUE;
+		i++;
+	}
+	return found;
+}
+
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
  * happens in a thread, we must care about proper locking, too.
@@ -247,6 +274,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
+	static gchar *remotefss[11] = { 
+		"smb://", "file:///media", 
+		"file:///mnt", "ftp://", 
+		"ftps://", "http://", "https://",
+		"imap://", "imaps://", "dav://", 
+		NULL };
+
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
 	if (task->unqueued) {
@@ -265,14 +299,28 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	i = 0;
 
+
+
 	while (urls[i] != NULL) {
 		gchar *mime_type = NULL;
 		gboolean has_thumb = FALSE;
 		GError *error = NULL;
+		gchar *normal = NULL, *large = NULL, *cropped = NULL;
+
+		hildon_thumbnail_util_get_thumb_paths (urls[i], &large, &normal, &cropped, 
+						       NULL, NULL, NULL);
 
 		get_some_file_infos (urls[i], &mime_type, 
 				     mime_types?mime_types[i]:NULL, 
-				     &has_thumb, &error);
+				     &error);
+
+		has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
+			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
+			     g_file_test (cropped, G_FILE_TEST_EXISTS));
+
+		g_free (normal);
+		g_free (large);
+		g_free (cropped);
 
 		if (error) {
 			
@@ -317,7 +365,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 	/* Foreach of the groups that have items that require creating a thumbnail */
 
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
-
+		gboolean had_err = FALSE;
 		gchar *mime_type = g_strdup (key);
 		GList *urlm = value, *copy = urlm;
 		GStrv urlss;
@@ -363,6 +411,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 				g_signal_emit (task->object, signals[ERROR_SIGNAL],
 					       0, task->num, 1, error->message);
 				g_clear_error (&error);
+				had_err = TRUE;
 			} else
 				g_signal_emit (task->object, signals[READY_SIGNAL], 
 					       0, urlss);
@@ -390,6 +439,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 					g_signal_emit (task->object, signals[ERROR_SIGNAL],
 						       0, task->num, 1, error->message);
 					g_clear_error (&error);
+					had_err = TRUE;
 				} else
 					g_signal_emit (task->object, signals[READY_SIGNAL], 
 						       0, urlss);
@@ -402,6 +452,35 @@ do_the_work (WorkTask *task, gpointer user_data)
 						       0, task->num, 0, str);
 				g_free (str);
 			}
+		}
+
+		i = 0;
+
+		while (!had_err && urlss[i] != NULL) {
+			if (strv_contains (remotefss, urlss[i])) {
+				gchar *from[4] = { NULL, NULL, NULL, NULL };
+				gchar *to[4] = { NULL, NULL, NULL, NULL };
+				guint z = 0;
+
+				hildon_thumbnail_util_get_thumb_paths (urlss[i], &from[0], &from[1], &from[2], 
+								       &to[0], &to[1], &to[2]);
+
+				for (z = 0; z < 3; z++) {
+					GFile *from_file, *to_file;
+
+					from_file = g_file_new_for_path (from[z]);
+					to_file = g_file_new_for_uri (to[z]);
+
+					g_file_copy (from_file, to_file, 0, NULL, 
+						     NULL, NULL, NULL);
+
+					g_object_unref (from_file);
+					g_object_unref (to_file);
+					g_free (from[z]);
+					g_free (to[z]);
+				}
+			}
+			i++;
 		}
 
 		g_free (mime_type);
