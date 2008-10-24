@@ -101,7 +101,7 @@ static void thumb_item_free(ThumbsItem* item)
 }
 
 static void
-create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar *cropped)
+create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar *cropped, gboolean uris_as_paths)
 {
 		GFile *filei = NULL;
 		GInputStream *stream = NULL;
@@ -120,7 +120,11 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 		}
 
 		/* Open the original thumbnail as a stream */
-		filei = g_file_new_for_path (path);
+		if (uris_as_paths)
+			filei = g_file_new_for_uri (path);
+		else
+			filei = g_file_new_for_path (path);
+
 		stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
 		g_free (path);
 
@@ -169,9 +173,10 @@ on_task_finished (DBusGProxy *proxy,
 		 * URI */
 		
 		hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
-											   &normal, &cropped);
+											   &normal, &cropped,
+											   NULL, NULL, NULL);
 
-		create_pixbuf_and_callback (item, large, normal, cropped);
+		create_pixbuf_and_callback (item, large, normal, cropped, FALSE);
 
 		g_free (cropped);
 		g_free (normal);
@@ -319,6 +324,7 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 
 typedef struct {
 	gchar *large, *normal, *cropped;
+	gchar *local_large, *local_normal, *local_cropped;
 	ThumbsItem *item;
 } ThumbsItemAndPaths;
 
@@ -328,6 +334,9 @@ free_thumbsitem_and_paths (ThumbsItemAndPaths *info)
 	g_free (info->large);
 	g_free (info->normal);
 	g_free (info->cropped);
+	g_free (info->local_large);
+	g_free (info->local_normal);
+	g_free (info->local_cropped);
 	thumb_item_free (info->item);
 	g_slice_free (ThumbsItemAndPaths, info);
 }
@@ -337,8 +346,41 @@ have_all_cb (gpointer user_data)
 {
 	ThumbsItemAndPaths *info = user_data;
 	ThumbsItem *item = info->item;
+	gchar *large, *normal, *cropped;
+	gboolean uris = FALSE;
+	GFile *local;
 
-	create_pixbuf_and_callback (item, info->large, info->normal, info->cropped);
+	local = g_file_new_for_uri (info->local_large);
+
+	if (g_file_query_exists (local, NULL)) {
+		large = info->local_large;
+		uris = TRUE;
+	} else 
+		large = info->large;
+
+	g_object_unref (local);
+
+	local = g_file_new_for_uri (info->local_normal);
+
+	if (g_file_query_exists (local, NULL)) {
+		normal = info->local_normal;
+		uris = TRUE;
+	} else 
+		normal = info->local_normal;
+
+	g_object_unref (local);
+
+	local = g_file_new_for_uri (info->local_cropped);
+
+	if (g_file_query_exists (local, NULL)) {
+		cropped = info->local_cropped;
+		uris = TRUE;
+	} else 
+		cropped = info->cropped;
+
+	g_object_unref (local);
+
+	create_pixbuf_and_callback (item, large, normal, cropped, uris);
 
 	return FALSE;
 }
@@ -351,6 +393,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 				HildonThumbnailFlags flags, ...)
 {
 	gchar *large, *normal, *cropped;
+	gchar *local_large, *local_normal, *local_cropped;
 	ThumbsItem *item;
 	GStrv uris;
 	GStrv mimes;
@@ -360,22 +403,30 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 			     NULL);
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-						       &cropped);
+								&cropped, &local_large, 
+								&local_normal, &local_cropped);
 
 	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
 		g_unlink (large);
 		g_unlink (normal);
 		g_unlink (cropped);
 	} else {
-		gchar *path;
+		gchar *path, *luri;
+		GFile *local;
+
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = cropped;
+			luri = local_cropped;
 		} else if (width > 128) {
 			path = large;
+			luri = local_large;
 		} else {
 			path = normal;
+			luri = local_normal;
 		}
-		have_all = g_file_test (path, G_FILE_TEST_EXISTS);
+		local = g_file_new_for_uri (luri);
+		have_all = (g_file_test (path, G_FILE_TEST_EXISTS) || g_file_query_exists (local, NULL));
+		g_object_unref (local);
 	}
 
 	item = g_new (ThumbsItem, 1);
@@ -401,6 +452,10 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		info->large = large;
 		info->cropped = cropped;
 
+		info->local_normal = local_normal;
+		info->local_large = local_large;
+		info->local_cropped = local_cropped;
+
 		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
 						 (GDestroyNotify) free_thumbsitem_and_paths);
 
@@ -410,6 +465,10 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	g_free (large);
 	g_free (normal);
 	g_free (cropped);
+
+	g_free (local_large);
+	g_free (local_normal);
+	g_free (local_cropped);
 
 	if (!have_all) {
 

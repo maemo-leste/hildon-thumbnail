@@ -135,7 +135,8 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, gboo
 		g_object_unref (info);
 	}
 
-	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped);
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped, 
+					       NULL, NULL, NULL);
 
 	*has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
 		      g_file_test (normal, G_FILE_TEST_EXISTS) && 
@@ -269,7 +270,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 		gboolean has_thumb = FALSE;
 		GError *error = NULL;
 
-		get_some_file_infos (urls[i], &mime_type, mime_types?mime_types[i]:NULL, &has_thumb, &error);
+		get_some_file_infos (urls[i], &mime_type, 
+				     mime_types?mime_types[i]:NULL, 
+				     &has_thumb, &error);
 
 		if (error) {
 			
@@ -447,12 +450,14 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_large, 
 						       &from_normal, 
-						       &from_cropped);
+						       &from_cropped,
+						       NULL, NULL, NULL);
 
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_large, 
 						       &to_normal, 
-						       &to_cropped);
+						       &to_cropped,
+						       NULL, NULL, NULL);
 
 		g_rename (from_large, to_large);
 		g_rename (from_normal, to_normal);
@@ -491,11 +496,13 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_s[0], 
 						       &from_s[1], 
-						       &from_s[2]);
+						       &from_s[2],
+						       NULL, NULL, NULL);
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_s[0], 
 						       &to_s[1], 
-						       &to_s[2]);
+						       &to_s[2],
+						       NULL, NULL, NULL);
 
 		for (n = 0; n<3; n++) {
 			GFile *from, *to;
@@ -548,7 +555,8 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, 
 						       &normal, 
-						       &cropped);
+						       &cropped,
+						       NULL, NULL, NULL);
 
 		g_unlink (large);
 		g_unlink (normal);

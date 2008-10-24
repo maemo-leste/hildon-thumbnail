@@ -22,20 +22,48 @@
  *
  */
 
+#include <gio/gio.h>
 #include <string.h>
 #include "utils.h"
 
 
 void
-hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped)
+hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, gchar **local_large, gchar **local_normal, gchar **local_cropped)
 {
-	gchar *ascii_digest;
-	gchar *thumb_filename;
-	gchar *cropped_filename;
-
+	gchar *ascii_digest, *filename = NULL;
+	gchar *lascii_digest = NULL;
+	gchar *thumb_filename, *uri_t = NULL;
+	gchar *cropped_filename, *ptr;
 	static gchar *large_dir = NULL;
 	static gchar *normal_dir = NULL;
 	static gchar *cropped_dir = NULL;
+	gchar *local_dir = NULL;
+	GFile *file; GFileInfo *info;
+	gboolean local = (local_large || local_normal || local_cropped);
+
+	if (local) {
+		uri_t = g_strdup (uri);
+		ptr = strrchr (uri_t, '/');
+
+		if (ptr) {
+			*ptr = '\0';
+			local_dir = g_strdup_printf ("%s/.thumblocal", uri_t);
+			g_free (uri_t);
+		}
+
+		file = g_file_new_for_uri (uri);
+		info = g_file_query_info (file,
+					  G_FILE_ATTRIBUTE_STANDARD_NAME,
+					  G_FILE_QUERY_INFO_NONE,
+					  NULL, NULL);
+
+		if (info) {
+			filename = g_strdup (g_file_info_get_name (info));
+			g_object_unref (info);
+		}
+
+		g_object_unref (file);
+	}
 
 	/* I know we leak, but it's better than doing memory fragementation on 
 	 * these strings ... */
@@ -61,12 +89,46 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 		g_mkdir_with_parents (cropped_dir, 0770);
 
 	ascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, uri, -1);
+
 	thumb_filename = g_strdup_printf ("%s.png", ascii_digest);
 	cropped_filename = g_strdup_printf ("%s.jpeg", ascii_digest);
 
 	*large = g_build_filename (large_dir, thumb_filename, NULL);
 	*normal = g_build_filename (normal_dir, thumb_filename, NULL);
 	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
+
+	if (local) {
+		if (filename && local_dir) {
+			gchar *lthumb_filename;
+			gchar *lcropped_filename;
+
+			lascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, filename, -1);
+			lthumb_filename = g_strdup_printf ("%s.png", lascii_digest);
+			lcropped_filename = g_strdup_printf ("%s.jpeg", lascii_digest);
+
+			if (local_large)
+				*local_large = g_build_filename (local_dir, "large", lthumb_filename, NULL);
+			if (local_normal)
+				*local_normal = g_build_filename (local_dir, "normal", lthumb_filename, NULL);
+			if (local_cropped)
+				*local_cropped = g_build_filename (local_dir, "cropped", lcropped_filename, NULL);
+
+			g_free (lthumb_filename);
+			g_free (lcropped_filename);
+
+		} else {
+			if (local_large)
+				*local_large = g_strdup ("");
+			if (local_normal)
+				*local_normal = g_strdup ("");
+			if (local_cropped)
+				*local_cropped = g_strdup ("");
+		}
+
+		g_free (filename);
+		g_free (lascii_digest);
+		g_free (local_dir);
+	}
 
 	g_free (thumb_filename);
 	g_free (cropped_filename);

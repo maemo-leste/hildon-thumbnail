@@ -433,7 +433,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 		GError *nerror = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (uris[i], &large, &normal, 
-						       &cropped);
+						       &cropped, NULL, NULL, NULL);
 
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);

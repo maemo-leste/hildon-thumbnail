@@ -227,7 +227,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 		gboolean just_crop;
 
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped);
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
+											   NULL, NULL, NULL);
 
 		just_crop = (g_file_test (large, G_FILE_TEST_EXISTS) && 
 			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
