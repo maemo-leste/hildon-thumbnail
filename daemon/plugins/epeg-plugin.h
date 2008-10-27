@@ -1,5 +1,5 @@
-#ifndef __HILDON_THUMBNAIL_PLUGIN_H__
-#define __HILDON_THUMBNAIL_PLUGIN_H__
+#ifndef __EPEG_PLUGIN_H__
+#define __EPEG_PLUGIN_H__
 
 /*
  * This file is part of hildon-thumbnail package
@@ -24,29 +24,5 @@
  * 02110-1301 USA
  *
  */
-
-#include <glib.h>
-#include <gmodule.h>
-#include <dbus/dbus-glib-bindings.h>
-
-G_BEGIN_DECLS
-
-typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module, gboolean overwrite);
-
-GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
-GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
-void        hildon_thumbnail_plugin_do_init       (GModule *module, 
-						   gboolean *cropping,
-						   register_func func,
-						   gpointer self,
-						   GError **error);
-void        hildon_thumbnail_plugin_do_create     (GModule *module, 
-						   GStrv uris, 
-						   gchar *mime_hint,
-						   GStrv *failed_uris, 
-						   GError **error);
-void        hildon_thumbnail_plugin_do_stop       (GModule *module);
-
-G_END_DECLS
 
 #endif

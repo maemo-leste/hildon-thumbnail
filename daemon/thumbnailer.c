@@ -74,12 +74,17 @@ enum {
 static guint signals[LAST_SIGNAL] = { 0, };
 
 void 
-thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin)
+thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, gboolean overwrite)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
 	g_mutex_lock (priv->mutex);
-	g_hash_table_insert (priv->plugins, 
+
+	if (!overwrite && g_hash_table_lookup (priv->plugins, mime_type)) {
+		g_mutex_unlock (priv->mutex);
+		return;
+	}
+	g_hash_table_replace (priv->plugins, 
 			     g_strdup (mime_type), 
 			     plugin);
 	thumbnail_manager_i_have (priv->manager, mime_type);

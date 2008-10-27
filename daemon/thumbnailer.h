@@ -63,7 +63,7 @@ void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBus
 void thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
 
-void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin);
+void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, gboolean overwrite);
 void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
 
 void thumbnailer_do_stop (void);

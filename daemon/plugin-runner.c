@@ -215,7 +215,7 @@ daemon_init (Daemon *object)
 
 
 static void 
-daemon_register_func (gpointer self, const gchar *mime_type, GModule *module)
+daemon_register_func (gpointer self, const gchar *mime_type, GModule *module, gboolean overwrite)
 {
 	GError *nerror = NULL;
 

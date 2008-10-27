@@ -418,7 +418,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		supported = hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], module);
+				func (thumbnailer, supported[i], module, TRUE);
 				i++;
 			}
 		}

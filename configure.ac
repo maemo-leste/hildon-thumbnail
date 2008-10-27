@@ -92,6 +92,14 @@ fi
 
 AM_CONDITIONAL(HAVE_GSTREAMER, test "$have_gstreamer" = "yes")
 
+PKG_CHECK_MODULES(EPEG,[epeg >= 0.9.0],
+		[have_epeg=yes],
+		[have_epeg=no])
+AC_SUBST(EPEG_CFLAGS)
+AC_SUBST(EPEG_LIBS)
+AM_CONDITIONAL(HAVE_EPEG, test "$have_epeg" = "yes")
+
+
 ##################################################
 # Check for gtk-doc.
 ##################################################

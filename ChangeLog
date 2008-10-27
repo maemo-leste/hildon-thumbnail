@@ -6,6 +6,21 @@
 	* daemon/plugins/gstreamer-video-plugin.c
 	* daemon/plugin-runner.c
 	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h: Prioritizing 
+
+	* daemon/plugins/epeg-plugin.c
+	* daemon/plugins/epeg-plugin.h
+	* daemon/plugins/Makefile.am
+	* configure.ac: Epeg plugin
+
+2008-10-27  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
 	* daemon/plugin-runner.xml
 	* daemon/thumbnailer-marshal.list
 	* daemon/thumbnailer.xml
