@@ -234,10 +234,11 @@ string_replace (const gchar *in, const gchar *uri, const gchar *large, const gch
 
 
 void
-hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris, GError **error)
 {
 	guint i = 0;
 	GString *errors = NULL;
+	GList *failed = NULL;
 
 	while (uris[i] != NULL) {
 		gchar *uri = uris[i];
@@ -299,6 +300,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 			g_string_append_printf (errors, "[`%s': %s] ", 
 								    uri, nerror->message);
 			g_error_free (nerror);
+			failed = g_list_prepend (failed, g_strdup (uri));
 			nerror = NULL;
 		}
 
@@ -314,7 +316,24 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GError **error)
 		i++;
 	}
 
-	if (errors) {
+	if (errors && failed) {
+		guint t = 0;
+		GStrv furis = (GStrv) g_malloc0 (sizeof (gchar*) * (g_list_length (failed) + 1));
+		GList *copy = failed;
+
+		t = 0;
+
+		while (copy) {
+			furis[t] = copy->data;
+			copy = g_list_next (copy);
+			t++;
+		}
+		furis[t] = NULL;
+
+		*failed_uris = furis;
+
+		g_list_free (failed);
+
 		g_set_error (error, EXEC_ERROR, 0,
 			     errors->str);
 		g_string_free (errors, TRUE);

@@ -29,6 +29,7 @@
 
     <signal name="Error">
       <arg type="u" name="handle" />
+      <arg type="as" name="failed_uris" />
       <arg type="i" name="error_code" />
       <arg type="s" name="message" />
     </signal>

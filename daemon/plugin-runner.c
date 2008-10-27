@@ -96,15 +96,20 @@ daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, DBusGMethodInvocati
 {
 	DaemonPrivate *priv = DAEMON_GET_PRIVATE (object);
 	GError *error = NULL;
+	GStrv failed_uris = NULL;
 
 	keep_alive ();
 
-	hildon_thumbnail_plugin_do_create (priv->module, uris, mime_hint, &error);
+	hildon_thumbnail_plugin_do_create (priv->module, uris, mime_hint, &failed_uris, &error);
+
 	if (error) {
 		dbus_g_method_return_error (context, error);
 		g_error_free (error);
 	} else
-		dbus_g_method_return (context);
+		dbus_g_method_return (context, failed_uris);
+
+	if (failed_uris)
+		g_strfreev (failed_uris);
 }
 
 #include "plugin-runner-glue.h"

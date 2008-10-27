@@ -43,6 +43,7 @@ void        hildon_thumbnail_plugin_do_init       (GModule *module,
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
 						   GStrv uris, 
 						   gchar *mime_hint,
+						   GStrv *failed_uris, 
 						   GError **error);
 void        hildon_thumbnail_plugin_do_stop       (GModule *module);
 

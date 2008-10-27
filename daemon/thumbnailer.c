@@ -252,6 +252,45 @@ strv_contains (GStrv list, gchar *uri)
 	return found;
 }
 
+static GStrv
+subtract_strv (GStrv a, GStrv b)
+{
+	guint i = 0;
+	GList *newlist = NULL;
+	GStrv retval = NULL;
+
+	while (a[i] != NULL) {
+		guint y = 0;
+		gboolean found = FALSE;
+
+		while (b[y] != NULL) {
+			if (strcmp (a[i], b[y]) == 0) {
+				found = TRUE;
+				break;
+			}
+			y++;
+		}
+		if (found)
+			newlist = g_list_append (newlist, g_strdup (a[i]));
+		i++;
+	}
+
+	if (newlist) {
+		guint t = 0;
+		GList *copy = newlist;
+		retval = (GStrv) g_malloc0 (sizeof (gchar*) * (g_list_length (newlist) + 1));
+		while (copy) {
+			retval[t] = copy->data;
+			copy = g_list_next (copy);
+			t++;
+		}
+		retval[t] = NULL;
+		g_list_free (newlist);
+	}
+
+	return retval;
+}
+
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
  * happens in a thread, we must care about proper locking, too.
@@ -298,7 +337,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	i = 0;
 
-
 	while (urls[i] != NULL) {
 		gchar *mime_type = NULL;
 		gboolean has_thumb = FALSE;
@@ -321,10 +359,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 		g_free (cropped);
 
 		if (error) {
-			
+			GStrv oneurl = (GStrv) g_malloc0 (sizeof (gchar*) * 2);
+			oneurl[0] = g_strdup (urls[i]);
+			oneurl[1] = NULL;
 			g_signal_emit (task->object, signals[ERROR_SIGNAL],
-				       0, task->num, 1, error->message);
+				       0, task->num, oneurl, 1, error->message);
 			g_error_free (error);
+			g_strfreev (oneurl);
 		} else {
 			if (mime_type && !has_thumb) {
 				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
@@ -350,6 +391,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		i++;
 	}
 	cached_items[i] = NULL;
+
 	if (i > 0)
 		g_signal_emit (task->object, signals[READY_SIGNAL], 0,
 			       cached_items);
@@ -390,8 +432,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 		 * proxy the call */
 
 		proxy = thumbnail_manager_get_handler (priv->manager, mime_type);
+
 		if (proxy) {
 			GError *error = NULL;
+			GStrv failed_urls = NULL;
 
 			keep_alive ();
 
@@ -399,6 +443,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 					   G_TYPE_STRV, urlss,
 					   G_TYPE_STRING, mime_type,
 					   G_TYPE_INVALID, 
+					   G_TYPE_STRV, &failed_urls,
 					   G_TYPE_INVALID);
 
 			keep_alive ();
@@ -406,14 +451,26 @@ do_the_work (WorkTask *task, gpointer user_data)
 			g_object_unref (proxy);
 
 			if (error) {
+				GStrv newlist = subtract_strv (urlss, failed_urls);
+
+				if (newlist) {
+					g_signal_emit (task->object, signals[READY_SIGNAL], 
+						       0, newlist);
+					g_strfreev (newlist);
+				}
+
 				g_signal_emit (task->object, signals[ERROR_SIGNAL],
-					       0, task->num, 1, error->message);
+					       0, task->num, failed_urls, 1, 
+					       error->message);
 				g_clear_error (&error);
+
 				had_err = TRUE;
-			} else
+			} else 
 				g_signal_emit (task->object, signals[READY_SIGNAL], 
 					       0, urlss);
 
+			if (failed_urls)
+				g_strfreev (failed_urls);
 
 		/* If not if we have a plugin that can handle it, we let the 
 		 * plugin have a go at it */
@@ -426,28 +483,45 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 			if (module) {
 				GError *error = NULL;
+				GStrv failed_urls = NULL;
 
 				keep_alive ();
 
-				hildon_thumbnail_plugin_do_create (module, urlss, mime_type, &error);
+				hildon_thumbnail_plugin_do_create (module, urlss, 
+								   mime_type, 
+								   &failed_urls, 
+								   &error);
 
 				keep_alive ();
 
 				if (error) {
+					GStrv newlist = subtract_strv (urlss, failed_urls);
+
+					if (newlist) {
+						g_signal_emit (task->object, signals[READY_SIGNAL], 
+							       0, newlist);
+						g_strfreev (newlist);
+					}
+
 					g_signal_emit (task->object, signals[ERROR_SIGNAL],
-						       0, task->num, 1, error->message);
+						       0, task->num, failed_urls, 1, 
+						       error->message);
 					g_clear_error (&error);
 					had_err = TRUE;
 				} else
 					g_signal_emit (task->object, signals[READY_SIGNAL], 
 						       0, urlss);
 
+				if (failed_urls)
+					g_strfreev (failed_urls);
+
 			/* And if even that is not the case, we are very sorry */
 
 			} else {
 				gchar *str = g_strdup_printf ("No handler for %s", (gchar*) key);
 				g_signal_emit (task->object, signals[ERROR_SIGNAL],
-						       0, task->num, 0, str);
+						       0, task->num, urlss, 0, str);
+				had_err = TRUE;
 				g_free (str);
 			}
 		}
@@ -461,8 +535,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 				guint z = 0;
 				GError *error = NULL;
 
-				hildon_thumbnail_util_get_thumb_paths (urlss[i], &from[0], &from[1], &from[2], 
-								       &to[0], &to[1], &to[2]);
+				hildon_thumbnail_util_get_thumb_paths (urlss[i], 
+								       &from[0], 
+								       &from[1], 
+								       &from[2], 
+								       &to[0], 
+								       &to[1], 
+								       &to[2]);
 
 				for (z = 0; z < 3 && !error; z++) {
 					GFile *from_file, *to_file;
@@ -770,7 +849,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (ThumbnailerClass, error),
 			      NULL, NULL,
-			      thumbnailer_marshal_VOID__UINT_INT_STRING,
+			      thumbnailer_marshal_VOID__UINT_BOXED_INT_STRING,
 			      G_TYPE_NONE,
 			      3,
 			      G_TYPE_UINT,

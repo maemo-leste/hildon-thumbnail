@@ -1,3 +1,17 @@
+2008-10-27  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
+	* daemon/plugin-runner.xml
+	* daemon/thumbnailer-marshal.list
+	* daemon/thumbnailer.xml
+	* daemon/hildon-thumbnail-plugin.c: Improved error reporting, passing
+	of failed_uris everywhere
+
 2008-10-24  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/thumbnailer.c: Copying to removable devices in .localthumbs
