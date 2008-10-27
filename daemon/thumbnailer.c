@@ -275,7 +275,7 @@ subtract_strv (GStrv a, GStrv b)
 			}
 			y++;
 		}
-		if (found)
+		if (!found)
 			newlist = g_list_append (newlist, g_strdup (a[i]));
 		i++;
 	}
