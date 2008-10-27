@@ -344,7 +344,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				errors = g_string_new ("");
 			g_string_append_printf (errors, "[`%s': %s] ", 
 								    uri, msg);
-			failed = g_list_prepend (failed, msg);
+			failed = g_list_prepend (failed, g_strdup (uri));
 		}
 
 		if (pixbuf_large)
