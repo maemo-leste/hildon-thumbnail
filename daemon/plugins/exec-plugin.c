@@ -405,6 +405,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
 	const gchar **supported;
+	const gchar *uri_schemes[2] = { "file", NULL };
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
@@ -421,7 +422,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		supported = hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], module, TRUE);
+				func (thumbnailer, supported[i], module, (const GStrv) uri_schemes, 0);
 				i++;
 			}
 		}

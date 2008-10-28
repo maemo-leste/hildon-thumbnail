@@ -52,7 +52,7 @@ void keep_alive (void);
 
 typedef struct {
 	ThumbnailManager *manager;
-	GHashTable *plugins;
+	GHashTable *plugins_perscheme;
 	GThreadPool *large_pool;
 	GThreadPool *normal_pool;
 	GMutex *mutex;
@@ -74,30 +74,88 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0, };
 
+typedef struct {
+	GModule *plugin;
+	gint priority;
+} PluginRegistration;
+
+static void
+free_pluginregistration (PluginRegistration *r)
+{
+	g_slice_free (PluginRegistration, r);
+}
+
 static GModule*
-get_plugin (Thumbnailer *object, const gchar *uri_scheme, const gchar *key)
+get_plugin (Thumbnailer *object, const gchar *uri_scheme, const gchar *mime_type)
 {
 	// TODO: take into account uri_scheme
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
-	return g_hash_table_lookup (priv->plugins, key);
+	GHashTable *hash;
+	GModule *plugin = NULL;
+
+	hash = g_hash_table_lookup (priv->plugins_perscheme, uri_scheme);
+
+	if (hash) {
+		PluginRegistration *reg = g_hash_table_lookup (hash, mime_type);
+		if (reg) {
+			plugin = reg->plugin;
+		}
+	}
+
+	return plugin;
 }
 
 void 
-thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, gboolean overwrite)
+thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, const GStrv uri_schemes, gint priority)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+	guint i = 0;
 
 	g_mutex_lock (priv->mutex);
 
-	if (!overwrite && g_hash_table_lookup (priv->plugins, mime_type)) {
-		g_mutex_unlock (priv->mutex);
-		return;
+	while (uri_schemes[i] != NULL) {
+		GHashTable *hash;
+
+		hash = g_hash_table_lookup (priv->plugins_perscheme, uri_schemes[i]);
+
+		if (!hash) {
+			PluginRegistration *reg = g_slice_new (PluginRegistration);
+
+			reg->plugin = plugin;
+			reg->priority = priority;
+
+			hash = g_hash_table_new_full (g_str_hash, g_str_equal, 
+					 (GDestroyNotify) g_free, 
+					 (GDestroyNotify) free_pluginregistration);
+
+			g_hash_table_replace (priv->plugins_perscheme, 
+					      g_strdup (uri_schemes[i]), 
+					      hash);
+
+			g_hash_table_replace (hash, g_strdup (mime_type), reg);
+
+			thumbnail_manager_i_have (priv->manager, mime_type);
+
+		} else {
+			PluginRegistration *o_reg = g_hash_table_lookup (hash, mime_type);
+
+			if (o_reg && o_reg->priority < priority) {
+				PluginRegistration *reg = g_slice_new (PluginRegistration);
+
+				reg->plugin = plugin;
+				reg->priority = priority;
+
+				g_hash_table_replace (hash, g_strdup (mime_type), reg);
+
+				thumbnail_manager_i_have (priv->manager, mime_type);
+			}
+		}
+
+		i++;
 	}
-	g_hash_table_replace (priv->plugins, 
-			     g_strdup (mime_type), 
-			     plugin);
-	thumbnail_manager_i_have (priv->manager, mime_type);
+
 	g_mutex_unlock (priv->mutex);
+
 }
 
 static gboolean 
@@ -108,15 +166,22 @@ do_delete_or_not (gpointer key, gpointer value, gpointer user_data)
 	return FALSE;
 }
 
+static void
+foreach_scheme (gpointer key, gpointer value, gpointer plugin)
+{
+	GHashTable *hash = value;
+	g_hash_table_foreach_remove (hash, do_delete_or_not, plugin);
+}
+
 void 
 thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
 	g_mutex_lock (priv->mutex);
-	g_hash_table_foreach_remove (priv->plugins, 
-				     do_delete_or_not, 
-				     plugin);
+	/* This might leave an empty node in case there are no more plugins
+	 * for a specific scheme. But that's harmless. */
+	g_hash_table_foreach (priv->plugins_perscheme, foreach_scheme, plugin);
 	g_mutex_unlock (priv->mutex);
 }
 
@@ -797,7 +862,7 @@ thumbnailer_finalize (GObject *object)
 	g_thread_pool_free (priv->large_pool, TRUE, TRUE);
 
 	g_object_unref (priv->manager);
-	g_hash_table_unref (priv->plugins);
+	g_hash_table_unref (priv->plugins_perscheme);
 	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
@@ -922,9 +987,9 @@ thumbnailer_init (Thumbnailer *object)
 
 	priv->mutex = g_mutex_new ();
 
-	priv->plugins = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       (GDestroyNotify) g_free,
-					       NULL);
+	priv->plugins_perscheme = g_hash_table_new_full (g_str_hash, g_str_equal,
+							 (GDestroyNotify) g_free,
+							 (GDestroyNotify) g_hash_table_unref);
 
 	/* We could increase the amount of threads to add some parallelism */
 

@@ -1,5 +1,20 @@
 2008-10-28  Philip Van Hoof  <philip@codeminded.be>
 
+	* albumart-providers/googleimages/Makefile.am: Bugfix for make 
+	distcheck and make clean
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h: Refactoring for grouping per URI scheme, picking
+	of plugins based on supported uri_schemes and priority
+
+2008-10-28  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/thumbnail-manager.h
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/exec-plugin.c

@@ -215,9 +215,11 @@ daemon_init (Daemon *object)
 
 
 static void 
-daemon_register_func (gpointer self, const gchar *mime_type, GModule *module, gboolean overwrite)
+daemon_register_func (gpointer self, const gchar *mime_type, GModule *module, const GStrv uri_schemes, gint priority)
 {
 	GError *nerror = NULL;
+
+	// TODO: we are neglecting uri_schemes and priority here 
 
 	dbus_g_proxy_call (self, "Register",
 			   &nerror, G_TYPE_STRING,
@@ -247,7 +249,6 @@ daemon_start (Daemon *object, gboolean do_register)
 	hildon_thumbnail_plugin_do_init (module, &priv->cropping, 
 					 daemon_register_func, 
 					 manager_proxy, &error);
-
 
 	g_object_unref (manager_proxy);
 

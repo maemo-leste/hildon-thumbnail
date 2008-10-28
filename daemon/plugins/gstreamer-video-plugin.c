@@ -545,6 +545,9 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	guint i = 0;
 	const gchar **supported;
 
+	/* TODO: Perhaps we can add a few remote ones here too (streaming media) */
+	const gchar *uri_schemes[2] = { "file", NULL };
+
 	g_type_init ();
 
 	gst_init (NULL, NULL);
@@ -564,7 +567,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		supported = hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], module, TRUE);
+				func (thumbnailer, supported[i], module, (const GStrv) uri_schemes, 0);
 				i++;
 			}
 		}

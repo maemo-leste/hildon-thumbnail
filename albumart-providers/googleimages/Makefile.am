@@ -17,8 +17,7 @@ EXTRA_DIST = my.vala.stamp                     \
              com.nokia.albumart.GoogleImages.service.in \
              com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
-CLEANFILES = $(com.nokia.albumart.GoogleImages_service_DATA) \
-	     $(albartdown_DATA)
+CLEANFILES = $(com.nokia.albumart.GoogleImages_service_DATA) 
 
 libexec_PROGRAMS = hildon-google-images-art-downloaderd
 
