@@ -147,7 +147,6 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 
 				g_hash_table_replace (hash, g_strdup (mime_type), reg);
 
-				thumbnail_manager_i_have (priv->manager, mime_type);
 			}
 		}
 
