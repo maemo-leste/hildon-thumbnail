@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -72,6 +73,14 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL] = { 0, };
+
+static GModule*
+get_plugin (Thumbnailer *object, const gchar *uri_scheme, const gchar *key)
+{
+	// TODO: take into account uri_scheme
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+	return g_hash_table_lookup (priv->plugins, key);
+}
 
 void 
 thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, gboolean overwrite)
@@ -309,12 +318,12 @@ static void
 do_the_work (WorkTask *task, gpointer user_data)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
-	GHashTable *hash;
 	GStrv urls = task->urls;
 	GStrv mime_types = task->mime_types;
 	guint i;
-	GHashTableIter iter;
-	gpointer key, value;
+	GHashTable *schemes;
+	GHashTableIter s_iter;
+	gpointer s_key, s_value;
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
@@ -338,7 +347,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
 			task->num);
 
-	hash = g_hash_table_new (g_str_hash, g_str_equal);
+	schemes = g_hash_table_new_full (g_str_hash, g_str_equal, 
+					 (GDestroyNotify) g_free, 
+					 (GDestroyNotify) g_hash_table_unref);
 
 	i = 0;
 
@@ -373,11 +384,39 @@ do_the_work (WorkTask *task, gpointer user_data)
 			g_strfreev (oneurl);
 		} else {
 			if (mime_type && !has_thumb) {
-				GList *urls_for_mime = g_hash_table_lookup (hash, mime_type);
-				urls_for_mime = g_list_prepend (urls_for_mime, urls[i]);
+				GList *urls_for_mime;
+				GHashTable *hash;
+				gchar *uri_scheme = g_strdup (urls[i]);
+				gchar *ptr = strchr (uri_scheme, ':');
+				gchar *uri;
+
+				if (ptr) {
+					/* We set the ':' to end-of-string */
+					*ptr = '\0';
+					/* Contains ie. ftp, ftps, file, http */
+					uri = g_strdup (urls[i]); /* XU1 */
+				} else {
+					g_free (uri_scheme);
+					uri_scheme = g_strdup ("file");
+					uri = g_strdup_printf ("file://%s", 
+						     /* XU2 */ urls[i]);
+				}
+
+				hash = g_hash_table_lookup (schemes, mime_type);
+
+				if (!hash) {
+					hash = g_hash_table_new (g_str_hash, g_str_equal);
+					g_hash_table_replace (schemes, uri_scheme, hash);
+					urls_for_mime = NULL;
+				} else 
+					urls_for_mime = g_hash_table_lookup (hash, mime_type);
+
+				urls_for_mime = g_list_prepend (urls_for_mime, uri);
 				g_hash_table_replace (hash, mime_type, urls_for_mime);
+
 			} else if (has_thumb)
-				thumb_items = g_list_prepend (thumb_items, urls[i]);
+				thumb_items = g_list_prepend (thumb_items, 
+						     /*XU3 */ g_strdup (urls[i]));
 		}
 
 		i++;
@@ -391,7 +430,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 	i = 0;
 
 	while (copy) {
-		cached_items[i] = g_strdup (copy->data);
+		/* Copied as new memory at XU3 */
+		cached_items[i] = (gchar *) copy->data;
 		copy = g_list_next (copy);
 		i++;
 	}
@@ -402,14 +442,22 @@ do_the_work (WorkTask *task, gpointer user_data)
 			       cached_items);
 
 	g_list_free (thumb_items);
-	g_strfreev (cached_items);
 
+	g_strfreev (cached_items); /* Frees all XU3 too */
 
-	g_hash_table_iter_init (&iter, hash);
+	g_hash_table_iter_init (&s_iter, schemes);
 
 	/* Foreach of the groups that have items that require creating a thumbnail */
+	while (g_hash_table_iter_next (&s_iter, &s_key, &s_value)) {
 
-	while (g_hash_table_iter_next (&iter, &key, &value)) {
+	  GHashTable *hash = s_value;
+	  gchar *uri_scheme = s_key;
+	  GHashTableIter iter;
+	  gpointer key, value;
+
+	  g_hash_table_iter_init (&iter, hash);
+
+	  while (g_hash_table_iter_next (&iter, &key, &value)) {
 		gboolean had_err = FALSE;
 		gchar *mime_type = g_strdup (key);
 		GList *urlm = value, *copy = urlm;
@@ -421,7 +469,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 		i = 0;
 
 		while (copy) {
-			urlss[i] = g_strdup ((gchar *) copy->data);
+			/* Copied as new memory at XU1 or XU2 */
+			urlss[i] = (gchar *) copy->data;
 			i++;
 			copy = g_list_next (copy);
 		}
@@ -436,7 +485,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		/* If we have a third party thumbnailer for this mime-type, we
 		 * proxy the call */
 
-		proxy = thumbnail_manager_get_handler (priv->manager, mime_type);
+		proxy = thumbnail_manager_get_handler (priv->manager, uri_scheme, mime_type);
 
 		if (proxy) {
 			GError *error = NULL;
@@ -483,7 +532,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		} else {
 			GModule *module;
 			g_mutex_lock (priv->mutex);
-			module = g_hash_table_lookup (priv->plugins, key);
+			module = get_plugin (task->object, uri_scheme, key);
 			g_mutex_unlock (priv->mutex);
 
 			if (module) {
@@ -570,12 +619,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 		}
 
 		g_free (mime_type);
-		g_strfreev (urlss);
+
+		/* Frees all XU1 and XU2 (in this schemes-group) */
+		g_strfreev (urlss); 
+	  }
+	  g_assert (g_hash_table_size (hash) == 0);
 	}
 
-	g_assert (g_hash_table_size (hash) == 0);
-
-	g_hash_table_unref (hash);
+	g_hash_table_unref (schemes);
 
 	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
 			       task->num);

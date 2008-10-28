@@ -58,10 +58,12 @@ enum {
 };
 
 DBusGProxy*
-thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *mime_type)
+thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *uri_scheme, const gchar *mime_type)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *proxy;
+
+	// TODO: take into account uri_scheme
 
 	g_mutex_lock (priv->mutex);
 	proxy = g_hash_table_lookup (priv->handlers, mime_type);

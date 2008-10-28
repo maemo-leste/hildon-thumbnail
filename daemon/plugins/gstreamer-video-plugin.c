@@ -517,6 +517,7 @@ reload_config (const gchar *config)
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
+		g_key_file_free (keyfile);
 		return;
 	}
 
@@ -552,6 +553,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 
 	g_signal_connect (G_OBJECT (monitor), "changed", 
 			  G_CALLBACK (on_file_changed), NULL);
+
+	g_object_unref (file);
 
 	reload_config (config);
 
