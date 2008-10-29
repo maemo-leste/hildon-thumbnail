@@ -429,7 +429,7 @@ service_gone (DBusGProxy *proxy,
 }
 
 /* This is a custom spec addition, for dynamic registration of thumbnailers.
- * Consult thumbnail_manager.xml for more information about this custom spec addition. */
+ * Consult manager.xml for more information about this custom spec addition. */
 
 void
 thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *mime_type, DBusGMethodInvocation *context)
@@ -442,7 +442,7 @@ thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *
 	dbus_async_return_if_fail (mime_type != NULL, context);
 	dbus_async_return_if_fail (uri_scheme != NULL, context);
 
-	query  = g_strdup_printf ("%s-%s", uri_scheme, mime_type);
+	query = g_strdup_printf ("%s-%s", uri_scheme, mime_type);
 
 	keep_alive ();
 
