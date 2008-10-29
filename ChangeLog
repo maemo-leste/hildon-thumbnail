@@ -1,3 +1,8 @@
+2008-10-29  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/thumbnail-manager.c: Refactoring for grouping per URI scheme.
+	Same as yesterday but now for 3th party external specialized plugins.
+
 2008-10-28  Philip Van Hoof  <philip@codeminded.be>
 
 	* albumart-providers/googleimages/Makefile.am: Bugfix for make 

@@ -62,14 +62,15 @@ thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *uri_scheme
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *proxy;
-
-	// TODO: take into account uri_scheme
+	gchar *query = g_strdup_printf ("%s-%s", uri_scheme, mime_type);
 
 	g_mutex_lock (priv->mutex);
-	proxy = g_hash_table_lookup (priv->handlers, mime_type);
+	proxy = g_hash_table_lookup (priv->handlers, query);
 	if (proxy)
 		g_object_ref (proxy);
 	g_mutex_unlock (priv->mutex);
+
+	g_free (query);
 
 	return proxy;
 }
@@ -139,8 +140,9 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		gchar *fullfilen;
 		gchar *value;
 		GStrv values;
+		GStrv uri_schemes;
 		GError *error = NULL;
-		guint i = 0;
+		guint i = 0, y = 0;
 		guint64 mtime;
 		GFileInfo *info;
 		GFile *file;
@@ -183,6 +185,16 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			continue;
 		}
 
+		/* Get the supported uri-schemes, if none we default to just `file` */
+
+		uri_schemes = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "UriSchemes", NULL, NULL);
+
+		if (!uri_schemes) {
+			uri_schemes = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+			uri_schemes[0] = g_strdup ("file");
+			uri_schemes[1] = NULL;
+		}
+
 		/* Else, get the modificiation time, we'll need it later */
 
 		file = g_file_new_for_path (fullfilen);
@@ -202,6 +214,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 				g_object_unref (file);
 			g_free (value);
 			g_strfreev (values);
+			g_strfreev (uri_schemes);
 			g_key_file_free (keyfile);
 			continue;
 		}
@@ -210,7 +223,13 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 
 		/* And register it in the temporary hashtable that is being formed */
 
-		while (values[i] != NULL) {
+		y = 0;
+
+		while (uri_schemes[y] != NULL) {
+
+		  i = 0;
+
+		  while (values[i] != NULL) {
 			ValueInfo *info;
 
 			info = g_hash_table_lookup (pre, values[i]);
@@ -233,11 +252,13 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 				info->prio = FALSE;
 
 				g_hash_table_replace (pre, 
-						      g_strdup (values[i]), 
+						      g_strdup_printf ("%s-%s", uri_schemes[y], values[i]), 
 						      info);
 			}
 
 			i++;
+		  }
+		  y++;
 		}
 
 		if (info)
@@ -246,6 +267,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			g_object_unref (file);
 
 		g_free (value);
+		g_strfreev (uri_schemes);
 		g_strfreev (values);
 		g_key_file_free (keyfile);
 	}
@@ -260,13 +282,14 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		keyfile = g_key_file_new ();
 
 		if (g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
-			gchar **mimes = g_key_file_get_groups (keyfile, &length);
+			gchar **urisch_and_mimes = g_key_file_get_groups (keyfile, &length);
 			guint i;
 
 			for (i = 0; i< length; i++) {
 				ValueInfo *info = g_slice_new (ValueInfo);
 
-				info->name = g_key_file_get_string (keyfile, mimes[i], "Name", NULL);
+				info->name = g_key_file_get_string (keyfile, urisch_and_mimes[i], 
+													"Name", NULL);
 
 				/* This is atm unused for items in overrides. */
 
@@ -277,10 +300,10 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 				info->prio = TRUE;
 
 				g_hash_table_replace (pre, 
-						      g_strdup (mimes[i]), 
+						      g_strdup (urisch_and_mimes[i]), 
 						      info);
 			}
-			g_strfreev (mimes);
+			g_strfreev (urisch_and_mimes);
 		}
 
 		g_free (fullfilen);
