@@ -448,17 +448,17 @@ thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *
 
 	g_mutex_lock (priv->mutex);
 
-	mime_proxy = g_hash_table_lookup (priv->handlers, 
-					  mime_type);
-
 	sender = dbus_g_method_get_sender (context);
 
 	thumbnail_manager_add (object, query, sender);
 
-	g_free (query);
 	g_free (sender);
 
 	/* This is not necessary for activatable ones */
+
+	mime_proxy = g_hash_table_lookup (priv->handlers, query);
+
+	g_free (query);
 
 	g_signal_connect (mime_proxy, "destroy",
 			  G_CALLBACK (service_gone),
