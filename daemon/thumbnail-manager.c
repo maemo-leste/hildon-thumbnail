@@ -410,8 +410,7 @@ do_remove_or_not (gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-service_gone (DBusGProxy *proxy,
-	      ThumbnailManager *object)
+service_gone (DBusGProxy *proxy, ThumbnailManager *object)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
