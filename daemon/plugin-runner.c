@@ -218,18 +218,23 @@ static void
 daemon_register_func (gpointer self, const gchar *mime_type, GModule *module, const GStrv uri_schemes, gint priority)
 {
 	GError *nerror = NULL;
+	guint i = 0;
 
-	// TODO: we are neglecting uri_schemes and priority here 
+	while (uri_schemes[i] != NULL) {
 
-	dbus_g_proxy_call (self, "Register",
-			   &nerror, G_TYPE_STRING,
-			   mime_type,
-			   G_TYPE_INVALID,
-			   G_TYPE_INVALID);
+		dbus_g_proxy_call (self, "Register",
+						   &nerror, 
+						   G_TYPE_STRING, uri_schemes[i],
+						   G_TYPE_STRING, mime_type,
+						   G_TYPE_INVALID,
+						   G_TYPE_INVALID);
 
-	if (nerror) {
-		g_critical ("Failed to init: %s\n", nerror->message);
-		g_error_free (nerror);
+		if (nerror) {
+			g_critical ("Failed to init: %s\n", nerror->message);
+			g_error_free (nerror);
+		}
+
+		i++;
 	}
 }
 

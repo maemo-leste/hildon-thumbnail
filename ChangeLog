@@ -1,5 +1,13 @@
 2008-10-29  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/thumbnail-manager.h
+	* daemon/plugin-runner.c
+	* daemon/manager.xml
+	* daemon/thumbnail-manager.c: Adding groupng per URI scheme to the
+	plugin-runner
+
+2008-10-29  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/thumbnail-manager.c: Refactoring for grouping per URI scheme.
 	Same as yesterday but now for 3th party external specialized plugins.
 

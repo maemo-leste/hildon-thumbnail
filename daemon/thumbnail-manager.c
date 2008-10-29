@@ -432,13 +432,17 @@ service_gone (DBusGProxy *proxy,
  * Consult thumbnail_manager.xml for more information about this custom spec addition. */
 
 void
-thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, DBusGMethodInvocation *context)
+thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *mime_type, DBusGMethodInvocation *context)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 	DBusGProxy *mime_proxy;
 	gchar *sender;
+	gchar *query;
 
 	dbus_async_return_if_fail (mime_type != NULL, context);
+	dbus_async_return_if_fail (uri_scheme != NULL, context);
+
+	query  = g_strdup_printf ("%s-%s", uri_scheme, mime_type);
 
 	keep_alive ();
 
@@ -449,8 +453,9 @@ thumbnail_manager_register (ThumbnailManager *object, gchar *mime_type, DBusGMet
 
 	sender = dbus_g_method_get_sender (context);
 
-	thumbnail_manager_add (object, mime_type, sender);
+	thumbnail_manager_add (object, query, sender);
 
+	g_free (query);
 	g_free (sender);
 
 	/* This is not necessary for activatable ones */

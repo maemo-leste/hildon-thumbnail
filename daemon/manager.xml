@@ -3,6 +3,7 @@
   <interface name="org.freedesktop.thumbnailer.Manager">  
     <method name="Register">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+      <arg type="s" name="uri_scheme" direction="in" />
       <arg type="s" name="mime_type" direction="in" />
     </method>
     <method name="GetSupported">
