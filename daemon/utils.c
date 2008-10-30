@@ -47,7 +47,7 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 
 		if (ptr) {
 			*ptr = '\0';
-			local_dir = g_build_filename (uri_t, ".thumblocal", NULL);
+			local_dir = g_build_filename ("%s/.thumblocal", uri_t);
 		}
 
 		g_free (uri_t);
