@@ -139,47 +139,37 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 void
 hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
-	gchar *art_filename, *str;
-	static gchar *dir = NULL;
-	gchar *_tmp14, *_tmp13, *down;
-
-	if (!prefix)
-		prefix = "album";
-
-	if (!a && !b) {
-		*path = NULL;
-		return;
-	}
-
-	if (!a)
-		a = "";
-
-	if (!b)
-		b = "";
-
-	down = g_utf8_strdown (_tmp14 = (g_strconcat ((_tmp13 = g_strconcat (a, " ", NULL)), b, NULL)),-1);
-
-	g_free (_tmp14);
-	g_free (_tmp13);
-
-	/* I know we leak, but it's better than doing memory fragementation on 
-	 * these strings ... */
-
-	if (!dir)
-		dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+	gchar *art_filename;
+	gchar *dir;
+	gchar *str;
+	gchar *down;
 
 	*path = NULL;
 
-	if(!g_file_test (dir, G_FILE_TEST_EXISTS))
+	if (!a && !b) {
+		return;
+	}
+
+	str = g_strconcat (a ? a : "", 
+			   " ", 
+			   b ? b : "", 
+			   NULL);
+	down = g_utf8_strdown (str, -1);
+	g_free (str);
+
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+
+	if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
 		g_mkdir_with_parents (dir, 0770);
+	}
 
 	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
+	g_free (down);
 
-	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix, str);
+	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix?prefix:"album", str);
+	g_free (str);
 
 	*path = g_build_filename (dir, art_filename, NULL);
-
-	g_free (str);
+	g_free (dir);
 	g_free (art_filename);
-	g_free (down);
 }
