@@ -137,6 +137,81 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 }
 
 
+
+static gchar*
+strip_characters (const gchar *original)
+{
+	const gchar *foo = "()[]<>{}_!@#$^&*+=|\\/\"'?~";
+	guint osize = strlen (original);
+	gchar *retval = (gchar *) g_malloc0 (sizeof (gchar *) * osize);
+	guint i = 0, y = 0;
+
+	while (i < osize) {
+
+		/* Remove (anything) */
+
+		if (original[i] == '(') {
+			gchar *loc = strchr (original+i, ')');
+			if (loc) {
+				i = loc - original + 1;
+				continue;
+			}
+		}
+
+		/* Remove [anything] */
+
+		if (original[i] == '[') {
+			gchar *loc = strchr (original+i, ']');
+			if (loc) {
+				i = loc - original + 1;
+				continue;
+			}
+		}
+
+		/* Remove {anything} */
+
+		if (original[i] == '{') {
+			gchar *loc = strchr (original+i, '}');
+			if (loc) {
+				i = loc - original + 1;
+				continue;
+			}
+		}
+
+		/* Remove <anything> */
+
+		if (original[i] == '<') {
+			gchar *loc = strchr (original+i, '>');
+			if (loc) {
+				i = loc - original + 1;
+				continue;
+			}
+		}
+
+		/* Remove double whitespaces */
+
+		if ((y > 0) &&
+		    (original[i] == ' ' || original[i] == '\t') &&
+		    (retval[y-1] == ' ' || retval[y-1] == '\t')) {
+			i++;
+			continue;
+		}
+
+		/* Remove strange characters */
+
+		if (!strchr (foo, original[i])) {
+			retval[y] = original[i]!='\t'?original[i]:' ';
+			y++;
+		}
+
+		i++;
+	}
+
+	retval[y] = 0;
+
+	return retval;
+}
+
 void
 hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
@@ -144,6 +219,7 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 	gchar *dir;
 	gchar *str;
 	gchar *down;
+	gchar *f_a = NULL, *f_b = NULL;
 
 	*path = NULL;
 
@@ -151,10 +227,20 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 		return;
 	}
 
-	str = g_strconcat (a ? a : "", 
+	if (a)
+		f_a = strip_characters (a);
+
+	if (b)
+		f_b = strip_characters (b);
+
+	str = g_strconcat (a ? f_a : "", 
 			   " ", 
-			   b ? b : "", 
+			   b ? f_b : "", 
 			   NULL);
+
+	g_free (f_a);
+	g_free (f_b);
+
 	down = g_utf8_strdown (str, -1);
 	g_free (str);
 

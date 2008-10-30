@@ -1,5 +1,9 @@
 2008-10-30  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/utils.c: Stripping album and artist strings
+
+2008-10-30  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/utils.c: Local thumbnail art, and code cleaning up
 
 2008-10-29  Philip Van Hoof  <philip@codeminded.be>
