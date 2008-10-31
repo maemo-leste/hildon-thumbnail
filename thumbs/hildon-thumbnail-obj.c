@@ -45,10 +45,12 @@ typedef struct {
 	gchar *lpaths[3];
 	guint width, height;
 	gboolean cropped;
-	HildonThumbnailRequestCallback callback;
+	HildonThumbnailRequestPixbufCallback pcallback;
+	HildonThumbnailRequestUriCallback ucallback;
 	GDestroyNotify destroy;
 	HildonThumbnailFactory *factory;
 	gpointer user_data;
+	GString *errors;
 } HildonThumbnailRequestPrivate;
 
 typedef struct {
@@ -75,6 +77,8 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 		  	    	     GError       **error);
 #endif
 
+#define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
+#define FACTORY_ERROR g_quark_from_static_string (HILDON_THUMBNAIL_APPLICATION)
 
 static void
 create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
@@ -112,41 +116,69 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 		}
 	}
 
-	stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
 
-	if (error)
-		goto error_handler;
+	if (r_priv->pcallback) {
 
-	/* Read the stream as a pixbuf at the requested exact scale */
-	pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
-		r_priv->width, r_priv->height, TRUE, 
-		NULL, &error);
+		stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
 
-	error_handler:
+		if (!error) {
+			/* Read the stream as a pixbuf at the requested exact scale */
+			pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+				r_priv->width, r_priv->height, TRUE, 
+				NULL, &error);
+		}
 
-	/* Callback user function, passing the pixbuf and error */
+		/* Callback user function, passing the pixbuf and error */
 
-	if (r_priv->callback)
-		r_priv->callback (r_priv->factory, pixbuf, error, r_priv->user_data);
+		if (r_priv->errors) {
+			if (!error)
+				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+			else {
+				g_string_append (r_priv->errors, " - ");
+				g_string_append (r_priv->errors, error->message);
+				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+			}
+		}
 
-	if (r_priv->destroy)
-		r_priv->destroy (r_priv->destroy);
+		r_priv->pcallback (r_priv->factory, pixbuf, error, r_priv->user_data);
 
-	/* Cleanup */
+		/* Cleanup */
+
+		if (stream) {
+			g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
+			g_object_unref (stream);
+		}
+
+		if (error)
+			g_error_free (error);
+
+		if (pixbuf)
+			gdk_pixbuf_unref (pixbuf);
+	}
+
+	if (r_priv->ucallback) {
+		gchar *u = g_file_get_uri (filei); 
+
+		if (r_priv->errors) {
+			if (!error)
+				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+			else {
+				g_string_append (r_priv->errors, " - ");
+				g_string_append (r_priv->errors, error->message);
+				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+			}
+		}
+
+		r_priv->ucallback (r_priv->factory, (const gchar *) u, error, r_priv->user_data);
+		g_free (u);
+	}
 
 	if (filei)
 		g_object_unref (filei);
 
-	if (stream) {
-		g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
-		g_object_unref (stream);
-	}
+	if (r_priv->destroy)
+		r_priv->destroy (r_priv->user_data);
 
-	if (error)
-		g_error_free (error);
-
-	if (pixbuf)
-		gdk_pixbuf_unref (pixbuf);
 }
 
 
@@ -167,6 +199,34 @@ on_task_finished (DBusGProxy *proxy,
 
 	g_free (key);
 }
+
+
+static void
+on_task_error (DBusGProxy *proxy,
+		  guint       handle,
+		  GStrv       failed_uris,
+		  gint        error_code,
+		  gchar      *error_message,
+		  gpointer    user_data)
+{
+	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (user_data);
+	gchar *key = g_strdup_printf ("%d", handle);
+	HildonThumbnailRequest *request = g_hash_table_lookup (f_priv->tasks, key);
+
+	if (request) {
+		HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
+
+		if (!r_priv->errors) {
+			r_priv->errors = g_string_new (error_message);
+		} else {
+			g_string_append (r_priv->errors, " - ");
+			g_string_append (r_priv->errors, error_message);
+		}
+	}
+
+	g_free (key);
+}
+
 
 static gboolean
 have_all_for_request_cb (gpointer user_data)
@@ -205,8 +265,19 @@ hildon_thumbnail_factory_init (HildonThumbnailFactory *self)
 
 	dbus_g_proxy_connect_signal (f_priv->proxy, "Finished",
 			     G_CALLBACK (on_task_finished),
-			     g_object_ref (self),
-			     (GClosureNotify) g_object_unref);
+			     self,
+			     NULL);
+
+	dbus_g_proxy_add_signal (f_priv->proxy, "Error", 
+				 G_TYPE_UINT, 
+				 G_TYPE_BOXED,
+				 G_TYPE_INT,
+				 G_TYPE_STRING, G_TYPE_INVALID);
+
+	dbus_g_proxy_connect_signal (f_priv->proxy, "Error",
+			     G_CALLBACK (on_task_error),
+			     self,
+			     NULL);
 }
 
 static void
@@ -224,9 +295,11 @@ hildon_thumbnail_request_init (HildonThumbnailRequest *self)
 	r_priv->lpaths[1] = NULL;
 	r_priv->lpaths[2] = NULL;
 	r_priv->factory = NULL;
-	r_priv->callback = NULL;
+	r_priv->pcallback = NULL;
+	r_priv->ucallback = NULL;
 	r_priv->destroy = NULL;
 	r_priv->user_data = NULL;
+	r_priv->errors = NULL;
 }
 
 
@@ -285,20 +358,30 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
 	r_priv->key = g_strdup (key);
-	g_hash_table_replace (f_priv->tasks, key, 
+
+	if (!error) {
+		g_hash_table_replace (f_priv->tasks, key, 
 			      g_object_ref (request));
+	} else {
+		if (r_priv->pcallback)
+			r_priv->pcallback (r_priv->factory, NULL, error, r_priv->user_data);
+		if (r_priv->ucallback)
+			r_priv->ucallback (r_priv->factory, NULL, error, r_priv->user_data);
+	}
+
 	g_object_unref (request);
 }
 
-HildonThumbnailRequest*
-hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
-				  const gchar *uri,
-				  guint width, guint height,
-				  gboolean cropped,
-				  const gchar *mime_type,
-				  HildonThumbnailRequestCallback callback,
-				  gpointer user_data,
-				  GDestroyNotify destroy)
+static HildonThumbnailRequest*
+hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
+					 const gchar *uri,
+					 guint width, guint height,
+					 gboolean cropped,
+					 const gchar *mime_type,
+					 HildonThumbnailRequestUriCallback ucallback,
+					 HildonThumbnailRequestPixbufCallback pcallback,
+					 gpointer user_data,
+					 GDestroyNotify destroy)
 {
 	HildonThumbnailRequest *request = g_object_new (HILDON_TYPE_THUMBNAIL_REQUEST, NULL);
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
@@ -321,7 +404,8 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 	r_priv->uris[0] = g_strdup (uri);
 	r_priv->factory = g_object_ref (self);
 	r_priv->user_data = user_data;
-	r_priv->callback = callback;
+	r_priv->pcallback = pcallback;
+	r_priv->ucallback = ucallback;
 	r_priv->destroy = destroy;
 	r_priv->cropped = cropped;
 
@@ -347,6 +431,42 @@ hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
 		g_strfreev (mime_types);
 
 	return request;
+}
+
+HildonThumbnailRequest*
+hildon_thumbnail_factory_request_pixbuf (HildonThumbnailFactory *self,
+					 const gchar *uri,
+					 guint width, guint height,
+					 gboolean cropped,
+					 const gchar *mime_type,
+					 HildonThumbnailRequestPixbufCallback callback,
+					 gpointer user_data,
+					 GDestroyNotify destroy)
+{
+	return hildon_thumbnail_factory_request_generic (self, uri, width, height,
+							 cropped, mime_type, 
+							 NULL,
+							 callback, 
+							 user_data,
+							 destroy);
+}
+
+HildonThumbnailRequest*
+hildon_thumbnail_factory_request_uri (HildonThumbnailFactory *self,
+					 const gchar *uri,
+					 guint width, guint height,
+					 gboolean cropped,
+					 const gchar *mime_type,
+					 HildonThumbnailRequestUriCallback callback,
+					 gpointer user_data,
+					 GDestroyNotify destroy)
+{
+	return hildon_thumbnail_factory_request_generic (self, uri, width, height,
+							 cropped, mime_type, 
+							 callback,
+							 NULL, 
+							 user_data,
+							 destroy);
 }
 
 void 

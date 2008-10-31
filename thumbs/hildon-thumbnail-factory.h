@@ -70,7 +70,7 @@ GType hildon_thumbnail_factory_get_type (void);
 GType hildon_thumbnail_request_get_type (void);
 
 /** 
- * HildonThumbnailRequestCallback:
+ * HildonThumbnailRequestPixbufCallback:
  * @self: the factory
  * @thumbnail: (allow-none): A pixbuf containing the thumbnail or %NULL. If application wishes to keep the structure, it must call g_object_ref() on it. The library does not cache returned pixbufs.
  * @error: (allow-none): The error or %NULL if there was none. Freed after callback returns.
@@ -78,8 +78,21 @@ GType hildon_thumbnail_request_get_type (void);
  *
  * Called when the thumbnailing process finishes or there is an error
  **/
-typedef void (*HildonThumbnailRequestCallback)	(HildonThumbnailFactory *self,
+typedef void (*HildonThumbnailRequestPixbufCallback)	(HildonThumbnailFactory *self,
 		GdkPixbuf *thumbnail, GError *error, gpointer user_data);
+
+
+/** 
+ * HildonThumbnailRequestUriCallback:
+ * @self: the factory
+ * @thumbnail: (allow-none): A URI containing the best fit thumbnail or %NULL.
+ * @error: (allow-none): The error or %NULL if there was none. Freed after callback returns.
+ * @user_data: (allow-none): User-supplied data when thumbnail was requested
+ *
+ * Called when the thumbnailing process finishes or there is an error
+ **/
+typedef void (*HildonThumbnailRequestUriCallback)	(HildonThumbnailFactory *self,
+		const gchar *thumbnail, GError *error, gpointer user_data);
 
 /**
  * hildon_thumbnail_factory_get_instance:
@@ -92,7 +105,7 @@ typedef void (*HildonThumbnailRequestCallback)	(HildonThumbnailFactory *self,
 HildonThumbnailFactory* hildon_thumbnail_factory_get_instance (void);
 
 /**
- * hildon_thumbnail_factory_request:
+ * hildon_thumbnail_factory_request_pixbuf:
  * @self: the factory
  * @uri: an URI to the file which you want to request a thumbnail for
  * @width: Wanted width of the thumbnail
@@ -111,15 +124,44 @@ HildonThumbnailFactory* hildon_thumbnail_factory_get_instance (void);
  * Returns: (transfer full): A handle for the request that got created on a queue
  **/
 HildonThumbnailRequest*
-	 hildon_thumbnail_factory_request (HildonThumbnailFactory *self,
+	 hildon_thumbnail_factory_request_pixbuf (HildonThumbnailFactory *self,
 									 const gchar *uri,
 									 guint width, guint height,
 									 gboolean cropped,
 									 const gchar *mime_type,
-									 HildonThumbnailRequestCallback callback,
+									 HildonThumbnailRequestPixbufCallback callback,
 									 gpointer user_data,
 									 GDestroyNotify destroy);
 
+
+/**
+ * hildon_thumbnail_factory_request_uri:
+ * @self: the factory
+ * @uri: an URI to the file which you want to request a thumbnail for
+ * @width: Wanted width of the thumbnail
+ * @height: Wanted height of the thumbnail
+ * @mime_type: (allow-none): A MIME type hint for @uri
+ * @callback: (allow-none): A callback that will be executed when the thumbnail is ready
+ * @user_data: (allow-none): User-supplied data for @callback and @destroy
+ * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
+ *
+ * Request the preparation, if needed, of a thumbnail and return it in @callback
+ * as a #GdkPixbuf as soon as it's ready. This operation is asynchronous, the
+ * creation of the thumbnail will not affect your running mainloop unless you
+ * use one of the join methods on either #HildonThumbnailFactory or the 
+ * #HildonThumbnailRequest being returned.
+ *
+ * Returns: (transfer full): A handle for the request that got created on a queue
+ **/
+HildonThumbnailRequest*
+	 hildon_thumbnail_factory_request_uri (HildonThumbnailFactory *self,
+									 const gchar *uri,
+									 guint width, guint height,
+									 gboolean cropped,
+									 const gchar *mime_type,
+									 HildonThumbnailRequestUriCallback callback,
+									 gpointer user_data,
+									 GDestroyNotify destroy);
 /**
  * hildon_thumbnail_factory_join:
  * @self: the factory

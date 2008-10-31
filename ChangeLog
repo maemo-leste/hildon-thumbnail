@@ -1,5 +1,11 @@
 2008-10-31  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-thumbnail-factory.h
+	* thumbs/hildon-albumart-obj.c: New API, improvements
+
+2008-10-31  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-factory.h: Error reporting and added to
 	convenience APIs 

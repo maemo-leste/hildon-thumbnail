@@ -77,13 +77,19 @@ create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
 	gchar *path;
 	GError *error = NULL;
 
-	filei = g_file_new_for_path (path);
-	stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
+	hildon_thumbnail_util_get_albumart_path (r_priv->artist_or_title, 
+						 r_priv->album, r_priv->kind, 
+						 &path);
 
-	if (error)
-		goto error_handler;
+	if (r_priv->callback) {
+		filei = g_file_new_for_path (path);
+		stream = G_INPUT_STREAM (g_file_read (filei, NULL, &error));
 
-	pixbuf = gdk_pixbuf_new_from_stream (stream, NULL, &error);
+		if (error)
+			goto error_handler;
+
+		pixbuf = gdk_pixbuf_new_from_stream (stream, NULL, &error);
+	}
 
 	error_handler:
 
@@ -91,9 +97,6 @@ create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
 
 	if (r_priv->callback)
 		r_priv->callback (r_priv->factory, pixbuf, error, r_priv->user_data);
-
-	if (r_priv->destroy)
-		r_priv->destroy (r_priv->destroy);
 
 	/* Cleanup */
 
@@ -110,6 +113,12 @@ create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
 
 	if (pixbuf)
 		gdk_pixbuf_unref (pixbuf);
+
+	g_free (path);
+
+	if (r_priv->destroy)
+		r_priv->destroy (r_priv->user_data);
+
 }
 
 
