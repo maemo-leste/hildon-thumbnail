@@ -146,7 +146,7 @@ HildonThumbnailRequest*
  * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
  *
  * Request the preparation, if needed, of a thumbnail and return it in @callback
- * as a #GdkPixbuf as soon as it's ready. This operation is asynchronous, the
+ * as a URI as soon as it's ready. This operation is asynchronous, the
  * creation of the thumbnail will not affect your running mainloop unless you
  * use one of the join methods on either #HildonThumbnailFactory or the 
  * #HildonThumbnailRequest being returned.
