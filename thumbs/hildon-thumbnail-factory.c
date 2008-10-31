@@ -751,19 +751,21 @@ gboolean
 hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolean is_cropped)
 {
 	gboolean retval;
-	gchar *path;
+	gchar *urif;
+	GFile *file;
 
-	path = hildon_thumbnail_get_path (uri, width, height, is_cropped);
+	urif = hildon_thumbnail_get_uri (uri, width, height, is_cropped);
+	file = g_file_new_for_uri (urif);
 
-	retval = g_file_test (path, G_FILE_TEST_EXISTS);
+	retval = g_file_query_exists (file, NULL);
 
-	g_free (path);
+	g_free (urif);
 
 	return retval;
 }
 
 gchar *
-hildon_thumbnail_get_path (const gchar *uri, guint width, guint height, gboolean is_cropped)
+hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean is_cropped)
 {
 	gchar *large, *normal, *cropped, *local_large, *local_normal, *local_cropped;
 	gchar *path;
@@ -785,16 +787,16 @@ hildon_thumbnail_get_path (const gchar *uri, guint width, guint height, gboolean
 
 		GFile *fnormal = g_file_new_for_uri (local_normal);
 		if (g_file_query_exists (fnormal, NULL))
-			path = g_strdup (local_normal);
+			path = g_strdup_printf ("file://%s", local_normal);
 		else 
-			path = g_strdup (normal);
+			path = g_strdup_printf ("file://%s", normal);
 		g_object_unref (fnormal);
 	} else {
 		GFile *flarge = g_file_new_for_uri (local_large);
 		if (g_file_query_exists (flarge, NULL))
 			path = g_strdup (local_large);
 		else 
-			path = g_strdup (large);
+			path = g_strdup_printf ("file://%s", large);
 		g_object_unref (flarge);
 	}
 

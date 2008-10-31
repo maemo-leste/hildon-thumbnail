@@ -205,19 +205,19 @@ typedef gpointer HildonThumbnailFactoryHandle;
 gboolean hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolean is_cropped);
 
 /**
- * hildon_thumbnail_get_path:
+ * hildon_thumbnail_get_uri:
  * @uri: URI of the original
  * @width: width
  * @height: height
  * @is_cropped: is cropped
  *
- * Gives you the absolute predicted path to the thumbnail for @uri. This function
+ * Gives you the absolute predicted URI to the thumbnail for @uri. This function
  * doesn't care about the thumbnail having been created (cached) already or not,
  * it just returns the predicted path.
  *
- * Returns: (caller-owns): the path to the thumbnail. You must free this.
+ * Returns: (caller-owns): the uri to the thumbnail. You must free this.
  **/
-gchar * hildon_thumbnail_get_path (const gchar *uri, guint width, guint height, gboolean is_cropped);
+gchar * hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean is_cropped);
 
 
 
