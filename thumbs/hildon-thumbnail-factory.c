@@ -154,7 +154,8 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 			}
 		}
 
-		item->callback (item, item->user_data, pixbuf, error);
+		if (item->callback)
+			item->callback (item, item->user_data, pixbuf, error);
 
 		/* Cleanup */
 		if (filei)
