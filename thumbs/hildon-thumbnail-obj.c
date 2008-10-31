@@ -87,6 +87,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 	GInputStream *stream = NULL;
 	GdkPixbuf *pixbuf = NULL;
 	GError *error = NULL;
+	gboolean err_d = FALSE;
 
 	/* Determine the exact type of thumbnail being requested */
 
@@ -98,7 +99,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 		} else {
 			filei = local;
 		}
-	} else if (r_priv->width > 128) {
+	} else if (r_priv->width >= 128) {
 		local = g_file_new_for_uri (r_priv->lpaths[1]);
 		if (!g_file_query_exists (local, NULL)) {
 			filei = g_file_new_for_path (r_priv->paths[1]);
@@ -131,6 +132,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 		/* Callback user function, passing the pixbuf and error */
 
 		if (r_priv->errors) {
+			err_d = TRUE;
 			if (!error)
 				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
 			else {
@@ -149,9 +151,6 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 			g_object_unref (stream);
 		}
 
-		if (error)
-			g_error_free (error);
-
 		if (pixbuf)
 			gdk_pixbuf_unref (pixbuf);
 	}
@@ -159,7 +158,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 	if (r_priv->ucallback) {
 		gchar *u = g_file_get_uri (filei); 
 
-		if (r_priv->errors) {
+		if (r_priv->errors && !err_d) {
 			if (!error)
 				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
 			else {
@@ -175,6 +174,9 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 
 	if (filei)
 		g_object_unref (filei);
+
+	if (error)
+		g_error_free (error);
 
 	if (r_priv->destroy)
 		r_priv->destroy (r_priv->user_data);
