@@ -149,6 +149,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 			else {
 				g_string_append (item->errors, " - ");
 				g_string_append (item->errors, error->message);
+				g_clear_error (&error);
 				g_set_error (&error, FACTORY_ERROR, 0, item->errors->str);
 			}
 		}

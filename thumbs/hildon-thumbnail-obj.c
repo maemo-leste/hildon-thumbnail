@@ -138,6 +138,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 			else {
 				g_string_append (r_priv->errors, " - ");
 				g_string_append (r_priv->errors, error->message);
+				g_clear_error (&error);
 				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
 			}
 		}
@@ -164,6 +165,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 			else {
 				g_string_append (r_priv->errors, " - ");
 				g_string_append (r_priv->errors, error->message);
+				g_clear_error (&error);
 				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
 			}
 		}
