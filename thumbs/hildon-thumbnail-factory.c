@@ -55,6 +55,7 @@ typedef struct {
 	HildonThumbnailFactoryFinishedCallback callback;
 	gpointer user_data;
 	gboolean canceled;
+	GString *errors;
 
 	guint handle_id;
 
@@ -97,6 +98,8 @@ static void thumb_item_free(ThumbsItem* item)
 {
 	g_free(item->uri);
 	g_free(item->mime_type);
+	if (item->errors)
+		g_string_free (item->errors, TRUE);
 	g_free(item);
 }
 
@@ -113,7 +116,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = g_strdup (cropped);
-		} else if (item->width > 128) {
+		} else if (item->width >= 128) {
 			path = g_strdup (large);
 		} else {
 			path = g_strdup (normal);
@@ -140,6 +143,16 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 
 		/* Callback user function, passing the pixbuf and error */
 
+		if (item->errors) {
+			if (!error)
+				g_set_error (&error, FACTORY_ERROR, 0, item->errors->str);
+			else {
+				g_string_append (item->errors, " - ");
+				g_string_append (item->errors, error->message);
+				g_set_error (&error, FACTORY_ERROR, 0, item->errors->str);
+			}
+		}
+
 		item->callback (item, item->user_data, pixbuf, error);
 
 		/* Cleanup */
@@ -159,6 +172,29 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 }
 
 static void
+on_task_error (DBusGProxy *proxy,
+		  guint       handle,
+		  GStrv       failed_uris,
+		  gint        error_code,
+		  gchar      *error_message,
+		  gpointer    user_data)
+{
+	gchar *key = g_strdup_printf ("%d", handle);
+	ThumbsItem *item = g_hash_table_lookup (tasks, key);
+
+	if (item) {
+		if (!item->errors) {
+			item->errors = g_string_new (error_message);
+		} else {
+			g_string_append (item->errors, " - ");
+			g_string_append (item->errors, error_message);
+		}
+	}
+
+	g_free (key);
+}
+
+static void
 on_task_finished (DBusGProxy *proxy,
 		  guint       handle,
 		  gpointer    user_data)
@@ -167,24 +203,24 @@ on_task_finished (DBusGProxy *proxy,
 	ThumbsItem *item = g_hash_table_lookup (tasks, key);
 
 	if (item) {
-		gchar *large = NULL, *normal = NULL, *cropped = NULL;
+			gchar *large = NULL, *normal = NULL, *cropped = NULL;
 
-		/* Get the large small and cropped path for the original
-		 * URI */
-		
-		hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
-											   &normal, &cropped,
-											   NULL, NULL, NULL);
+			/* Get the large small and cropped path for the original
+			 * URI */
+			
+			hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
+												   &normal, &cropped,
+												   NULL, NULL, NULL);
 
-		create_pixbuf_and_callback (item, large, normal, cropped, FALSE);
+			create_pixbuf_and_callback (item, large, normal, cropped, FALSE);
 
-		g_free (cropped);
-		g_free (normal);
-		g_free (large);
+			g_free (cropped);
+			g_free (normal);
+			g_free (large);
 
-		/* Remove the key from the hash, which means that we declare it 
-		 * handled. */
-		g_hash_table_remove (tasks, key);
+			/* Remove the key from the hash, which means that we declare it 
+			 * handled. */
+			g_hash_table_remove (tasks, key);
 	}
 
 	g_free (key);
@@ -317,9 +353,13 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 	ThumbsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
 	item->handle_id = OUT_handle;
-
-	/* Register the item as being handled */
-	g_hash_table_replace (tasks, key, item);
+	if (!error) {
+		/* Register the item as being handled */
+		g_hash_table_replace (tasks, key, item);
+	} else {
+		item->callback (item, item->user_data, NULL, error);
+		g_free (key);
+	}
 }
 
 typedef struct {
@@ -417,7 +457,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = cropped;
 			luri = local_cropped;
-		} else if (width > 128) {
+		} else if (width >= 128) {
 			path = large;
 			luri = local_large;
 		} else {
@@ -443,6 +483,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	item->flags = flags;
 	item->canceled = FALSE;
 	item->handle_id = 0;
+	item->errors = NULL;
 
 	if (have_all) {
 		ThumbsItemAndPaths *info = g_slice_new (ThumbsItemAndPaths);
@@ -664,12 +705,24 @@ static void init (void) {
 
 		dbus_g_proxy_add_signal (proxy, "Finished", 
 					G_TYPE_UINT, G_TYPE_INVALID);
+		dbus_g_proxy_add_signal (proxy, "Error", 
+					G_TYPE_UINT, 
+					G_TYPE_BOXED,
+					G_TYPE_INT,
+					G_TYPE_STRING, G_TYPE_INVALID);
 
 		dbus_g_proxy_connect_signal (proxy, "Finished",
 				     G_CALLBACK (on_task_finished),
 				     NULL,
 				     NULL);
+
+		dbus_g_proxy_connect_signal (proxy, "Error",
+				     G_CALLBACK (on_task_error),
+				     NULL,
+				     NULL);
+
 	}
+
 	had_init = TRUE;
 }
 
@@ -691,3 +744,65 @@ hildon_thumbnail_error_quark (void)
 {
 	return FACTORY_ERROR;
 }
+
+gboolean
+hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolean is_cropped)
+{
+	gboolean retval;
+	gchar *path;
+
+	path = hildon_thumbnail_get_path (uri, width, height, is_cropped);
+
+	retval = g_file_test (path, G_FILE_TEST_EXISTS);
+
+	g_free (path);
+
+	return retval;
+}
+
+gchar *
+hildon_thumbnail_get_path (const gchar *uri, guint width, guint height, gboolean is_cropped)
+{
+	gchar *large, *normal, *cropped, *local_large, *local_normal, *local_cropped;
+	gchar *path;
+
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
+								&cropped, &local_large, 
+								&local_normal, &local_cropped);
+
+	if (is_cropped) {
+
+		GFile *fcropped = g_file_new_for_uri (local_cropped);
+		if (g_file_query_exists (fcropped, NULL))
+			path = g_strdup (local_cropped);
+		else 
+			path = g_strdup (cropped);
+		g_object_unref (fcropped);
+
+	} else if (width >= 128) {
+
+		GFile *fnormal = g_file_new_for_uri (local_normal);
+		if (g_file_query_exists (fnormal, NULL))
+			path = g_strdup (local_normal);
+		else 
+			path = g_strdup (normal);
+		g_object_unref (fnormal);
+	} else {
+		GFile *flarge = g_file_new_for_uri (local_large);
+		if (g_file_query_exists (flarge, NULL))
+			path = g_strdup (local_large);
+		else 
+			path = g_strdup (large);
+		g_object_unref (flarge);
+	}
+
+	g_free (large);
+	g_free (normal);
+	g_free (cropped);
+	g_free (local_large);
+	g_free (local_normal);
+	g_free (local_cropped);
+
+	return path;
+}
+

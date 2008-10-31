@@ -147,6 +147,38 @@ void hildon_thumbnail_request_join (HildonThumbnailRequest *self);
 
 typedef gpointer HildonThumbnailFactoryHandle;
 
+
+/**
+ * hildon_thumbnail_is_cached:
+ * @uri: URI of the original
+ * @width: width
+ * @height: height
+ * @is_cropped: is cropped
+ *
+ * Determines whether or not the there's already a thumbnail for @uri
+ *
+ * Returns: Whether or not a thumbnail was once made
+ **/
+
+gboolean hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolean is_cropped);
+
+/**
+ * hildon_thumbnail_get_path:
+ * @uri: URI of the original
+ * @width: width
+ * @height: height
+ * @is_cropped: is cropped
+ *
+ * Gives you the absolute predicted path to the thumbnail for @uri. This function
+ * doesn't care about the thumbnail having been created (cached) already or not,
+ * it just returns the predicted path.
+ *
+ * Returns: (caller-owns): the path to the thumbnail. You must free this.
+ **/
+gchar * hildon_thumbnail_get_path (const gchar *uri, guint width, guint height, gboolean is_cropped);
+
+
+
 /**
  * HildonThumbnailFlags:
  *

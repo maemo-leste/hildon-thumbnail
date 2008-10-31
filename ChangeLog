@@ -1,3 +1,9 @@
+2008-10-31  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-factory.h: Error reporting and added to
+	convenience APIs 
+
 2008-10-30  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/utils.c: Stripping album and artist strings
