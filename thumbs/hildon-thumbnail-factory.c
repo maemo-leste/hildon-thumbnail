@@ -206,13 +206,35 @@ on_task_finished (DBusGProxy *proxy,
 
 	if (item) {
 			gchar *large = NULL, *normal = NULL, *cropped = NULL;
+			gchar *path;
 
 			/* Get the large small and cropped path for the original
 			 * URI */
 			
 			hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
 												   &normal, &cropped,
-												   NULL, NULL, NULL);
+												   NULL, NULL, NULL,
+												   FALSE);
+
+			if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
+				path = cropped;
+			} else if (item->width >= 128) {
+				path = large;
+			} else {
+				path = normal;
+			}
+
+			if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
+
+				g_free (large); large = NULL;
+				g_free (normal); normal = NULL;
+				g_free (cropped); cropped = NULL;
+
+				hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
+												   &normal, &cropped,
+												   NULL, NULL, NULL,
+												   TRUE);
+			}
 
 			create_pixbuf_and_callback (item, large, normal, cropped, FALSE);
 
@@ -434,19 +456,42 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 				gpointer user_data, 
 				HildonThumbnailFlags flags, ...)
 {
-	gchar *large, *normal, *cropped;
-	gchar *local_large, *local_normal, *local_cropped;
+	gchar *large = NULL, *normal = NULL, *cropped = NULL;
+	gchar *local_large = NULL, *local_normal = NULL, *local_cropped = NULL;
 	ThumbsItem *item;
 	GStrv uris;
 	GStrv mimes;
 	gboolean have_all = FALSE;
+	guint y = 0;
 
 	g_return_val_if_fail(uri != NULL && mime_type != NULL && callback != NULL,
 			     NULL);
 
-	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-								&cropped, &local_large, 
-								&local_normal, &local_cropped);
+	for (y = 0; y < 2; y++) {
+
+		g_free (normal); normal = NULL;
+		g_free (large); large = NULL;
+		g_free (cropped); cropped = NULL;
+		g_free (local_normal); local_normal = NULL;
+		g_free (local_large); local_large = NULL;
+		g_free (local_cropped); local_cropped = NULL;
+
+		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
+									&cropped, &local_large, 
+									&local_normal, &local_cropped,
+									(y == 1));
+
+		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
+			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
+				break;
+		} else if (width >= 128) {
+			if (g_file_test (large, G_FILE_TEST_EXISTS))
+				break;
+		} else {
+			if (g_file_test (normal, G_FILE_TEST_EXISTS))
+				break;
+		}
+	}
 
 	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
 		g_unlink (large);
@@ -772,7 +817,7 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
 								&cropped, &local_large, 
-								&local_normal, &local_cropped);
+								&local_normal, &local_cropped, FALSE);
 
 	if (is_cropped) {
 

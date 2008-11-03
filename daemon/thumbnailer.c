@@ -424,7 +424,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		gchar *normal = NULL, *large = NULL, *cropped = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (urls[i], &large, &normal, &cropped, 
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL, FALSE);
 
 		get_some_file_infos (urls[i], &mime_type, 
 				     mime_types?mime_types[i]:NULL, 
@@ -433,6 +433,28 @@ do_the_work (WorkTask *task, gpointer user_data)
 		has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
 			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
 			     g_file_test (cropped, G_FILE_TEST_EXISTS));
+
+		if (!has_thumb) {
+			gchar *pnormal = NULL, *plarge = NULL, *pcropped = NULL;
+			hildon_thumbnail_util_get_thumb_paths (urls[i], &plarge, &pnormal, &pcropped, 
+						       NULL, NULL, NULL, FALSE);
+			has_thumb = (g_file_test (plarge, G_FILE_TEST_EXISTS) && 
+				     g_file_test (pnormal, G_FILE_TEST_EXISTS) && 
+				     g_file_test (pcropped, G_FILE_TEST_EXISTS));
+
+			if (has_thumb) {
+				g_free (normal);
+				normal = pnormal;
+				g_free (large);
+				large = plarge;
+				g_free (cropped);
+				cropped = pcropped;
+			} else {
+				g_free (pcropped);
+				g_free (pnormal);
+				g_free (plarge);
+			}
+		}
 
 		g_free (normal);
 		g_free (large);
@@ -648,6 +670,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 		while (!had_err && urlss[i] != NULL) {
 			if (strv_contains (remotefss, urlss[i])) {
+			  guint y = 0;
+			  for (y = 0; y < 2; y++) {
 				gchar *from[4] = { NULL, NULL, NULL, NULL };
 				gchar *to[4] = { NULL, NULL, NULL, NULL };
 				guint z = 0;
@@ -659,7 +683,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 								       &from[2], 
 								       &to[0], 
 								       &to[1], 
-								       &to[2]);
+								       &to[2], 
+								       (y == 0));
 
 				for (z = 0; z < 3 && !error; z++) {
 					GFile *from_file, *to_file;
@@ -678,6 +703,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 				if (error)
 					g_error_free (error);
+			  }
 			}
 			i++;
 		}
@@ -719,6 +745,8 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 	while (from_urls[i] != NULL && to_urls[i] != NULL) {
 
+	  guint y = 0;
+	  for (y = 0; i < 2; y++ ) {
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
 		gchar *from_normal = NULL, 
@@ -731,13 +759,15 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_large, 
 						       &from_normal, 
 						       &from_cropped,
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL,
+						       (y == 0));
 
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_large, 
 						       &to_normal, 
 						       &to_cropped,
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL,
+						       (y == 0));
 
 		g_rename (from_large, to_large);
 		g_rename (from_normal, to_normal);
@@ -750,7 +780,8 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		g_free (to_large);
 		g_free (to_cropped);
 
-		i++;
+	  }
+	  i++;
 	}
 
 	dbus_g_method_return (context);
@@ -767,7 +798,8 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 	keep_alive ();
 
 	while (from_urls[i] != NULL && to_urls[i] != NULL) {
-
+	  guint y = 0;
+	  for (y = 0; i < 2; y++ ) {
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
 		gchar *from_s[3] = { NULL, NULL, NULL };
@@ -777,12 +809,14 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 		hildon_thumbnail_util_get_thumb_paths (from_uri, &from_s[0], 
 						       &from_s[1], 
 						       &from_s[2],
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL,
+						       (y == 0));
 
 		hildon_thumbnail_util_get_thumb_paths (to_uri, &to_s[0], 
 						       &to_s[1], 
 						       &to_s[2],
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL,
+						       (y == 0));
 
 		for (n = 0; n<3; n++) {
 			GFile *from, *to;
@@ -810,8 +844,8 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 			g_free (from_s[n]);
 			g_free (to_s[n]);
 		}
-
-		i++;
+	  }
+	  i++;
 	}
 
 	dbus_g_method_return (context);
@@ -827,7 +861,8 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 	keep_alive ();
 
 	while (urls[i] != NULL) {
-
+	  guint y = 0;
+	  for (y = 0; i < 2; y++ ) {
 		const gchar *uri = urls[i];
 		gchar *normal = NULL, 
 		      *large = NULL, 
@@ -836,7 +871,8 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, 
 						       &normal, 
 						       &cropped,
-						       NULL, NULL, NULL);
+						       NULL, NULL, NULL,
+						       (y == 0));
 
 		g_unlink (large);
 		g_unlink (normal);
@@ -845,8 +881,8 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 		g_free (normal);
 		g_free (large);
 		g_free (cropped);
-
-		i++;
+	  }
+	  i++;
 	}
 
 	dbus_g_method_return (context);

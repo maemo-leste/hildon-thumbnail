@@ -43,6 +43,7 @@
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
+static gboolean do_pngs = FALSE;
 static GHashTable *execs = NULL;
 static GFileMonitor *monitor = NULL;
 
@@ -270,7 +271,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		content_type = g_file_info_get_content_type (info);
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-						       &cropped, NULL, NULL, NULL);
+						       &cropped, NULL, NULL, NULL, do_pngs);
 
 		mime_type = g_strdup (content_type);
 		mime_type_at = g_strdup (content_type);
@@ -360,6 +361,7 @@ reload_config (const gchar *config)
 	GKeyFile *keyfile;
 	GStrv mimetypes;
 	guint i = 0, length;
+	GError *error = NULL;
 
 	if (!execs)
 		execs = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -370,11 +372,18 @@ reload_config (const gchar *config)
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
+		do_pngs = FALSE;
 		g_key_file_free (keyfile);
 		return;
 	}
 
 	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
+	do_pngs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoPngs", &error);
+
+	if (error) {
+		do_pngs = FALSE;
+		g_error_free (error);
+	}
 
 	mimetypes = g_key_file_get_string_list (keyfile, "Hildon Thumbnailer", "MimeTypes", &length, NULL);
 

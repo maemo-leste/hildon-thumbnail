@@ -48,6 +48,7 @@
 
 static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
+static gboolean do_pngs = FALSE;
 static gboolean do_vidthumbs = TRUE;
 static GFileMonitor *monitor = NULL;
 
@@ -93,28 +94,33 @@ static gboolean
 save_thumb_file_meta (GdkPixbuf *pixbuf, const gchar *file, guint64 mtime, const gchar *uri, GError **error)
 {
 	gboolean ret;
-	char mtime_str[64];
+	if (do_pngs) {
+		char mtime_str[64];
 
-	const char *default_keys[] = {
-	    URI_OPTION,
-	    MTIME_OPTION,
-	    SOFTWARE_OPTION,
-	    NULL
-	};
+		const char *default_keys[] = {
+			URI_OPTION,
+			MTIME_OPTION,
+			SOFTWARE_OPTION,
+			NULL
+		};
 
-	const char *default_values[] = {
-	    uri,
-	    mtime_str,
-	    HILDON_THUMBNAIL_APPLICATION "-" VERSION,
-	    NULL
-	};
+		const char *default_values[] = {
+			uri,
+			mtime_str,
+			HILDON_THUMBNAIL_APPLICATION "-" VERSION,
+			NULL
+		};
 
-	g_sprintf(mtime_str, "%lu", mtime);
+		g_sprintf(mtime_str, "%lu", mtime);
 
-	ret = gdk_pixbuf_savev (pixbuf, file, "png", 
-				(char **) default_keys, 
-				(char **) default_values, 
-				error);
+		ret = gdk_pixbuf_savev (pixbuf, file, "png", 
+					(char **) default_keys, 
+					(char **) default_values, 
+					error);
+	} else {
+		ret = gdk_pixbuf_save (pixbuf, file, "jpeg", 
+							   error, NULL);
+	}
 
 	return ret;
 }
@@ -434,7 +440,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		GError *nerror = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (uris[i], &large, &normal, 
-						       &cropped, NULL, NULL, NULL);
+						       &cropped, NULL, NULL, NULL,
+						       do_pngs);
 
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);
@@ -512,16 +519,25 @@ static void
 reload_config (const gchar *config)
 {
 	GKeyFile *keyfile;
+	GError *error = NULL;
 
 	keyfile = g_key_file_new ();
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
+		do_pngs = FALSE;
 		g_key_file_free (keyfile);
 		return;
 	}
 
 	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
+	do_pngs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoPngs", &error);
+
+	if (error) {
+		do_pngs = FALSE;
+		g_error_free (error);
+	}
+
 	do_vidthumbs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoVideoThumbnails", NULL);
 
 	g_key_file_free (keyfile);

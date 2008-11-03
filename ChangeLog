@@ -1,3 +1,24 @@
+2008-11-03  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/utils.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/utils.h
+	* daemon/thumbnailer.c: Storing as JPEG instead of PNG, since this 
+	commit we therefore no longer follow the thumbnail-spec. If you
+	set the DoPngs in all your thumbnailer plugin's configurations, then
+	you will still follow the thumbnail-spec.
+
+	The reason for this is that a) JPEG thumbnails are smaller
+				    b) Smaller files means loading faster
+				    c) The device has libraries that load JPEG
+				       files faster and better than that it can
+				       load PNG files.
+
 2008-10-31  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c
