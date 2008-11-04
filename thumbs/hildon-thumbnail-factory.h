@@ -51,19 +51,19 @@ typedef struct _HildonThumbnailFactoryClass HildonThumbnailFactoryClass;
 typedef struct _HildonThumbnailRequestClass HildonThumbnailRequestClass;
 
 struct _HildonThumbnailFactory {
-	GObject *parent;
+	GObject parent;
 };
 
 struct _HildonThumbnailFactoryClass {
-	GObjectClass *parent_class;
+	GObjectClass parent_class;
 };
 
 struct _HildonThumbnailRequest {
-	GObject *parent;
+	GObject parent;
 };
 
 struct _HildonThumbnailRequestClass {
-	GObjectClass *parent_class;
+	GObjectClass parent_class;
 };
 
 GType hildon_thumbnail_factory_get_type (void);

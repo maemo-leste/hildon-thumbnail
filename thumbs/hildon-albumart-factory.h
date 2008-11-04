@@ -51,19 +51,19 @@ typedef struct _HildonAlbumartFactoryClass HildonAlbumartFactoryClass;
 typedef struct _HildonAlbumartRequestClass HildonAlbumartRequestClass;
 
 struct _HildonAlbumartFactory {
-	GObject *parent;
+	GObject parent;
 };
 
 struct _HildonAlbumartFactoryClass {
-	GObjectClass *parent_class;
+	GObjectClass parent_class;
 };
 
 struct _HildonAlbumartRequest {
-	GObject *parent;
+	GObject parent;
 };
 
 struct _HildonAlbumartRequestClass {
-	GObjectClass *parent_class;
+	GObjectClass parent_class;
 };
 
 GType hildon_albumart_factory_get_type (void);

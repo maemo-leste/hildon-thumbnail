@@ -204,6 +204,7 @@ on_task_finished (DBusGProxy *proxy,
 	g_free (key);
 }
 
+static gboolean waiting_for_cb = FALSE;
 
 static void
 on_task_error (DBusGProxy *proxy,
@@ -353,6 +354,7 @@ hildon_thumbnail_factory_class_init (HildonThumbnailFactoryClass *klass)
 	g_type_class_add_private (object_class, sizeof (HildonThumbnailFactoryPrivate));
 }
 
+
 static void 
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
@@ -372,6 +374,8 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 		if (r_priv->ucallback)
 			r_priv->ucallback (r_priv->factory, NULL, error, r_priv->user_data);
 	}
+
+	waiting_for_cb = FALSE;
 
 	g_object_unref (request);
 }
@@ -435,6 +439,7 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	}
 
 	if (!have) {
+		waiting_for_cb = TRUE;
 		org_freedesktop_thumbnailer_Generic_queue_async (f_priv->proxy, 
 								 (const char **) r_priv->uris, 
 								 (const char **) mime_types,
@@ -494,8 +499,11 @@ hildon_thumbnail_factory_join (HildonThumbnailFactory *self)
 {
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
 
+	while (waiting_for_cb)
+		g_main_context_iteration (NULL, FALSE);
+
 	while(g_hash_table_size (f_priv->tasks) != 0) {
-		g_main_context_iteration (NULL, TRUE);
+		g_main_context_iteration (NULL, FALSE);
 	}
 }
 
@@ -529,8 +537,11 @@ hildon_thumbnail_request_join (HildonThumbnailRequest *self)
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
 	HildonThumbnailRequest *found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 
+	while (waiting_for_cb)
+		g_main_context_iteration (NULL, FALSE);
+
 	while (found) {
-		g_main_context_iteration (NULL, TRUE);
+		g_main_context_iteration (NULL, FALSE);
 		found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 	}
 }

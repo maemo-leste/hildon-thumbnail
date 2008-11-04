@@ -371,6 +371,8 @@ hildon_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 	g_free (cropped_dir);
 }
 
+static gboolean waiting_for_cb = FALSE;
+
 static void 
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
@@ -384,6 +386,8 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 		item->callback (item, item->user_data, NULL, error);
 		g_free (key);
 	}
+	waiting_for_cb = FALSE;
+
 }
 
 typedef struct {
@@ -570,6 +574,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		} else
 			mimes = NULL;
 
+		waiting_for_cb = TRUE;
 		org_freedesktop_thumbnailer_Generic_queue_async (proxy, 
 														 (const char **) uris, 
 														 (const char **) mimes,
@@ -597,22 +602,22 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
 static void 
 on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
 {
-	ThumbsItem *item = userdata;
-	gchar *key = g_strdup_printf ("%d", item->handle_id);
-
-	/* Unregister the item */
-	g_hash_table_remove (tasks, key);
-	g_free (key);
 }
 
 void hildon_thumbnail_factory_cancel(HildonThumbnailFactoryHandle handle)
 {
 	ThumbsItem *item = THUMBS_ITEM (handle);
+	gchar *key;
 
 	init();
 
 	if (item->handle_id == 0)
 		return;
+
+	key = g_strdup_printf ("%d", item->handle_id);
+	/* Unregister the item */
+	g_hash_table_remove (tasks, key);
+	g_free (key);
 
 	/* We don't do real canceling, we just do unqueing */
 	org_freedesktop_thumbnailer_Generic_unqueue_async (proxy, item->handle_id, 
@@ -624,8 +629,11 @@ void hildon_thumbnail_factory_wait()
 {
 	init();
 
+	while (waiting_for_cb)
+		g_main_context_iteration (NULL, FALSE);
+
 	while(g_hash_table_size (tasks) != 0) {
-		g_main_context_iteration(NULL, TRUE);
+		g_main_context_iteration(NULL, FALSE);
 	}
 }
 

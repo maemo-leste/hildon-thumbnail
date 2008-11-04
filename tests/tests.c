@@ -53,6 +53,12 @@ void thumb_callback(HildonThumbnailFactoryHandle handle, gpointer user_data,
     }
 }
 
+void thumb_callback_new (HildonThumbnailFactory *self, GdkPixbuf *thumbnail, GError *error, gpointer user_data)
+{
+    g_message("Callback invoked, pixbuf=%08X, error=%s", (int)thumbnail,
+              error ? error->message : "NULL");             
+}
+
 gchar *to_uri(gchar *file) {
     gchar *str;
     gchar *cur = g_get_current_dir();
@@ -67,7 +73,7 @@ gchar *to_uri(gchar *file) {
 }
 
 // Works only when current directory == top build directory
-void test_thumbs() {
+void test_thumbs_old() {
     HildonThumbnailFactoryHandle h, h1, h2;
     gchar *uri1, *uri2, *uri3,*uri4;
     char *file1 = "tests/images/Debian.jpg";
@@ -166,6 +172,67 @@ void test_thumbs() {
     g_free(uri4);
 }
 
+void test_thumbs_new() {
+    HildonThumbnailFactory *f;
+    HildonThumbnailRequest *h1, *h2, *h3, *h4;
+
+    gchar *uri1, *uri2, *uri3,*uri4;
+    char *file1 = "tests/images/Debian.jpg";
+    char *file2 = "tests/images/Splash-Debian.png";
+    char *file3 = "tests/images/error-test.png";
+    char *file4 = "tests/images/test.mp3";
+
+    uri1 = to_uri(file1);
+    uri2 = to_uri(file2);
+    uri3 = to_uri(file3);
+    uri4 = to_uri(file4);
+
+    printf("--- Loading new tests ---\n");
+
+    f = hildon_thumbnail_factory_get_instance ();
+
+    h1 = hildon_thumbnail_factory_request_pixbuf (f, uri1, 
+		100, 100, FALSE, "image/png", thumb_callback_new, 
+		NULL, NULL);
+    h2 = hildon_thumbnail_factory_request_pixbuf (f, uri3, 
+		100, 100, FALSE,"image/png", thumb_callback_new, 
+		NULL, NULL);
+    h3 = hildon_thumbnail_factory_request_pixbuf (f, uri4, 
+		100, 100, TRUE, "image/png", thumb_callback_new, 
+		NULL, NULL);
+    h4 = hildon_thumbnail_factory_request_pixbuf (f, uri4, 
+		100, 100, FALSE, "image/png", thumb_callback_new, 
+		NULL, NULL);
+          
+
+
+    hildon_thumbnail_factory_join (f);
+
+	g_object_unref (h1);
+    g_object_unref (h2);
+    g_object_unref (h3);
+    g_object_unref (h4);
+
+	g_object_unref (f);
+
+    printf("--- Filemanager tests ---\n");
+    // File management functionality
+    rename(file1, file3);
+    hildon_thumbnail_factory_move(uri1, uri3);
+    rename(file3, file1);
+    hildon_thumbnail_factory_move(uri3, uri1);
+    link(file1, file3);
+    hildon_thumbnail_factory_copy(uri1, uri3);
+    unlink(file3);
+    hildon_thumbnail_factory_remove(uri3);
+
+    g_free(uri1);
+    g_free(uri2);
+    g_free(uri3);
+    g_free(uri4);
+}
+
+
 void test_clean()
 {
     printf("--- Clean test ---\n");
@@ -176,11 +243,15 @@ void test_clean()
 int main() {
     printf("Running tests...\n");
 
+    g_type_init ();
+
     if(!g_file_test("tests/images", G_FILE_TEST_IS_DIR)) {
         g_error("Tester can't find test images in tests/images directory");
 
         return 1;
     }
+
+	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 
     hildon_thumbnail_factory_set_debug(TRUE);
 
@@ -195,7 +266,16 @@ int main() {
     g_warning("Warning test");
 
     test_clean();
-    test_thumbs();
+    test_thumbs_old();
+
+    test_clean();
+    test_thumbs_new();
+
+	g_timeout_add_seconds (10, (GSourceFunc) g_main_loop_quit, loop);
+
+	g_main_loop_run (loop);
+
+	g_main_loop_unref (loop);
 
     printf("Done!\n");
     return 0;

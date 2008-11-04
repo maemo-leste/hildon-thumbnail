@@ -397,6 +397,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 		"ftps://", "dav://", "nfs://",
 		NULL };
 
+	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
+			task->num);
+
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
 	if (task->unqueued) {
@@ -407,9 +410,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	/* We split the request into groups that have items with the same 
 	  * mime-type and one group with items that already have a thumbnail */
-
-	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
-			task->num);
 
 	schemes = g_hash_table_new_full (g_str_hash, g_str_equal, 
 					 (GDestroyNotify) g_free, 
@@ -718,10 +718,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	g_hash_table_unref (schemes);
 
-	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
-			       task->num);
 
 unqueued:
+
+	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+			       task->num);
 
 	g_object_unref (task->object);
 	g_strfreev (task->urls);
@@ -746,7 +747,7 @@ thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 	while (from_urls[i] != NULL && to_urls[i] != NULL) {
 
 	  guint y = 0;
-	  for (y = 0; i < 2; y++ ) {
+	  for (y = 0; y < 2; y++ ) {
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
 		gchar *from_normal = NULL, 
@@ -799,7 +800,7 @@ thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMeth
 
 	while (from_urls[i] != NULL && to_urls[i] != NULL) {
 	  guint y = 0;
-	  for (y = 0; i < 2; y++ ) {
+	  for (y = 0; y < 2; y++ ) {
 		const gchar *from_uri = from_urls[i];
 		const gchar *to_uri = to_urls[i];
 		gchar *from_s[3] = { NULL, NULL, NULL };
@@ -862,7 +863,7 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 
 	while (urls[i] != NULL) {
 	  guint y = 0;
-	  for (y = 0; i < 2; y++ ) {
+	  for (y = 0; y < 2; y++ ) {
 		const gchar *uri = urls[i];
 		gchar *normal = NULL, 
 		      *large = NULL, 
@@ -1007,8 +1008,9 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      NULL, NULL,
 			      thumbnailer_marshal_VOID__UINT_BOXED_INT_STRING,
 			      G_TYPE_NONE,
-			      3,
+			      4,
 			      G_TYPE_UINT,
+			      G_TYPE_BOXED,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
 
