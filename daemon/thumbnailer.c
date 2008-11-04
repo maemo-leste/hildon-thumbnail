@@ -139,7 +139,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 		} else {
 			PluginRegistration *o_reg = g_hash_table_lookup (hash, mime_type);
 
-			if (o_reg && o_reg->priority < priority) {
+			if (!o_reg || (o_reg && o_reg->priority < priority)) {
 				PluginRegistration *reg = g_slice_new (PluginRegistration);
 
 				reg->plugin = plugin;

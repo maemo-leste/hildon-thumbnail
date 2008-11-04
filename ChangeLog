@@ -1,5 +1,12 @@
 2008-11-04  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-thumbnail-obj.c
+	* tests/tests.c
+	* daemon/thumbnailer.c: More bugfixes in determining the path in the
+	new client API
+
+2008-11-04  Philip Van Hoof  <philip@codeminded.be>
+
 	* tests/tests.c
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c

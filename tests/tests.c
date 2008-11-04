@@ -187,17 +187,18 @@ void test_thumbs_new() {
     uri3 = to_uri(file3);
     uri4 = to_uri(file4);
 
-    printf("--- Loading new tests ---\n");
+    printf("--- Loading new tests ---\n \t%s\n\t%s\n\t%s\n\t%s\n",
+		   	uri1, uri2, uri3, uri4);
 
     f = hildon_thumbnail_factory_get_instance ();
 
     h1 = hildon_thumbnail_factory_request_pixbuf (f, uri1, 
 		100, 100, FALSE, "image/png", thumb_callback_new, 
 		NULL, NULL);
-    h2 = hildon_thumbnail_factory_request_pixbuf (f, uri3, 
+    h2 = hildon_thumbnail_factory_request_pixbuf (f, uri2, 
 		100, 100, FALSE,"image/png", thumb_callback_new, 
 		NULL, NULL);
-    h3 = hildon_thumbnail_factory_request_pixbuf (f, uri4, 
+    h3 = hildon_thumbnail_factory_request_pixbuf (f, uri3, 
 		100, 100, TRUE, "image/png", thumb_callback_new, 
 		NULL, NULL);
     h4 = hildon_thumbnail_factory_request_pixbuf (f, uri4, 

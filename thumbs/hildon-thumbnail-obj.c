@@ -41,8 +41,6 @@
 typedef struct {
 	GStrv uris;
 	gchar *key;
-	gchar *paths[3];
-	gchar *lpaths[3];
 	guint width, height;
 	gboolean cropped;
 	HildonThumbnailRequestPixbufCallback pcallback;
@@ -88,35 +86,93 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 	GdkPixbuf *pixbuf = NULL;
 	GError *error = NULL;
 	gboolean err_d = FALSE;
+	gboolean have = FALSE;
+	guint y, i, x;
 
-	/* Determine the exact type of thumbnail being requested */
+	gchar *paths[3] = { NULL, NULL, NULL };
+	gchar *lpaths[3] = { NULL, NULL, NULL };
+
+	for (y = 0 ; y < 2 && !have; y++ ) {
+
+		have = TRUE;
+
+		for (x = 0; x < 3; x++) {
+			g_free (paths[x]); 
+			paths[x] = NULL;
+			g_free (lpaths[x]); 
+			lpaths[x] = NULL;
+		}
+
+		hildon_thumbnail_util_get_thumb_paths (r_priv->uris[0], 
+						       &paths[0], 
+						       &paths[1], 
+						       &paths[2],
+						       &lpaths[0],
+						       &lpaths[1],
+						       &lpaths[2], 
+						       (y==0));
+
+		for (i = 0; i < 3 && have; i++) {
+			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
+				g_file_test (lpaths[i], G_FILE_TEST_EXISTS));
+		}
+	}
 
 	if (r_priv->cropped) {
-		local = g_file_new_for_uri (r_priv->lpaths[2]);
+		GFile *temp = g_file_new_for_uri (lpaths[2]);
+		if (!g_file_query_exists (temp, NULL)) {
+			filei = g_file_new_for_path (paths[2]);
+			g_object_unref (temp);
+		} else
+			filei = temp;
+	} else if (r_priv->width >= 128) {
+		GFile *temp = g_file_new_for_uri (lpaths[0]);
+		if (!g_file_query_exists (temp, NULL)) {
+			filei = g_file_new_for_path (paths[0]);
+			g_object_unref (temp);
+		} else
+			filei = temp;
+	} else {
+		GFile *temp = g_file_new_for_uri (lpaths[1]);
+		if (!g_file_query_exists (temp, NULL)) {
+			filei = g_file_new_for_path (paths[1]);
+			g_object_unref (temp);
+		} else
+			filei = temp;
+	}
+
+	if (r_priv->cropped) {
+		local = g_file_new_for_uri (lpaths[2]);
 		if (!g_file_query_exists (local, NULL)) {
-			filei = g_file_new_for_path (r_priv->paths[2]);
+			filei = g_file_new_for_path (paths[2]);
 			g_object_unref (local);
 		} else {
 			filei = local;
 		}
 	} else if (r_priv->width >= 128) {
-		local = g_file_new_for_uri (r_priv->lpaths[1]);
+		local = g_file_new_for_uri (lpaths[1]);
 		if (!g_file_query_exists (local, NULL)) {
-			filei = g_file_new_for_path (r_priv->paths[1]);
+			filei = g_file_new_for_path (paths[1]);
 			g_object_unref (local);
 		} else {
 			filei = local;
 		}
 	} else {
-		local = g_file_new_for_uri (r_priv->lpaths[0]);
+		local = g_file_new_for_uri (lpaths[0]);
 		if (!g_file_query_exists (local, NULL)) {
-			filei = g_file_new_for_path (r_priv->paths[0]);
+			filei = g_file_new_for_path (paths[0]);
 			g_object_unref (local);
 		} else {
 			filei = local;
 		}
 	}
 
+	for (x = 0; x < 3; x++) {
+		g_free (paths[x]); 
+		paths[x] = NULL;
+		g_free (lpaths[x]); 
+		lpaths[x] = NULL;
+	}
 
 	if (r_priv->pcallback) {
 
@@ -293,12 +349,6 @@ hildon_thumbnail_request_init (HildonThumbnailRequest *self)
 	r_priv->uris = NULL;
 	r_priv->key = NULL;
 	r_priv->cropped = FALSE;
-	r_priv->paths[0] = NULL;
-	r_priv->paths[1] = NULL;
-	r_priv->paths[2] = NULL;
-	r_priv->lpaths[0] = NULL;
-	r_priv->lpaths[1] = NULL;
-	r_priv->lpaths[2] = NULL;
 	r_priv->factory = NULL;
 	r_priv->pcallback = NULL;
 	r_priv->ucallback = NULL;
@@ -323,10 +373,6 @@ hildon_thumbnail_request_finalize (GObject *object)
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (object);
 	guint i;
 
-	for (i = 0; i < 3; i++) {
-		g_free (r_priv->paths[i]);
-		g_free (r_priv->lpaths[i]);
-	}
 	if (r_priv->uris)
 		g_strfreev (r_priv->uris);
 	g_free (r_priv->key);
@@ -394,34 +440,44 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	HildonThumbnailRequest *request = g_object_new (HILDON_TYPE_THUMBNAIL_REQUEST, NULL);
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
-	guint i;
 	gboolean have = FALSE;
 	GStrv mime_types = NULL;
-	guint y;
+	guint y, i, x;
+
+	gchar *paths[3] = { NULL, NULL, NULL };
+	gchar *lpaths[3] = { NULL, NULL, NULL };
 
 	for (y = 0 ; y < 2 && !have; y++ ) {
 
 		have = TRUE;
 
-		g_free (r_priv->paths[0]); r_priv->paths[0] = NULL;
-		g_free (r_priv->paths[1]); r_priv->paths[1] = NULL;
-		g_free (r_priv->paths[2]); r_priv->paths[2] = NULL;
-		g_free (r_priv->lpaths[0]); r_priv->lpaths[0] = NULL;
-		g_free (r_priv->lpaths[1]); r_priv->lpaths[1] = NULL;
-		g_free (r_priv->lpaths[2]); r_priv->lpaths[2] = NULL;
+		for (x = 0; x < 3; x++) {
+			g_free (paths[x]); 
+			paths[x] = NULL;
+			g_free (lpaths[x]); 
+			lpaths[x] = NULL;
+		}
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &r_priv->paths[0], 
-						       &r_priv->paths[1], 
-						       &r_priv->paths[2],
-						       &r_priv->lpaths[0],
-						       &r_priv->lpaths[1],
-						       &r_priv->lpaths[2], 
-						       (y==1));
+		hildon_thumbnail_util_get_thumb_paths (uri, 
+						       &paths[0], 
+						       &paths[1], 
+						       &paths[2],
+						       &lpaths[0],
+						       &lpaths[1],
+						       &lpaths[2], 
+						       (y==0));
 
 		for (i = 0; i < 3 && have; i++) {
-			have = (g_file_test (r_priv->paths[i], G_FILE_TEST_EXISTS) || 
-				g_file_test (r_priv->lpaths[i], G_FILE_TEST_EXISTS));
+			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
+				g_file_test (lpaths[i], G_FILE_TEST_EXISTS));
 		}
+	}
+
+	for (x = 0; x < 3; x++) {
+		g_free (paths[x]); 
+		paths[x] = NULL;
+		g_free (lpaths[x]); 
+		lpaths[x] = NULL;
 	}
 
 	r_priv->uris = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
