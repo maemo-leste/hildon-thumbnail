@@ -42,12 +42,20 @@ libhildonthumbnail_la_SOURCES = hildon-thumbnail-factory.c \
 	hildon-thumbnail-factory.h thumbnailer-client.h \
 	pixbuf-io-loader.c hildon-albumart-factory.c \
 	hildon-albumart-factory.h albumart-client.h \
-	hildon-thumbnail-obj.c hildon-albumart-obj.c
+	hildon-thumbnail-obj.c hildon-albumart-obj.c \
+	thumbnailer-marshal.c thumbnailer-marshal.h
+
+thumbnailer-marshal.h: thumbnailer-marshal.list
+	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --header > $@
+
+thumbnailer-marshal.c: thumbnailer-marshal.list
+	$(GLIB_GENMARSHAL) $< --prefix=thumbnailer_marshal --body > $@
 
 %-client.h: $(top_srcdir)/daemon/%.xml
 	$(DBUSBINDINGTOOL) --mode=glib-client --output=$@ --prefix=$(subst -,_,$*) $^
 
-BUILT_SOURCES = thumbnailer-client.h albumart-client.h
+BUILT_SOURCES = thumbnailer-client.h albumart-client.h \
+	thumbnailer-marshal.h thumbnailer-marshal.c
 
 libhildonthumbnaildir=$(includedir)/hildon-thumbnail
 libhildonthumbnail_HEADERS = hildon-thumbnail-factory.h hildon-thumber-common.h \

@@ -1,5 +1,13 @@
 2008-11-04  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/Makefile.am
+	* thumbs/thumbnailer-marshal.list: Registering client-side marshallers
+	for the Error signal
+
+2008-11-04  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-obj.c
 	* tests/tests.c
 	* daemon/thumbnailer.c: More bugfixes in determining the path in the

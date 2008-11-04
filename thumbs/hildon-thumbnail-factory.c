@@ -25,6 +25,7 @@
 #include "hildon-thumbnail-factory.h"
 #include "hildon-thumber-common.h"
 #include "thumbnailer-client.h"
+#include "thumbnailer-marshal.h"
 #include "utils.h"
 
 #include <stdlib.h>
@@ -760,11 +761,21 @@ static void init (void) {
 
 		dbus_g_proxy_add_signal (proxy, "Finished", 
 					G_TYPE_UINT, G_TYPE_INVALID);
+
+		dbus_g_object_register_marshaller (thumbnailer_marshal_VOID__UINT_BOXED_INT_STRING,
+					G_TYPE_NONE,
+					G_TYPE_UINT, 
+					G_TYPE_BOXED,
+					G_TYPE_INT,
+					G_TYPE_STRING,
+					G_TYPE_INVALID);
+	
 		dbus_g_proxy_add_signal (proxy, "Error", 
 					G_TYPE_UINT, 
 					G_TYPE_BOXED,
 					G_TYPE_INT,
-					G_TYPE_STRING, G_TYPE_INVALID);
+					G_TYPE_STRING,
+					G_TYPE_INVALID);
 
 		dbus_g_proxy_connect_signal (proxy, "Finished",
 				     G_CALLBACK (on_task_finished),
