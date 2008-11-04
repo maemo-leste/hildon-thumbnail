@@ -483,7 +483,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
 									&cropped, &local_large, 
 									&local_normal, &local_cropped,
-									(y == 1));
+									(y == 0));
 
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
