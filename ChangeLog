@@ -1,5 +1,10 @@
 2008-11-05  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/epeg-plugin.c: When the destination is larger
+	than the source, EPeg behaves unexpected.
+
+2008-11-05  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/albumart.c: Aways emit the finished and started signals
 
 2008-11-05  Philip Van Hoof  <philip@codeminded.be>

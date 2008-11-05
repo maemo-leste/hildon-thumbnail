@@ -216,7 +216,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		gboolean just_crop;
 		GFileInfo *finfo = NULL;
 		GError *nerror = NULL;
-
+		guint ow, oh;
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
 										   &cropped,
@@ -261,17 +261,35 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			goto nerror_handler;
 		}
 
-		epeg_decode_colorspace_set (im, EPEG_RGB8);
-		epeg_decode_size_set (im, 256, 256);
-		epeg_quality_set (im, 80);
-		epeg_thumbnail_comments_enable (im, 0);
+		epeg_size_get (im, &ow, &oh);
 
-		data = (guchar *) epeg_pixels_get (im, 0, 0, 256, 256);
+		if (ow < 256 || oh < 256) {
 
-		pixbuf_large = gdk_pixbuf_new_from_data ((const guchar*) data, 
-								  GDK_COLORSPACE_RGB, FALSE, 
-								  8, 256, 256, 256*3,
-								  destroy_pixbuf, im);
+			/* Epeg doesn't behave as expected when the destination is larger
+			 * than the source */
+
+			pixbuf_large = gdk_pixbuf_new_from_file_at_size (path, 
+															 256, 256, 
+															 &nerror);
+			epeg_close (im);
+
+			if (nerror)
+				goto nerror_handler;
+
+		} else {
+
+			epeg_decode_colorspace_set (im, EPEG_RGB8);
+			epeg_decode_size_set (im, 256, 256);
+			epeg_quality_set (im, 80);
+			epeg_thumbnail_comments_enable (im, 0);
+
+			data = (guchar *) epeg_pixels_get (im, 0, 0, 256, 256);
+
+			pixbuf_large = gdk_pixbuf_new_from_data ((const guchar*) data, 
+									  GDK_COLORSPACE_RGB, FALSE, 
+									  8, 256, 256, 256*3,
+									  destroy_pixbuf, im);	
+		}
 
 		save_thumb_file_meta (pixbuf_large, large, mtime, uri, &nerror);
 
