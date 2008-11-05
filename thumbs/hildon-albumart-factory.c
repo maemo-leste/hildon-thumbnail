@@ -303,6 +303,8 @@ hildon_albumart_factory_clean_cache(gint max_size, time_t min_mtime)
 	g_free (a_dir);
 }
 
+static gboolean waiting_for_cb = FALSE;
+
 static void 
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
@@ -312,6 +314,8 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 
 	/* Register the item as being handled */
 	g_hash_table_replace (tasks, key, item);
+
+	waiting_for_cb = FALSE;
 }
 
 typedef struct {
@@ -385,6 +389,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 
 		init ();
 
+		waiting_for_cb = TRUE;
 		com_nokia_albumart_Requester_queue_async (proxy, artist, 
 												  album, 
 												  kind, 0, 
@@ -428,6 +433,9 @@ void hildon_albumart_factory_cancel(HildonAlbumartFactoryHandle handle)
 void hildon_albumart_factory_wait()
 {
 	init();
+
+	while (waiting_for_cb)
+		g_main_context_iteration (NULL, FALSE);
 
 	while(g_hash_table_size (tasks) != 0) {
 		g_main_context_iteration(NULL, TRUE);

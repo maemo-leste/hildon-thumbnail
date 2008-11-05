@@ -244,6 +244,8 @@ hildon_albumart_factory_class_init (HildonAlbumartFactoryClass *klass)
 	g_type_class_add_private (object_class, sizeof (HildonAlbumartFactoryPrivate));
 }
 
+static gboolean waiting_for_cb = FALSE;
+
 static void 
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
@@ -256,10 +258,12 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 	g_hash_table_replace (f_priv->tasks, key, 
 			      g_object_ref (request));
 	g_object_unref (request);
+
+	waiting_for_cb = FALSE;
 }
 
 HildonAlbumartRequest*
-hildon_albumart_factory_request (HildonAlbumartFactory *self,
+hildon_albumart_factory_queue (HildonAlbumartFactory *self,
 				  const gchar *artist_or_title, const gchar *album, const gchar *kind,
 				  HildonAlbumartRequestCallback callback,
 				  gpointer user_data,
@@ -276,6 +280,8 @@ hildon_albumart_factory_request (HildonAlbumartFactory *self,
 	r_priv->user_data = user_data;
 	r_priv->callback = callback;
 	r_priv->destroy = destroy;
+
+	waiting_for_cb = TRUE;
 
 	com_nokia_albumart_Requester_queue_async (f_priv->proxy, 
 						  r_priv->artist_or_title, 
@@ -361,7 +367,7 @@ hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 	info->width = width;
 	info->height = height;
 
-	r_priv->real = hildon_albumart_factory_request (self, artist_or_title, 
+	r_priv->real = hildon_albumart_factory_queue (self, artist_or_title, 
 							album, kind,
 							intercept_callback,
 							info,
@@ -376,8 +382,11 @@ hildon_albumart_factory_join (HildonAlbumartFactory *self)
 {
 	HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
 
+	while (waiting_for_cb)
+		g_main_context_iteration (NULL, FALSE);
+
 	while(g_hash_table_size (f_priv->tasks) != 0) {
-		g_main_context_iteration (NULL, TRUE);
+		g_main_context_iteration (NULL, FALSE);
 	}
 }
 
@@ -419,8 +428,11 @@ hildon_albumart_request_join (HildonAlbumartRequest *self)
 		HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
 		HildonAlbumartRequest *found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 
+		while (waiting_for_cb)
+			g_main_context_iteration (NULL, FALSE);
+
 		while (found) {
-			g_main_context_iteration (NULL, TRUE);
+			g_main_context_iteration (NULL, FALSE);
 			found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 		}
 	}

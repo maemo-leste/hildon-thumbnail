@@ -1,3 +1,12 @@
+2008-11-05  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-albumart-factory.c
+	* thumbs/hildon-albumart-obj.c
+	* tests/artist-art-test.c
+	* daemon/utils.c: Saw the hope for change become materialized and then
+	fixed some problems in the new album art client library. Also adapted
+	the test to use the new library instead of the old one.
+
 2008-11-04  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-factory.c

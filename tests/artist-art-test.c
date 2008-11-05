@@ -1,22 +1,33 @@
 #include <gtk/gtk.h>
 #include <hildon-albumart-factory.h>
 
+
 GtkWindow *window;
 GtkHBox *box;
 GtkVBox *hbox;
-GtkImage *image;
+GtkImage *image, *imaget;
 GtkEntry *atext;
 GtkEntry *btext;
 GtkButton *button;
 
 
+#ifdef OLDAPI
 static void
 on_art_back (HildonAlbumartFactoryHandle handle, gpointer user_data, GdkPixbuf *albumart, GError *error)
 {
 	if (albumart) {
-		gtk_image_set_from_pixbuf (image, albumart);
+		gtk_image_set_from_pixbuf (user_data, albumart);
 	}
 }
+#else
+static void 
+on_art_back (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *error, gpointer user_data)
+{
+	if (albumart) {
+		gtk_image_set_from_pixbuf (user_data, albumart);
+	}
+}
+#endif
 
 static void
 on_button_clicked (GtkButton *button, gpointer user_data)
@@ -26,7 +37,24 @@ on_button_clicked (GtkButton *button, gpointer user_data)
 	album = gtk_entry_get_text (btext);
 	artist = gtk_entry_get_text (atext);
 
-	hildon_albumart_factory_load(artist, album, "album", on_art_back, NULL);
+#ifdef OLDAPI
+	hildon_albumart_factory_load(artist, album, "album", on_art_back, image);
+#else
+	HildonAlbumartFactory *f = hildon_albumart_factory_get_instance ();
+	HildonAlbumartRequest *r1, *r2;
+
+	r1 = hildon_albumart_factory_queue (f, artist, album, "album",
+		on_art_back, image, NULL);
+
+	r2 = hildon_albumart_factory_queue_thumbnail (f, artist, album, "album",
+		256, 256,
+		on_art_back, imaget, NULL);
+
+	g_object_unref (f);
+	g_object_unref (r1);
+	g_object_unref (r2);
+#endif
+
 }
 
 int
@@ -49,6 +77,9 @@ main(int argc, char **argv)
 
 	image = gtk_image_new ();
 	gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET (image), TRUE, TRUE, 0);
+
+	imaget = gtk_image_new ();
+	gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET (imaget), TRUE, TRUE, 0);
 
 	button = gtk_button_new_with_label ("Get album art");
 	gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET (button), FALSE, TRUE, 0);
