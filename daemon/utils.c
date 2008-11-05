@@ -104,7 +104,7 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
 
 	if (local) {
-		if (filename && local_dir) {
+		if (filename && strlen (filename) > 1 && local_dir) {
 			gchar *lthumb_filename;
 			gchar *lcropped_filename;
 
@@ -134,10 +134,11 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 				*local_cropped = g_strdup ("");
 		}
 
-		g_free (filename);
 		g_free (lascii_digest);
 		g_free (local_dir);
 	}
+
+	g_free (filename);
 
 	g_free (thumb_filename);
 	g_free (cropped_filename);
