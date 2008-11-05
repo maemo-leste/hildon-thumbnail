@@ -197,6 +197,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 	gchar *kind = task->kind;
 	gchar *path;
 
+	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
+			task->num);
+
 	g_mutex_lock (priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
 	if (task->unqueued) {
@@ -204,9 +207,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 		goto unqueued;
 	}
 	g_mutex_unlock (priv->mutex);
-
-	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
-			task->num);
 
 	hildon_thumbnail_util_get_albumart_path (artist, album, kind, &path);
 
@@ -252,10 +252,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 	g_free (path);
 
-	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
-			       task->num);
-
 unqueued:
+
+	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+		       task->num);
 
 	g_object_unref (task->object);
 	g_free (task->artist);
