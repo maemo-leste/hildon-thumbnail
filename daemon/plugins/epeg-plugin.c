@@ -288,7 +288,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			pixbuf_large = gdk_pixbuf_new_from_data ((const guchar*) data, 
 									  GDK_COLORSPACE_RGB, FALSE, 
 									  8, 256, 256, 256*3,
-									  destroy_pixbuf, im);	
+									  destroy_pixbuf, im);
 		}
 
 		save_thumb_file_meta (pixbuf_large, large, mtime, uri, &nerror);
