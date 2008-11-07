@@ -1,5 +1,10 @@
 2008-11-05  Philip Van Hoof  <philip@codeminded.be>
 
+	* thumbs/hildon-albumart-obj.c
+	* thumbs/hildon-albumart-factory.h: Added cropped param to API
+
+2008-11-05  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/utils.c: Bugfix for files with filename <= 1, found by
 	Garnacho
 

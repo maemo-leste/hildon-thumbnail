@@ -140,7 +140,7 @@ HildonAlbumartRequest*
 HildonAlbumartRequest*
 	 hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 									 const gchar *artist_or_title, const gchar *album, const gchar *kind,
-									 guint width, guint height,
+									 guint width, guint height, gboolean cropped,
 									 HildonAlbumartRequestCallback callback,
 									 gpointer user_data,
 									 GDestroyNotify destroy);

@@ -297,6 +297,7 @@ typedef struct {
 	HildonAlbumartRequest *request;
 	guint width;
 	guint height;
+	gboolean cropped;
 } ArtReqInfo;
 
 
@@ -332,10 +333,11 @@ intercept_callback (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *er
 
 		uri = g_strdup_printf ("file://%s", path);
 
-		hildon_thumbnail_factory_load (uri, "image/jpeg",
-					       info->width, info->height,
-					       thumb_callback, 
-					       info);
+		hildon_thumbnail_factory_load_custom (uri, "image/jpeg",
+						      info->width, info->height,
+						      thumb_callback, 
+						      info, 
+						      info->cropped?HILDON_THUMBNAIL_FLAG_CROP:0, -1);
 
 		g_free (path);
 		g_free (uri);
@@ -346,7 +348,7 @@ intercept_callback (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *er
 HildonAlbumartRequest*
 hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 					  const gchar *artist_or_title, const gchar *album, const gchar *kind,
-					  guint width, guint height,
+					  guint width, guint height, gboolean cropped,
 					  HildonAlbumartRequestCallback callback,
 					  gpointer user_data,
 					  GDestroyNotify destroy)
@@ -366,6 +368,7 @@ hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 	info->request = g_object_ref (request);
 	info->width = width;
 	info->height = height;
+	info->cropped = cropped;
 
 	r_priv->real = hildon_albumart_factory_queue (self, artist_or_title, 
 							album, kind,
