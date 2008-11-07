@@ -1,6 +1,8 @@
-hildon-thumbnail (3.0.9~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.9) unstable; urgency=low
 
-  * 
+  * Support for finding thumbnails in root directories of mounted volumes.
+  * Thumbnails are now JPEG
+  * API and Bug fixes.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 23 Oct 2008 17:20:46 +0300
 
