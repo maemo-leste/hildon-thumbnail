@@ -44,12 +44,12 @@ static gboolean is_active = TRUE;
 
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
-						guint width, guint height,
-						guint rowstride, guint bits_per_sample,
-						OutType type,
-						guint64 mtime, 
-						const gchar *uri, 
-						GError **error)
+				guint width, guint height,
+				guint rowstride, guint bits_per_sample,
+				OutType type,
+				guint64 mtime, 
+				const gchar *uri, 
+				GError **error)
 {
 	GdkPixbuf *pixbuf;
 	gchar *large, *normal, *cropped, *filen;
