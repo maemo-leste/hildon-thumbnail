@@ -531,10 +531,14 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 		g_type_init ();
 		gst_init_check (NULL, NULL, &nerror);
 
+		had_init = TRUE;
+
 		if (nerror) {
 			g_propagate_error (error, nerror);
+			g_object_unref (file);
+			g_free (config);
+			return;
 		}
-		had_init = TRUE;
 	}
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
