@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -53,7 +55,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	gchar *large, *normal, *cropped, *filen;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
-											   NULL, NULL, NULL, FALSE);
+					       NULL, NULL, NULL, FALSE);
 
 	switch (type) {
 		case OUTTYPE_LARGE:
@@ -68,12 +70,12 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	}
 
 	pixbuf = gdk_pixbuf_new_from_data ((const guchar*) rgb8_pixmap, 
-									   GDK_COLORSPACE_RGB, FALSE, 
-									   bits_per_sample, width, height, rowstride,
-									   NULL, NULL);
+					   GDK_COLORSPACE_RGB, FALSE, 
+					   bits_per_sample, width, height, rowstride,
+					   NULL, NULL);
 
 	gdk_pixbuf_save (pixbuf, filen, "jpeg", 
-					 error, NULL);
+			 error, NULL);
 
 	g_object_unref (pixbuf);
 
@@ -134,7 +136,7 @@ hildon_thumbnail_outplugin_is_active (void)
 		monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
 		g_signal_connect (G_OBJECT (monitor), "changed", 
-						  G_CALLBACK (on_file_changed), NULL);
+				  G_CALLBACK (on_file_changed), NULL);
 
 		/* g_object_unref (monitor); */
 		g_object_unref (file);

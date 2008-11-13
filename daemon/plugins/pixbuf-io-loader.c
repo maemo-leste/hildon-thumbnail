@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 
 /* -*- mode: C; c-file-style: "linux" -*- */
 /* GdkPixbuf library - Main loading interface.

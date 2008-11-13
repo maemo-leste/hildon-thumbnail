@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -209,14 +211,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			goto nerror_handler;
 
 		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_large), 
-											gdk_pixbuf_get_width     (pixbuf_large),
-											gdk_pixbuf_get_height    (pixbuf_large),
-											gdk_pixbuf_get_rowstride (pixbuf_large),
-											8,
-											OUTTYPE_LARGE,
-											mtime, 
-											uri, 
-											&nerror);
+						    gdk_pixbuf_get_width     (pixbuf_large),
+						    gdk_pixbuf_get_height    (pixbuf_large),
+						    gdk_pixbuf_get_rowstride (pixbuf_large),
+						    8,
+						    OUTTYPE_LARGE,
+						    mtime, 
+						    uri, 
+						    &nerror);
 
 		g_object_unref (pixbuf_large);
 
@@ -238,14 +240,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			goto nerror_handler;
 
 		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_normal), 
-											gdk_pixbuf_get_width     (pixbuf_normal),
-											gdk_pixbuf_get_height    (pixbuf_normal),
-											gdk_pixbuf_get_rowstride (pixbuf_normal),
-											8,
-											OUTTYPE_NORMAL,
-											mtime, 
-											uri, 
-											&nerror);
+						    gdk_pixbuf_get_width     (pixbuf_normal),
+						    gdk_pixbuf_get_height    (pixbuf_normal),
+						    gdk_pixbuf_get_rowstride (pixbuf_normal),
+						   8,
+						    OUTTYPE_NORMAL,
+						    mtime, 
+						    uri, 
+						    &nerror);
 
 		g_object_unref (pixbuf_normal);
 
@@ -269,14 +271,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		g_object_unref (pixbuf);
 
 		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_cropped), 
-											gdk_pixbuf_get_width     (pixbuf_cropped),
-											gdk_pixbuf_get_height    (pixbuf_cropped),
-											gdk_pixbuf_get_rowstride (pixbuf_cropped),
-											8,
-											OUTTYPE_CROPPED,
-											mtime, 
-											uri, 
-											&nerror);
+						    gdk_pixbuf_get_width     (pixbuf_cropped),
+						    gdk_pixbuf_get_height    (pixbuf_cropped),
+						    gdk_pixbuf_get_rowstride (pixbuf_cropped),
+						    8,
+						    OUTTYPE_CROPPED,
+						    mtime, 
+						    uri, 
+						    &nerror);
 
 		g_object_unref (pixbuf_cropped);
 
@@ -385,8 +387,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	guint i = 0;
 	const gchar **supported;
 	const gchar *uri_schemes[8] = { "file", "http", "https", 
-									"smb", "nfs", "ftp", 
-									"ftps", NULL };
+					"smb", "nfs", "ftp", 
+					"ftps", NULL };
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 

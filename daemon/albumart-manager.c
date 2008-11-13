@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-albumart package
  *
@@ -308,7 +310,7 @@ albumart_manager_set_property (GObject      *object,
 	switch (prop_id) {
 	case PROP_CONNECTION:
 		albumart_manager_set_connection (ALBUMART_MANAGER (object),
-					g_value_get_pointer (value));
+						 g_value_get_pointer (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

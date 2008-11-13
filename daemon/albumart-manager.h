@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 #ifndef __ALBUMART_MANAGER_H__
 #define __ALBUMART_MANAGER_H__
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-albumart package
  *
@@ -176,8 +178,8 @@ on_task_finished (DBusGProxy *proxy,
 		 * URI */
 
 		hildon_thumbnail_util_get_albumart_path (item->artist, 
-												 item->album, 
-												 item->kind, &path);
+							 item->album, 
+							 item->kind, &path);
 
 		create_pixbuf_and_callback (item, path);
 
@@ -391,10 +393,10 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 
 		waiting_for_cb = TRUE;
 		com_nokia_albumart_Requester_queue_async (proxy, artist, 
-												  album, 
-												  kind, 0, 
-												  on_got_handle,
-												  item);
+							  album, 
+							  kind, 0, 
+							  on_got_handle,
+							  item);
 
 	}
 
@@ -425,8 +427,8 @@ void hildon_albumart_factory_cancel(HildonAlbumartFactoryHandle handle)
 	/* We don't do real canceling, we just do unqueing */
 
 	com_nokia_albumart_Requester_unqueue_async (proxy, 
-												item->handle_id,
-												on_cancelled, item);
+						    item->handle_id,
+						    on_cancelled, item);
 
 }
 
@@ -453,10 +455,10 @@ void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *a
 	init();
 
 	com_nokia_albumart_Requester_delete_async (proxy, 
-											   artist, 
-											   album, 
-											   kind, 
-											   file_opp_reply, NULL);
+						   artist, 
+						   album, 
+						   kind, 
+						   file_opp_reply, NULL);
 
 }
 

@@ -1,5 +1,31 @@
 2008-11-13  Philip Van Hoof  <philip@codeminded.be>
 
+	*thumbs/hildon-thumbnail-factory.c
+	*thumbs/thumber-gdk-pixbuf.c
+	*thumbs/hildon-albumart-factory.c
+	*thumbs/hildon-thumbnail-factory.h
+	*thumbs/thumber-register.c
+	*thumbs/hildon-albumart-obj.c
+	*thumbs/hildon-thumber-common.h
+	*thumbs/thumber-common.c
+	*thumbs/hildon-albumart-factory.h
+	*daemon/hildon-thumbnail-plugin.h
+	*daemon/utils.c
+	*daemon/plugins/gdkpixbuf-plugin.c
+	*daemon/plugins/exec-plugin.c
+	*daemon/plugins/pixbuf-io-loader.c
+	*daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	*daemon/plugins/epeg-plugin.c
+	*daemon/plugin-runner.c
+	*daemon/utils.h
+	*daemon/albumart.h
+	*daemon/albumart-manager.c
+	*daemon/albumart-manager.h
+	*daemon/hildon-thumbnail-plugin.c
+	*daemon/thumbnail-manager.c: Indentation
+
+2008-11-13  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/hildon-thumbnail-daemon.c
 	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c

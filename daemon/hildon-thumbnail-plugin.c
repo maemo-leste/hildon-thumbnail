@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -61,21 +63,21 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 }
 
 typedef void (*OutFunc) (const guchar *rgb8_pixmap, 
-						guint width, guint height,
-						guint rowstride, guint bits_per_sample,
-						OutType type,
-						guint64 mtime, 
-						const gchar *uri, 
-						GError **error);
+			 guint width, guint height,
+			 guint rowstride, guint bits_per_sample,
+			 OutType type,
+			 guint64 mtime, 
+			 const gchar *uri, 
+			 GError **error);
 
 void
 hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap, 
-									guint width, guint height,
-									guint rowstride, guint bits_per_sample,
-									OutType type,
-									guint64 mtime, 
-									const gchar *uri, 
-									GError **error)
+				    guint width, guint height,
+				    guint rowstride, guint bits_per_sample,
+				    OutType type,
+				    guint64 mtime, 
+				    const gchar *uri, 
+				    GError **error)
 {
 	GList *copy = outplugs;
 	GString *errors = NULL;

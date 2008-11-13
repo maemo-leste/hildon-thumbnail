@@ -371,10 +371,10 @@ hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 	info->cropped = cropped;
 
 	r_priv->real = hildon_albumart_factory_queue (self, artist_or_title, 
-							album, kind,
-							intercept_callback,
-							info,
-							NULL);
+						      album, kind,
+						      intercept_callback,
+						      info,
+						      NULL);
 
 	return request;
 }

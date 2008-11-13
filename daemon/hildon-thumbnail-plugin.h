@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 #ifndef __HILDON_THUMBNAIL_PLUGIN_H__
 #define __HILDON_THUMBNAIL_PLUGIN_H__
 
@@ -56,12 +58,12 @@ void        hildon_thumbnail_plugin_do_stop       (GModule *module);
 
 GModule*    hildon_thumbnail_outplugin_load       (const gchar *module_name);
 void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap, 
-												   guint width, guint height,
-												   guint rowstride, guint bits_per_sample,
-												   OutType type,
-												   guint64 mtime, 
-												   const gchar *uri, 
-												   GError **error);
+						   guint width, guint height,
+						   guint rowstride, guint bits_per_sample,
+						   OutType type,
+						   guint64 mtime, 
+						   const gchar *uri, 
+						   GError **error);
 
 G_END_DECLS
 

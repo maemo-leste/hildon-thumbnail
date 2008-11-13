@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -232,9 +234,9 @@ on_task_finished (DBusGProxy *proxy,
 				g_free (cropped); cropped = NULL;
 
 				hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
-												   &normal, &cropped,
-												   NULL, NULL, NULL,
-												   TRUE);
+								       &normal, &cropped,
+								       NULL, NULL, NULL,
+								       TRUE);
 			}
 
 			create_pixbuf_and_callback (item, large, normal, cropped, FALSE);
@@ -482,9 +484,9 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		g_free (local_cropped); local_cropped = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-									&cropped, &local_large, 
-									&local_normal, &local_cropped,
-									(y == 0));
+						       &cropped, &local_large, 
+						       &local_normal, &local_cropped,
+						       (y == 0));
 
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
@@ -550,7 +552,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		info->local_cropped = local_cropped;
 
 		g_idle_add_full (G_PRIORITY_DEFAULT, have_all_cb, info,
-						 (GDestroyNotify) free_thumbsitem_and_paths);
+				 (GDestroyNotify) free_thumbsitem_and_paths);
 
 		return item;
 	}
@@ -577,10 +579,10 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 
 		waiting_for_cb = TRUE;
 		org_freedesktop_thumbnailer_Generic_queue_async (proxy, 
-														 (const char **) uris, 
-														 (const char **) mimes,
-														 0, 
-								 						 on_got_handle, item);
+								 (const char **) uris, 
+								 (const char **) mimes,
+								 0, 
+								 on_got_handle, item);
 
 		g_strfreev (uris);
 		if (mimes)
@@ -835,8 +837,8 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 	gchar *path;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, 
-								&cropped, &local_large, 
-								&local_normal, &local_cropped, FALSE);
+						&cropped, &local_large, 
+						&local_normal, &local_cropped, FALSE);
 
 	if (is_cropped) {
 

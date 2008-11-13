@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
+
 /*
  * This file is part of hildon-thumbnail package
  *
@@ -289,7 +291,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 				ValueInfo *info = g_slice_new (ValueInfo);
 
 				info->name = g_key_file_get_string (keyfile, urisch_and_mimes[i], 
-													"Name", NULL);
+								    "Name", NULL);
 
 				/* This is atm unused for items in overrides. */
 
@@ -299,8 +301,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 
 				info->prio = TRUE;
 
-				g_hash_table_replace (pre, 
-						      g_strdup (urisch_and_mimes[i]), 
+				g_hash_table_replace (pre, g_strdup (urisch_and_mimes[i]), 
 						      info);
 			}
 			g_strfreev (urisch_and_mimes);
