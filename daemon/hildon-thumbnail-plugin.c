@@ -62,7 +62,7 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 typedef void (*OutFunc) (const guchar *rgb8_pixmap, 
 						guint width, guint height,
-						guint rowstride,
+						guint rowstride, guint bits_per_sample,
 						OutType type,
 						guint64 mtime, 
 						const gchar *uri, 
@@ -71,7 +71,7 @@ typedef void (*OutFunc) (const guchar *rgb8_pixmap,
 void
 hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap, 
 									guint width, guint height,
-									guint rowstride,
+									guint rowstride, guint bits_per_sample,
 									OutType type,
 									guint64 mtime, 
 									const gchar *uri, 
@@ -88,7 +88,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 
 		if (g_module_symbol (module, "hildon_thumbnail_outplugin_out", (gpointer *) &out_func)) {
 
-			out_func (rgb8_pixmap, width, height, rowstride, type, mtime, uri, &nerror);
+			out_func (rgb8_pixmap, width, height, rowstride, bits_per_sample, type, mtime, uri, &nerror);
 
 			if (nerror) {
 				if (!errors) {

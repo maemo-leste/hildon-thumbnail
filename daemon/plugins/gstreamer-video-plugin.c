@@ -98,6 +98,7 @@ create_output (OutType target, unsigned char *data, guint width, guint height, g
 					    width,
 					    height,
 					    width*3,
+					    bpp,
 					    target,
 					    mtime, 
 					    uri, 
