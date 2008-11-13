@@ -129,7 +129,7 @@ gboolean
 hildon_thumbnail_outplugin_is_active (void) 
 {
 	if (!had_init) {
-		gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-output-plugin.conf", NULL);
+		gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-jpeg-output-plugin.conf", NULL);
 		GFile *file = g_file_new_for_path (config);
 		GFileMonitor *monitor;
 
