@@ -265,8 +265,8 @@ main (int argc, char **argv)
 		Thumbnailer *thumbnailer;
 		Albumart *arter;
 		DBusGProxy *manager_proxy;
-		GFile *file;
-		GFileMonitor *monitor;
+		GFile *file, *fileo;
+		GFileMonitor *monitor, *monitoro;
 
 		thumbnail_manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
@@ -287,9 +287,9 @@ main (int argc, char **argv)
 		g_signal_connect (G_OBJECT (monitor), "changed", 
 				  G_CALLBACK (on_plugin_changed), thumbnailer);
 
-		file = g_file_new_for_path (OUTPUTPLUGINS_DIR);
-		monitor =  g_file_monitor_directory (file, G_FILE_MONITOR_NONE, NULL, NULL);
-		g_signal_connect (G_OBJECT (monitor), "changed", 
+		fileo = g_file_new_for_path (OUTPUTPLUGINS_DIR);
+		monitoro =  g_file_monitor_directory (fileo, G_FILE_MONITOR_NONE, NULL, NULL);
+		g_signal_connect (G_OBJECT (monitoro), "changed", 
 				  G_CALLBACK (on_outputplugin_changed), thumbnailer);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
@@ -302,6 +302,8 @@ main (int argc, char **argv)
 
 		g_object_unref (monitor);
 		g_object_unref (file);
+		g_object_unref (monitoro);
+		g_object_unref (fileo);
 
 		stop_plugins (registrations, thumbnailer);
 		stop_outputplugins (outregistrations, thumbnailer);
