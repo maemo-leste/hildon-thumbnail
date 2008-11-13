@@ -123,7 +123,7 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 	}
 }
 
-void
+gboolean
 hildon_thumbnail_outplugin_is_active (void) 
 {
 	if (!had_init) {

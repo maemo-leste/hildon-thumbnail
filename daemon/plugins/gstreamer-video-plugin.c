@@ -92,21 +92,12 @@ gint                g_sprintf                           (gchar *string,
 static gboolean
 create_output (OutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime)
 {
-	GdkPixbuf *pixbuf = NULL;
 	GError *error = NULL;
 
-	pixbuf = gdk_pixbuf_new_from_data(data,
-			GDK_COLORSPACE_RGB, /* RGB-colorspace */
-			FALSE, /* No alpha-channel */
-			bpp/3, /* Bits per RGB-component */
-			width, height, /* Dimensions */
-			width*3, /* Number of bytes between lines (ie stride) */
-			NULL, NULL); /* Callbacks */
-
-	hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf), 
-					    gdk_pixbuf_get_width     (pixbuf),
-					    gdk_pixbuf_get_height    (pixbuf),
-					    gdk_pixbuf_get_rowstride (pixbuf),
+	hildon_thumbnail_outplugins_do_out (data, 
+					    width,
+					    height,
+					    width*3,
 					    target,
 					    mtime, 
 					    uri, 
@@ -115,11 +106,9 @@ create_output (OutType target, unsigned char *data, guint width, guint height, g
 	if (error) {
 		g_warning("%s\n", error->message);
 		g_error_free(error);
-		g_object_unref(pixbuf);
 		return FALSE;
 	}
 
-	g_object_unref(pixbuf);
 	return TRUE;
 }
 
