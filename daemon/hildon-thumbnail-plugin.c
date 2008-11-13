@@ -30,17 +30,21 @@ static GList *outplugs = NULL;
 
 typedef gboolean (*IsActiveFunc) (void);
 
+void
+hildon_thumbnail_outplugin_unload (GModule *module)
+{
+	outplugs = g_list_remove (outplugs, module);
+	g_module_close (module);
+}
+
 GModule*
 hildon_thumbnail_outplugin_load (const gchar *module_name)
 {
-	gchar *path;
 	GModule *module;
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
-	path = g_build_filename (OUTPUTPLUGINS_DIR, module_name, NULL);
-
-	module = g_module_open (path, G_MODULE_BIND_LOCAL);
+	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
 	if (!module) {
 		g_warning ("Could not load thumbnailer module '%s', %s\n", 
@@ -50,8 +54,6 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 		g_module_make_resident (module);
 		outplugs = g_list_prepend (outplugs, module);
 	}
-
-	g_free (path);
 
 	return module;
 }
@@ -116,14 +118,11 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 GModule *
 hildon_thumbnail_plugin_load (const gchar *module_name)
 {
-	gchar *path;
 	GModule *module;
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
-	path = g_build_filename (PLUGINS_DIR, module_name, NULL);
-
-	module = g_module_open (path, G_MODULE_BIND_LOCAL);
+	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
 	if (!module) {
 		g_warning ("Could not load thumbnailer module '%s', %s\n", 
@@ -132,8 +131,6 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 	} else {
 		g_module_make_resident (module);
 	}
-
-	g_free (path);
 
 	return module;
 }
@@ -187,4 +184,5 @@ hildon_thumbnail_plugin_do_stop (GModule *module)
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_stop", (gpointer *) &func)) {
 		(func) ();
 	}
+	g_module_close (module);
 }

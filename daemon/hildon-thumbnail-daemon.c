@@ -78,23 +78,31 @@ init_plugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
 	if (dir) {
 	  while ((plugin = g_dir_read_name (dir)) != NULL) {
 		gboolean cropping;
+		gchar *full;
 
 		if (!g_str_has_suffix (plugin, "." G_MODULE_SUFFIX)) {
 			continue;
 		}
-		
-		module = hildon_thumbnail_plugin_load (plugin);
-		hildon_thumbnail_plugin_do_init (module, &cropping,
-						 (register_func) thumbnailer_register_plugin,
-						 thumbnailer,
-						 &error);
+
+		full = g_build_filename (PLUGINS_DIR, plugin, NULL);
+
+		module = hildon_thumbnail_plugin_load (full);
+		if (module)
+			hildon_thumbnail_plugin_do_init (module, &cropping,
+							 (register_func) thumbnailer_register_plugin,
+							 thumbnailer,
+							 &error);
 		if (error) {
 			g_warning ("Can't load plugin [%s]: %s\n", plugin, 
 				   error->message);
 			g_error_free (error);
-		} else
-			g_hash_table_replace (regs, g_strdup (plugin),
-					      module);
+			g_free (full);
+			if (module)
+				g_module_close (module);
+		} else if (module)
+			g_hash_table_replace (regs, full, module);
+		  else
+			g_free (full);
 	  }
 	  g_dir_close (dir);
 	}
@@ -123,14 +131,15 @@ init_outputplugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
 
 	if (dir) {
 	  while ((plugin = g_dir_read_name (dir)) != NULL) {
+		gchar *full;
 
 		if (!g_str_has_suffix (plugin, "." G_MODULE_SUFFIX)) {
 			continue;
 		}
 
-		module = hildon_thumbnail_outplugin_load (plugin);
-		g_hash_table_replace (regs, g_strdup (plugin),
-					      module);
+		full = g_build_filename (OUTPUTPLUGINS_DIR, plugin, NULL);
+		module = hildon_thumbnail_outplugin_load (full);
+		g_hash_table_replace (regs, full, module);
 	  }
 	  g_dir_close (dir);
 	}
@@ -150,6 +159,7 @@ stop_plugins (GHashTable *regs, Thumbnailer *thumbnailer)
 	g_hash_table_iter_init (&iter, regs);
 
 	while (g_hash_table_iter_next (&iter, &key, &value))  {
+		g_hash_table_iter_remove (&iter);
 		thumbnailer_unregister_plugin (thumbnailer, value);
 		hildon_thumbnail_plugin_do_stop (value);
 	}
@@ -163,7 +173,9 @@ stop_outputplugins (GHashTable *regs, Thumbnailer *thumbnailer)
 
 	g_hash_table_iter_init (&iter, regs);
 
-	while (g_hash_table_iter_next (&iter, &key, &value))  {
+	while (g_hash_table_iter_next (&iter, &key, &value)) {
+		g_hash_table_iter_remove (&iter);
+		hildon_thumbnail_outplugin_unload (value);
 	}
 }
 
@@ -171,17 +183,19 @@ static void
 on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	Thumbnailer *thumbnailer = user_data;
-	gchar *path = g_file_get_path (other_file);
+	gchar *path = g_file_get_path (file);
 
-	if (path) {
+	if (path && g_str_has_suffix (path, "." G_MODULE_SUFFIX)) {
 		switch (event_type)  {
 			case G_FILE_MONITOR_EVENT_DELETED: {
 				GModule *module = g_hash_table_lookup (registrations, path);
 				if (module) {
+					g_hash_table_remove (registrations, path);
 					thumbnailer_unregister_plugin (thumbnailer, module);
 					hildon_thumbnail_plugin_do_stop (module);
 				}
 			}
+			break;
 			case G_FILE_MONITOR_EVENT_CREATED: {
 				GModule *module = hildon_thumbnail_plugin_load (path);
 				gboolean cropping = FALSE;
@@ -217,19 +231,24 @@ static void
 on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	Thumbnailer *thumbnailer = user_data;
-	gchar *path = g_file_get_path (other_file);
+	gchar *path = g_file_get_path (file);
 
-	if (path) {
+	if (path && g_str_has_suffix (path, "." G_MODULE_SUFFIX)) {
 		switch (event_type)  {
 			case G_FILE_MONITOR_EVENT_DELETED: {
 				GModule *module = g_hash_table_lookup (outregistrations, path);
 				if (module) {
+					g_hash_table_remove (outregistrations, path);
+					hildon_thumbnail_outplugin_unload (module);
 				}
 			}
+			break;
 			case G_FILE_MONITOR_EVENT_CREATED: {
 				GModule *module = hildon_thumbnail_outplugin_load (path);
-				g_hash_table_replace (outregistrations, g_strdup (path),
-						      module);
+				if (module) {
+					g_hash_table_replace (outregistrations, g_strdup (path),
+							      module);
+				}
 			}
 			break;
 			default:
