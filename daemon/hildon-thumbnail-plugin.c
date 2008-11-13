@@ -30,9 +30,17 @@ static GList *outplugs = NULL;
 
 typedef gboolean (*IsActiveFunc) (void);
 
+typedef void (*StopFunc) (void);
+
 void
 hildon_thumbnail_outplugin_unload (GModule *module)
 {
+	StopFunc stop_func;
+
+	if (g_module_symbol (module, "hildon_thumbnail_outplugin_stop", (gpointer *) &stop_func)) {
+		stop_func ();
+	}
+
 	outplugs = g_list_remove (outplugs, module);
 	g_module_close (module);
 }
@@ -173,8 +181,6 @@ hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, gchar *mime_hint
 		(func) (uris, mime_hint, failed_uris, error);
 	}
 }
-
-typedef void (*StopFunc) (void);
 
 void
 hildon_thumbnail_plugin_do_stop (GModule *module)

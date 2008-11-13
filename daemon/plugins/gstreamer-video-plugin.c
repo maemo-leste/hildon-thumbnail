@@ -39,12 +39,6 @@
 #define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"
 #define GSTP_ERROR		g_quark_from_static_string (GSTP_ERROR_DOMAIN)
 
-#define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
-#define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
-#define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
-#define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
-#define SOFTWARE_OPTION "tEXt::Software"
-
 static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
 static gboolean do_vidthumbs = TRUE;

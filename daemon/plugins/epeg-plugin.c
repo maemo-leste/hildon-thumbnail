@@ -61,14 +61,6 @@ hildon_thumbnail_plugin_supported (void)
 	return (const gchar**) supported;
 }
 
-
-#define HILDON_THUMBNAIL_OPTION_PREFIX "tEXt::Thumb::"
-#define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
-#define URI_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "URI"
-#define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
-#define SOFTWARE_OPTION "tEXt::Software"
-
-
 static GdkPixbuf*
 crop_resize (GdkPixbuf *src, int width, int height) {
 	int x = width, y = height;

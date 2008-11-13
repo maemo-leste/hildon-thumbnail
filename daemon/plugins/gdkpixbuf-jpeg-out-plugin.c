@@ -41,6 +41,7 @@
 
 static gboolean had_init = FALSE;
 static gboolean is_active = TRUE;
+static GFileMonitor *monitor = NULL;
 
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
@@ -125,13 +126,19 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 	}
 }
 
+void
+hildon_thumbnail_outplugin_stop (void) 
+{
+	if (monitor)
+		g_object_unref (monitor);
+}
+
 gboolean
 hildon_thumbnail_outplugin_is_active (void) 
 {
 	if (!had_init) {
 		gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-jpeg-output-plugin.conf", NULL);
 		GFile *file = g_file_new_for_path (config);
-		GFileMonitor *monitor;
 
 		monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
