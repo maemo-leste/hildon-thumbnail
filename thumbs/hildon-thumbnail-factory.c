@@ -215,9 +215,9 @@ on_task_finished (DBusGProxy *proxy,
 			 * URI */
 			
 			hildon_thumbnail_util_get_thumb_paths (item->uri, &large, 
-												   &normal, &cropped,
-												   NULL, NULL, NULL,
-												   FALSE);
+								&normal, &cropped,
+								NULL, NULL, NULL,
+								FALSE);
 
 			if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 				path = cropped;
