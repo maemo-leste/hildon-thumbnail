@@ -58,7 +58,6 @@ GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
-static gboolean do_pngs = FALSE;
 static GFileMonitor *monitor = NULL;
 
 const gchar** 
@@ -94,52 +93,6 @@ hildon_thumbnail_plugin_supported (void)
 #define MTIME_OPTION HILDON_THUMBNAIL_OPTION_PREFIX "MTime"
 #define SOFTWARE_OPTION "tEXt::Software"
 
-static gboolean 
-save_thumb_file_meta (GdkPixbuf *pixbuf, gchar *file, guint64 mtime, const gchar *uri, GError **error)
-{
-	gboolean ret;
-	if (do_pngs) {
-		char mtime_str[64];
-
-		const char *default_keys[] = {
-			URI_OPTION,
-			MTIME_OPTION,
-			SOFTWARE_OPTION,
-			NULL
-		};
-
-		const char *default_values[] = {
-			uri,
-			mtime_str,
-			HILDON_THUMBNAIL_APPLICATION "-" VERSION,
-			NULL
-		};
-
-		g_sprintf(mtime_str, "%lu", mtime);
-
-		ret = gdk_pixbuf_savev (pixbuf, file, "png", 
-								(char **) default_keys, 
-								(char **) default_values, 
-								error);
-	} else {
-		ret = gdk_pixbuf_save (pixbuf, file, "jpeg", 
-							   error, NULL);
-	}
-
-	return ret;
-}
-
-
-
-static gboolean 
-save_thumb_file_cropped (GdkPixbuf *pixbuf, gchar *file, guint64 mtime, const gchar *uri, GError **error)
-{
-	gboolean ret;
-
-	ret = gdk_pixbuf_save (pixbuf, file, "jpeg", error, NULL);
-
-	return ret;
-}
 
 
 static GdkPixbuf*
@@ -228,24 +181,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		GdkPixbuf *pixbuf_normal;
 		GdkPixbuf *pixbuf, *pixbuf_cropped;
 		guint64 mtime;
-		gchar *large = NULL, 
-		      *normal = NULL, 
-		      *cropped = NULL;
-		gboolean just_crop;
 
-		hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
-											   NULL, NULL, NULL, do_pngs);
-
-		just_crop = (g_file_test (large, G_FILE_TEST_EXISTS) && 
-				     g_file_test (normal, G_FILE_TEST_EXISTS) && 
-				    !g_file_test (cropped, G_FILE_TEST_EXISTS));
-
-		if (just_crop && !do_cropped) {
-			g_free (cropped);
-			g_free (normal);
-			g_free (large);
-			continue;
-		}
 
 		file = g_file_new_for_uri (uri);
 
@@ -272,7 +208,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (nerror)
 			goto nerror_handler;
 
-		save_thumb_file_meta (pixbuf_large, large, mtime, uri, &nerror);
+		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_large), 
+											gdk_pixbuf_get_width     (pixbuf_large),
+											gdk_pixbuf_get_height    (pixbuf_large),
+											gdk_pixbuf_get_rowstride (pixbuf_large),
+											OUTTYPE_LARGE,
+											mtime, 
+											uri, 
+											&nerror);
 
 		g_object_unref (pixbuf_large);
 
@@ -293,7 +236,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (nerror)
 			goto nerror_handler;
 
-		save_thumb_file_meta (pixbuf_normal, normal, mtime, uri, &nerror);
+		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_normal), 
+											gdk_pixbuf_get_width     (pixbuf_normal),
+											gdk_pixbuf_get_height    (pixbuf_normal),
+											gdk_pixbuf_get_rowstride (pixbuf_normal),
+											OUTTYPE_NORMAL,
+											mtime, 
+											uri, 
+											&nerror);
 
 		g_object_unref (pixbuf_normal);
 
@@ -316,7 +266,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		g_object_unref (pixbuf);
 
-		save_thumb_file_cropped (pixbuf_cropped, cropped, mtime, uri, &nerror);
+		hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf_cropped), 
+											gdk_pixbuf_get_width     (pixbuf_cropped),
+											gdk_pixbuf_get_height    (pixbuf_cropped),
+											gdk_pixbuf_get_rowstride (pixbuf_cropped),
+											OUTTYPE_CROPPED,
+											mtime, 
+											uri, 
+											&nerror);
 
 		g_object_unref (pixbuf_cropped);
 
@@ -343,9 +300,6 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (file)
 			g_object_unref (file);
 
-		g_free (large);
-		g_free (normal);
-		g_free (cropped);
 
 		i++;
 	}
@@ -396,16 +350,14 @@ reload_config (const gchar *config)
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
-		do_pngs = FALSE;
 		g_key_file_free (keyfile);
 		return;
 	}
 
-	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
-	do_pngs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoPngs", &error);
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", &error);
 
 	if (error) {
-		do_pngs = FALSE;
+		do_cropped = TRUE;
 		g_error_free (error);
 	}
 
@@ -436,7 +388,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
 	g_signal_connect (G_OBJECT (monitor), "changed", 
-			  G_CALLBACK (on_file_changed), NULL);
+					  G_CALLBACK (on_file_changed), NULL);
 
 	g_object_unref (file);
 

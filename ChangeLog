@@ -1,3 +1,16 @@
+2008-11-13  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/Makefile.am
+	* daemon/hildon-thumbnail-plugin.c: Output plugins
+
 2008-11-07  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.9.

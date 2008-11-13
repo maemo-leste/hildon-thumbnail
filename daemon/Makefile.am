@@ -7,7 +7,8 @@ INCLUDES = \
 	$(GIO_CFLAGS) \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
 	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
-	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\"
+	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
+	-DOUTPUTPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/output-plugins"\"
 
 
 noinst_LTLIBRARIES = libshared.la

@@ -1010,7 +1010,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_TYPE_NONE,
 			      4,
 			      G_TYPE_UINT,
-			      G_TYPE_BOXED,
+			      G_TYPE_STRV,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
 

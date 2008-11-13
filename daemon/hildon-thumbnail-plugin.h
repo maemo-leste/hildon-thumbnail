@@ -31,6 +31,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+	OUTTYPE_LARGE,
+	OUTTYPE_NORMAL,
+	OUTTYPE_CROPPED,
+} OutType;
+
 typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module, const GStrv uri_schemes, gint priority);
 
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
@@ -46,6 +52,16 @@ void        hildon_thumbnail_plugin_do_create     (GModule *module,
 						   GStrv *failed_uris, 
 						   GError **error);
 void        hildon_thumbnail_plugin_do_stop       (GModule *module);
+
+
+GModule*    hildon_thumbnail_outplugin_load       (const gchar *module_name);
+void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap, 
+												   guint width, guint height,
+												   guint rowstride,
+												   OutType type,
+												   guint64 mtime, 
+												   const gchar *uri, 
+												   GError **error);
 
 G_END_DECLS
 

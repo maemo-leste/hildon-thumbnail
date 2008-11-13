@@ -24,6 +24,92 @@
 
 #include "hildon-thumbnail-plugin.h"
 
+static GList *outplugs = NULL;
+
+typedef gboolean (*IsActiveFunc) (void);
+
+GModule*
+hildon_thumbnail_outplugin_load (const gchar *module_name)
+{
+	gchar *path;
+	GModule *module;
+
+	g_return_val_if_fail (module_name != NULL, NULL);
+
+	path = g_build_filename (OUTPUTPLUGINS_DIR, module_name, NULL);
+
+	module = g_module_open (path, G_MODULE_BIND_LOCAL);
+
+	if (!module) {
+		g_warning ("Could not load thumbnailer module '%s', %s\n", 
+			   module_name, 
+			   g_module_error ());
+	} else {
+		IsActiveFunc isac_func;
+
+		if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
+			if (isac_func ()) {
+				outplugs = g_list_prepend (outplugs, module);
+				g_module_make_resident (module);
+			}
+		}
+	}
+
+	g_free (path);
+
+	return module;
+}
+
+typedef void (*OutFunc) (const guchar *rgb8_pixmap, 
+						guint width, guint height,
+						guint rowstride,
+						OutType type,
+						guint64 mtime, 
+						const gchar *uri, 
+						GError **error);
+
+void
+hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap, 
+									guint width, guint height,
+									guint rowstride,
+									OutType type,
+									guint64 mtime, 
+									const gchar *uri, 
+									GError **error)
+{
+	GList *copy = outplugs;
+	GString *errors = NULL;
+	GQuark domain;
+
+	while (copy) {
+		GModule *module = copy->data;
+		OutFunc out_func;
+		GError *nerror = NULL;
+
+		if (g_module_symbol (module, "hildon_thumbnail_outplugin_out", (gpointer *) &out_func)) {
+
+			out_func (rgb8_pixmap, width, height, rowstride, type, mtime, uri, &nerror);
+
+			if (nerror) {
+				if (!errors) {
+					errors = g_string_new ("");
+					domain = nerror->domain;
+				}
+				g_string_append (errors, nerror->message);
+				g_error_free (nerror);
+			}
+
+		}
+		copy = g_list_next (copy);
+	}
+
+	if (errors) {
+		g_set_error (error, domain, 0, errors->str);
+		g_string_free (errors, TRUE);
+	}
+}
+
+
 
 GModule *
 hildon_thumbnail_plugin_load (const gchar *module_name)

@@ -48,13 +48,12 @@
 
 static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
-static gboolean do_pngs = FALSE;
 static gboolean do_vidthumbs = TRUE;
 static GFileMonitor *monitor = NULL;
 
 typedef struct {
 	const gchar    *uri;
-	const gchar    *target;
+	OutType         target;
 	guint           size;
 
 	guint           mtime;
@@ -90,44 +89,8 @@ gint                g_sprintf                           (gchar *string,
                                                          ...);
 #endif
 
-static gboolean 
-save_thumb_file_meta (GdkPixbuf *pixbuf, const gchar *file, guint64 mtime, const gchar *uri, GError **error)
-{
-	gboolean ret;
-	if (do_pngs) {
-		char mtime_str[64];
-
-		const char *default_keys[] = {
-			URI_OPTION,
-			MTIME_OPTION,
-			SOFTWARE_OPTION,
-			NULL
-		};
-
-		const char *default_values[] = {
-			uri,
-			mtime_str,
-			HILDON_THUMBNAIL_APPLICATION "-" VERSION,
-			NULL
-		};
-
-		g_sprintf(mtime_str, "%lu", mtime);
-
-		ret = gdk_pixbuf_savev (pixbuf, file, "png", 
-					(char **) default_keys, 
-					(char **) default_values, 
-					error);
-	} else {
-		ret = gdk_pixbuf_save (pixbuf, file, "jpeg", 
-							   error, NULL);
-	}
-
-	return ret;
-}
-
 static gboolean
-create_png(const gchar *target, unsigned char *data, guint width, guint height, guint bpp,
-	   const gchar *uri, guint mtime)
+create_output (OutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime)
 {
 	GdkPixbuf *pixbuf = NULL;
 	GError *error = NULL;
@@ -140,14 +103,22 @@ create_png(const gchar *target, unsigned char *data, guint width, guint height, 
 			width*3, /* Number of bytes between lines (ie stride) */
 			NULL, NULL); /* Callbacks */
 
-	if(!save_thumb_file_meta(pixbuf, target, mtime, uri, &error))
-	{
+	hildon_thumbnail_outplugins_do_out (gdk_pixbuf_get_pixels    (pixbuf), 
+					    gdk_pixbuf_get_width     (pixbuf),
+					    gdk_pixbuf_get_height    (pixbuf),
+					    gdk_pixbuf_get_rowstride (pixbuf),
+					    target,
+					    mtime, 
+					    uri, 
+					    &error);
+
+	if (error) {
 		g_warning("%s\n", error->message);
 		g_error_free(error);
 		g_object_unref(pixbuf);
 		return FALSE;
 	}
-	
+
 	g_object_unref(pixbuf);
 	return TRUE;
 }
@@ -161,12 +132,9 @@ callback_thumbnail (GstElement       *image_sink,
 	unsigned char *data_photo =
 	    (unsigned char *) GST_BUFFER_DATA(buffer);
 
-	/* Create a PNG of the data and check the status */
-	if(!create_png(thumber->target, data_photo,
-		       thumber->size, thumber->size,
-		       24, thumber->uri, thumber->mtime)) {
-		g_error ("Creation of thumbnail failed");
-	}
+	create_output (thumber->target, data_photo,
+			   thumber->size, thumber->size,
+			   24, thumber->uri, thumber->mtime);
 
 	g_main_loop_quit (thumber->loop);
 
@@ -208,7 +176,7 @@ callback_bus(GstBus           *bus,
 	     VideoThumbnailer *thumber)
 {
 	gchar       *message_str;
-	GError      *error;
+	GError      *error = NULL;
 	GstState     old_state, new_state;
 	gint64       duration = -1;
 	gint64       position = -1;
@@ -219,16 +187,20 @@ callback_bus(GstBus           *bus,
 
 	case GST_MESSAGE_ERROR:
 		gst_message_parse_error(message, &error, &message_str);
-		g_error("GStreamer error: %s\n", message_str);
-		g_free(error);
+		g_warning("GStreamer error: %s\n", message_str);
+		if (error)
+			g_error_free (error);
 		g_free(message_str);
+		g_main_loop_quit (thumber->loop);
 		break;
 	
 	case GST_MESSAGE_WARNING:
 		gst_message_parse_warning(message, &error, &message_str);
 		g_warning("GStreamer warning: %s\n", message_str);
-		g_free(error);
+		if (error)
+			g_error_free(error);
 		g_free(message_str);
+		g_main_loop_quit (thumber->loop);
 		break;
 
 	case GST_MESSAGE_EOS:
@@ -262,7 +234,7 @@ callback_bus(GstBus           *bus,
 
 		if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
 			if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
-				g_error ("Seek failed");
+				g_warning ("Seek failed");
 			}
 		}
 		break;
@@ -270,6 +242,7 @@ callback_bus(GstBus           *bus,
 	case GST_MESSAGE_APPLICATION:
 	case GST_MESSAGE_TAG:
 	default:
+		g_main_loop_quit (thumber->loop);
 		/* unhandled message */
 		break;
 	}
@@ -377,6 +350,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	/* Run */
 	thumber->loop = g_main_loop_new (NULL, FALSE);
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
+
+	// g_timeout_add_seconds (10, g_main_loop_quit, thumber->loop);
 	g_main_loop_run (thumber->loop);
 
 	cleanup:
@@ -439,10 +414,6 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 	while (uris[i] != NULL) {
 		GError *nerror = NULL;
 
-		hildon_thumbnail_util_get_thumb_paths (uris[i], &large, &normal, 
-						       &cropped, NULL, NULL, NULL,
-						       do_pngs);
-
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);
 
@@ -450,7 +421,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		thumber->video_fps_n  = thumber->video_fps_d = -1;
 		thumber->video_height = thumber->video_width = -1;
 		thumber->uri          = uris[i];
-		thumber->target       = normal;
+		thumber->target       = OUTTYPE_NORMAL;
 		thumber->size         = 128;
 
 		video_thumbnail_create (thumber, &nerror);
@@ -458,10 +429,20 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (nerror)
 			goto nerror_handler;
 
-		thumber->target       = large;
+		thumber->target       = OUTTYPE_LARGE;
 		thumber->size         = 256;
 
 		video_thumbnail_create (thumber, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		if (do_cropped) {
+			thumber->target       = OUTTYPE_CROPPED;
+			thumber->size         = 124;
+
+			video_thumbnail_create (thumber, &nerror);
+		}
 
 		nerror_handler:
 
@@ -476,10 +457,6 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			failed = g_list_prepend (failed, g_strdup (uris[i]));
 			nerror = NULL;
 		}
-
-		g_free (large);
-		g_free (normal);
-		g_free (cropped);
 
 		i++;
 	}
@@ -525,16 +502,14 @@ reload_config (const gchar *config)
 
 	if (!g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
 		do_cropped = TRUE;
-		do_pngs = FALSE;
 		g_key_file_free (keyfile);
 		return;
 	}
 
-	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", NULL);
-	do_pngs = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoPngs", &error);
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", "DoCropping", &error);
 
 	if (error) {
-		do_pngs = FALSE;
+		do_cropped = TRUE;
 		g_error_free (error);
 	}
 

@@ -35,6 +35,7 @@
 #include "albumart-manager.h"
 
 static GHashTable *registrations;
+static GHashTable *outregistrations;
 static gboolean do_shut_down_next_time = TRUE;
 
 void
@@ -98,6 +99,45 @@ init_plugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
 	  g_dir_close (dir);
 	}
 
+	if (error)
+		g_error_free (error);
+
+	return regs;
+}
+
+
+static GHashTable*
+init_outputplugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
+{
+	GHashTable *regs;
+	GModule *module;
+	GError *error = NULL;
+	GDir *dir;
+	const gchar *plugin;
+
+	regs = g_hash_table_new_full (g_str_hash, g_str_equal,
+				      (GDestroyNotify) g_free, 
+				      (GDestroyNotify) NULL);
+
+	dir = g_dir_open (OUTPUTPLUGINS_DIR, 0, &error);
+
+	if (dir) {
+	  while ((plugin = g_dir_read_name (dir)) != NULL) {
+
+		if (!g_str_has_suffix (plugin, "." G_MODULE_SUFFIX)) {
+			continue;
+		}
+
+		module = hildon_thumbnail_outplugin_load (plugin);
+		g_hash_table_replace (regs, g_strdup (plugin),
+					      module);
+	  }
+	  g_dir_close (dir);
+	}
+
+	if (error)
+		g_error_free (error);
+
 	return regs;
 }
 
@@ -115,6 +155,17 @@ stop_plugins (GHashTable *regs, Thumbnailer *thumbnailer)
 	}
 }
 
+static void
+stop_outputplugins (GHashTable *regs, Thumbnailer *thumbnailer)
+{
+	GHashTableIter iter;
+	gpointer key, value;
+
+	g_hash_table_iter_init (&iter, regs);
+
+	while (g_hash_table_iter_next (&iter, &key, &value))  {
+	}
+}
 
 static void
 on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
@@ -150,6 +201,35 @@ on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileM
 						g_hash_table_replace (registrations, g_strdup (path),
 								      module);
 				}
+			}
+			break;
+			default:
+			break;
+		}
+	}
+
+	g_free (path);
+}
+
+
+
+static void
+on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+{
+	Thumbnailer *thumbnailer = user_data;
+	gchar *path = g_file_get_path (other_file);
+
+	if (path) {
+		switch (event_type)  {
+			case G_FILE_MONITOR_EVENT_DELETED: {
+				GModule *module = g_hash_table_lookup (outregistrations, path);
+				if (module) {
+				}
+			}
+			case G_FILE_MONITOR_EVENT_CREATED: {
+				GModule *module = hildon_thumbnail_outplugin_load (path);
+				g_hash_table_replace (outregistrations, g_strdup (path),
+						      module);
 			}
 			break;
 			default:
@@ -200,11 +280,17 @@ main (int argc, char **argv)
 					   MANAGER_INTERFACE);
 
 		registrations = init_plugins (connection, thumbnailer);
+		outregistrations = init_outputplugins (connection, thumbnailer);
 
 		file = g_file_new_for_path (PLUGINS_DIR);
 		monitor =  g_file_monitor_directory (file, G_FILE_MONITOR_NONE, NULL, NULL);
 		g_signal_connect (G_OBJECT (monitor), "changed", 
 				  G_CALLBACK (on_plugin_changed), thumbnailer);
+
+		file = g_file_new_for_path (OUTPUTPLUGINS_DIR);
+		monitor =  g_file_monitor_directory (file, G_FILE_MONITOR_NONE, NULL, NULL);
+		g_signal_connect (G_OBJECT (monitor), "changed", 
+				  G_CALLBACK (on_outputplugin_changed), thumbnailer);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 
@@ -218,6 +304,7 @@ main (int argc, char **argv)
 		g_object_unref (file);
 
 		stop_plugins (registrations, thumbnailer);
+		stop_outputplugins (outregistrations, thumbnailer);
 
 		g_hash_table_unref (registrations);
 
