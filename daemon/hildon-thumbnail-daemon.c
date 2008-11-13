@@ -307,6 +307,7 @@ main (int argc, char **argv)
 		stop_outputplugins (outregistrations, thumbnailer);
 
 		g_hash_table_unref (registrations);
+		g_hash_table_unref (outregistrations);
 
 		albumart_do_stop ();
 		thumbnailer_do_stop ();
