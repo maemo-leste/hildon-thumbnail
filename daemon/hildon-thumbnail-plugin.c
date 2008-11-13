@@ -47,14 +47,8 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 			   module_name, 
 			   g_module_error ());
 	} else {
-		IsActiveFunc isac_func;
-
-		if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
-			if (isac_func ()) {
-				outplugs = g_list_prepend (outplugs, module);
-				g_module_make_resident (module);
-			}
-		}
+		g_module_make_resident (module);
+		outplugs = g_list_prepend (outplugs, module);
 	}
 
 	g_free (path);
@@ -90,15 +84,21 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 
 		if (g_module_symbol (module, "hildon_thumbnail_outplugin_out", (gpointer *) &out_func)) {
 
-			out_func (rgb8_pixmap, width, height, rowstride, bits_per_sample, type, mtime, uri, &nerror);
+			IsActiveFunc isac_func;
 
-			if (nerror) {
-				if (!errors) {
-					errors = g_string_new ("");
-					domain = nerror->domain;
+			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
+				if (isac_func ()) {
+					out_func (rgb8_pixmap, width, height, rowstride, bits_per_sample, type, mtime, uri, &nerror);
+
+					if (nerror) {
+						if (!errors) {
+							errors = g_string_new ("");
+							domain = nerror->domain;
+						}
+						g_string_append (errors, nerror->message);
+						g_error_free (nerror);
+					}
 				}
-				g_string_append (errors, nerror->message);
-				g_error_free (nerror);
 			}
 
 		}

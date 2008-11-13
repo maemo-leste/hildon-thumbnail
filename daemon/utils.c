@@ -98,8 +98,10 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	else
 		thumb_filename = g_strdup_printf ("%s.jpeg", ascii_digest);
 
-	cropped_filename = g_strdup_printf ("%s.jpeg", ascii_digest);
-
+	if (as_png)
+		cropped_filename = g_strdup_printf ("%s.png", ascii_digest);
+	else
+		cropped_filename = g_strdup_printf ("%s.jpeg", ascii_digest);
 
 	*large = g_build_filename (large_dir, thumb_filename, NULL);
 	*normal = g_build_filename (normal_dir, thumb_filename, NULL);
@@ -115,7 +117,11 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 				lthumb_filename = g_strdup_printf ("%s.png", lascii_digest);
 			else
 				lthumb_filename = g_strdup_printf ("%s.jpeg", lascii_digest);
-			lcropped_filename = g_strdup_printf ("%s.jpeg", lascii_digest);
+
+			if (as_png)
+				lcropped_filename = g_strdup_printf ("%s.png", lascii_digest);
+			else
+				lcropped_filename = g_strdup_printf ("%s.jpeg", lascii_digest);
 
 			if (local_large)
 				*local_large = g_build_filename (local_dir, "large", lthumb_filename, NULL);
