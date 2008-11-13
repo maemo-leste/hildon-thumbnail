@@ -54,14 +54,12 @@ libhildon_thumbnailer_gstreamer_video_la_CFLAGS = \
 	-I$(top_srcdir)/thumbs \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(GSTREAMER_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS)
+	$(GSTREAMER_CFLAGS) 
 libhildon_thumbnailer_gstreamer_video_la_LIBADD = \
 	$(top_builddir)/daemon/libshared.la \
         $(GMODULE_LIBS) \
         $(GLIB_LIBS) \
-	$(GSTREAMER_LIBS) \
-	$(GDK_PIXBUF_LIBS)
+	$(GSTREAMER_LIBS) 
 
 libhildon_thumbnailer_epeg_la_SOURCES = epeg-plugin.c epeg-plugin.h
 libhildon_thumbnailer_epeg_la_LDFLAGS = $(plugin_flags)
