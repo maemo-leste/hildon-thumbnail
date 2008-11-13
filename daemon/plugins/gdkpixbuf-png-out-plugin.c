@@ -152,11 +152,11 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 	}
 }
 
-void
-hildon_thumbnail_outplugin_stop (void) 
+gboolean hildon_thumbnail_outplugin_stop (void) 
 {
 	if (monitor)
 		g_object_unref (monitor);
+	return FALSE;
 }
 
 gboolean

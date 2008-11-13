@@ -322,7 +322,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 	return;
 }
 
-void 
+gboolean  
 hildon_thumbnail_plugin_stop (void)
 {
 	if (supported)
@@ -330,6 +330,7 @@ hildon_thumbnail_plugin_stop (void)
 	supported = NULL;
 	if (monitor)
 		g_object_unref (monitor);
+	return FALSE;
 }
 
 static void

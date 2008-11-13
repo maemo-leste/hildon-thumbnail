@@ -43,6 +43,7 @@ static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
 static gboolean do_vidthumbs = TRUE;
 static GFileMonitor *monitor = NULL;
+static gboolean had_init = FALSE;
 
 typedef struct {
 	const gchar    *uri;
@@ -468,11 +469,15 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 }
 
 
-void 
+
+gboolean 
 hildon_thumbnail_plugin_stop (void)
 {
+	/* gst_deinit (); */
+
 	if (monitor)
 		g_object_unref (monitor);
+	return TRUE;
 }
 
 static void
@@ -518,13 +523,19 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
 	const gchar **supported;
-
+	GError *nerror = NULL;
 	/* TODO: Perhaps we can add a few remote ones here too (streaming media) */
 	const gchar *uri_schemes[2] = { "file", NULL };
 
-	g_type_init ();
+	if (!had_init) {
+		g_type_init ();
+		gst_init_check (NULL, NULL, &nerror);
 
-	gst_init (NULL, NULL);
+		if (nerror) {
+			g_propagate_error (error, nerror);
+		}
+		had_init = TRUE;
+	}
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
 
@@ -548,5 +559,4 @@ hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer t
 	}
 
 	g_free (config);
-
 }

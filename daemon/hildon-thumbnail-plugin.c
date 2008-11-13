@@ -27,22 +27,29 @@
 #include "hildon-thumbnail-plugin.h"
 
 static GList *outplugs = NULL;
+static GStaticRecMutex mutex = G_STATIC_REC_MUTEX_INIT;
 
 typedef gboolean (*IsActiveFunc) (void);
-
-typedef void (*StopFunc) (void);
+typedef gboolean (*StopFunc) (void);
 
 void
 hildon_thumbnail_outplugin_unload (GModule *module)
 {
 	StopFunc stop_func;
+	gboolean resident = FALSE;
+
+	g_static_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_outplugin_stop", (gpointer *) &stop_func)) {
-		stop_func ();
+		resident = stop_func ();
 	}
 
 	outplugs = g_list_remove (outplugs, module);
-	g_module_close (module);
+
+	if (!resident)
+		g_module_close (module);
+
+	g_static_rec_mutex_unlock (&mutex);
 }
 
 GModule*
@@ -52,6 +59,8 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
+	g_static_rec_mutex_lock (&mutex);
+
 	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
 	if (!module) {
@@ -59,9 +68,11 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 			   module_name, 
 			   g_module_error ());
 	} else {
-		g_module_make_resident (module);
+		/* g_module_make_resident (module); */
 		outplugs = g_list_prepend (outplugs, module);
 	}
+
+	g_static_rec_mutex_unlock (&mutex);
 
 	return module;
 }
@@ -86,6 +97,8 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 	GList *copy = outplugs;
 	GString *errors = NULL;
 	GQuark domain;
+
+	g_static_rec_mutex_lock (&mutex);
 
 	while (copy) {
 		GModule *module = copy->data;
@@ -119,6 +132,8 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 		g_set_error (error, domain, 0, errors->str);
 		g_string_free (errors, TRUE);
 	}
+
+	g_static_rec_mutex_unlock (&mutex);
 }
 
 
@@ -130,15 +145,19 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
+	g_static_rec_mutex_lock (&mutex);
+
 	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
 	if (!module) {
 		g_warning ("Could not load thumbnailer module '%s', %s\n", 
 			   module_name, 
 			   g_module_error ());
-	} else {
+	} /* else {
 		g_module_make_resident (module);
-	}
+	} */
+
+	g_static_rec_mutex_unlock (&mutex);
 
 	return module;
 }
@@ -151,9 +170,13 @@ hildon_thumbnail_plugin_get_supported (GModule *module)
 	GStrv supported = NULL;
 	SupportedFunc supported_func;
 
+	g_static_rec_mutex_lock (&mutex);
+
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_supported", (gpointer *) &supported_func)) {
 		supported = (supported_func) ();
 	}
+
+	g_static_rec_mutex_unlock (&mutex);
 
 	return supported;
 }
@@ -166,9 +189,14 @@ hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, register_f
 {
 	InitFunc func;
 
+	g_static_rec_mutex_lock (&mutex);
+
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
 		(func) (cropping, in_func, instance, module, error);
 	}
+
+	g_static_rec_mutex_unlock (&mutex);
+
 }
 
 typedef void (*CreateFunc) (GStrv uris, gchar *mime_hint, GStrv *failed_uris, GError **error);
@@ -177,18 +205,30 @@ void
 hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, gchar *mime_hint, GStrv *failed_uris, GError **error)
 {
 	CreateFunc func;
+
+	g_static_rec_mutex_lock (&mutex);
+
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_create", (gpointer *) &func)) {
 		(func) (uris, mime_hint, failed_uris, error);
 	}
+
+	g_static_rec_mutex_unlock (&mutex);
 }
 
 void
 hildon_thumbnail_plugin_do_stop (GModule *module)
 {
 	StopFunc func;
+	gboolean resident = FALSE;
+
+	g_static_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_stop", (gpointer *) &func)) {
-		(func) ();
+		resident = (func) ();
 	}
-	g_module_close (module);
+
+	if (!resident)
+		g_module_close (module);
+
+	g_static_rec_mutex_unlock (&mutex);
 }

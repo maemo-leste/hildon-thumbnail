@@ -1,6 +1,21 @@
 2008-11-13  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/hildon-thumbnail-plugin.c: Actually unloading and loading of
+	modules, taking into account resident modules if the module behaves as
+	a resident one (currently only the gstreamer-video-plugin.c is a
+	resident one, because it needs gst_init, and the function can't be
+	executed twice without crashing ... when I last checked)
+
+2008-11-13  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/gdkpixbuf-png-out-plugin.c
 	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
 	* daemon/plugins/gstreamer-video-plugin.c

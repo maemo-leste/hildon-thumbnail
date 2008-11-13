@@ -160,8 +160,11 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 static gboolean 
 do_delete_or_not (gpointer key, gpointer value, gpointer user_data)
 {
-	if (value == user_data)
+	PluginRegistration *reg = value;
+
+	if (reg->plugin == user_data)
 		return TRUE;
+
 	return FALSE;
 }
 
