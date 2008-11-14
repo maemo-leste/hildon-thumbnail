@@ -53,8 +53,8 @@ typedef struct {
 	guint           mtime;
 
 	GCond          *condition;
-	gboolean        had_callback;
-	GMutex         *mutex;
+	gboolean        had_callback, set_state;
+	GMutex         *mutex, *pipe_lock;
 
 	GstElement     *pipeline;
 	GstElement     *source;
@@ -140,6 +140,7 @@ callback_newpad (GstElement       *decodebin,
 		 gboolean          last,
 		 VideoThumbnailer *thumber)
 {
+  if (g_mutex_trylock (thumber->pipe_lock)) {
 	GstCaps      *caps;
 	GstStructure *str;
 	GstPad       *videopad;
@@ -147,6 +148,7 @@ callback_newpad (GstElement       *decodebin,
 	videopad = gst_element_get_pad (thumber->bin, "sink");
 	if (GST_PAD_IS_LINKED (videopad)) {
 		g_object_unref (videopad);
+		g_mutex_unlock (thumber->pipe_lock);
 		return;
 	}
 	
@@ -155,11 +157,13 @@ callback_newpad (GstElement       *decodebin,
 	if (!g_strrstr (gst_structure_get_name (str), "video")) {
 		g_object_unref (videopad);
 		gst_caps_unref (caps);
+		g_mutex_unlock (thumber->pipe_lock);
 		return;
 	}
 	gst_caps_unref (caps);
-	
 	gst_pad_link (pad, videopad);
+	g_mutex_unlock (thumber->pipe_lock);
+  }
 }
 
 
@@ -168,13 +172,13 @@ callback_bus(GstBus           *bus,
 	     GstMessage       *message, 
 	     VideoThumbnailer *thumber)
 {
+  if (g_mutex_trylock (thumber->pipe_lock)) {
 	gchar       *message_str;
 	GError      *error = NULL;
 	GstState     old_state, new_state;
 	gint64       duration = -1;
 	gint64       position = -1;
 	GstFormat    format;
-
 
 	switch (GST_MESSAGE_TYPE(message)) {
 
@@ -250,7 +254,7 @@ callback_bus(GstBus           *bus,
 
 		if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
 			if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
-				g_warning ("Seek failed");
+				//g_warning ("Seek failed");
 			}
 		}
 		break;
@@ -261,8 +265,10 @@ callback_bus(GstBus           *bus,
 		/* unhandled message */
 		break;
 	}
+	g_mutex_unlock (thumber->pipe_lock);
+  }
 
-	return TRUE;
+  return TRUE;
 }
 
 static void
@@ -284,8 +290,9 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	thumber->video_sink   = NULL;
 
 	thumber->had_callback = FALSE;
-	thumber->mutex = g_mutex_new ();
-	thumber->condition = g_cond_new ();
+	thumber->mutex        = g_mutex_new ();
+	thumber->condition    = g_cond_new ();
+	thumber->set_state    = FALSE;
 
 	/* Preparing the source, decodebin and pipeline */
 	thumber->pipeline     = gst_pipeline_new("source pipeline");
@@ -369,31 +376,32 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
 
 	/* Run */
+	thumber->set_state = FALSE;
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
 
 	g_get_current_time (&timev);
-	g_time_val_add  (&timev, 10000000); /* 10 seconds */
+	g_time_val_add  (&timev, 1000000); /* 1 seconds */
 
 	g_mutex_lock (thumber->mutex);
 	if (!thumber->had_callback)
 		g_cond_timed_wait (thumber->condition, thumber->mutex, &timev);
 	g_mutex_unlock (thumber->mutex);
 
-
 	cleanup:
 
 	g_cond_free (thumber->condition);
+	thumber->condition = NULL;
 	g_mutex_free (thumber->mutex);
 
+	g_mutex_lock (thumber->pipe_lock);
+
 	if (thumber->pipeline) {
-		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
+
+		if (thumber->pipeline && !thumber->set_state)
+			gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
 
 		/* This should free all the elements in the pipeline FIXME 
-		 * Check that this is the case 
-		 *
-		 * Review by Philip: I'm assuming here that this is a correct
-		 * assumption ;-) - I have not checked myself - */
-
+		 * Check that this is the case */
 		gst_object_unref (thumber->pipeline);
 	} else {
 		if (thumber->source)
@@ -409,6 +417,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 		if (thumber->video_sink)
 			gst_object_unref (thumber->video_sink);
 	}
+	g_mutex_unlock (thumber->pipe_lock);
 
 }
 
@@ -444,6 +453,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);
 
+		thumber->pipe_lock = g_mutex_new ();
+
 		thumber->has_audio    = thumber->has_video = FALSE;
 		thumber->video_fps_n  = thumber->video_fps_d = -1;
 		thumber->video_height = thumber->video_width = -1;
@@ -472,6 +483,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		}
 
 		nerror_handler:
+
+		g_mutex_free (thumber->pipe_lock);
 
 		g_slice_free (VideoThumbnailer, thumber);
 
