@@ -1,3 +1,8 @@
+2008-11-14  Mikael Ottela    <mikael.ottela@ixonos.com>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Fixed some bugs in the 
+	video thumbnailer
+
 2008-11-13  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/gdkpixbuf-plugin.c

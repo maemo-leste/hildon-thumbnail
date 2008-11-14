@@ -72,6 +72,8 @@ typedef struct {
 	gint		video_fps_d;
 	gint		audio_channels;
 	gint		audio_samplerate;
+
+	gboolean        bugged;
 } VideoThumbnailer;
 
 
@@ -92,7 +94,7 @@ create_output (OutType target, unsigned char *data, guint width, guint height, g
 					    width,
 					    height,
 					    width*3,
-					    bpp,
+					    bpp/3,
 					    target,
 					    mtime, 
 					    uri, 
@@ -175,6 +177,7 @@ callback_bus(GstBus           *bus,
 		if (error)
 			g_error_free (error);
 		g_free(message_str);
+		thumber->bugged = TRUE;
 		g_main_loop_quit (thumber->loop);
 		break;
 	
@@ -188,6 +191,7 @@ callback_bus(GstBus           *bus,
 		break;
 
 	case GST_MESSAGE_EOS:
+		thumber->bugged = TRUE;
 		g_main_loop_quit (thumber->loop);
 		break;
 
@@ -226,7 +230,6 @@ callback_bus(GstBus           *bus,
 	case GST_MESSAGE_APPLICATION:
 	case GST_MESSAGE_TAG:
 	default:
-		g_main_loop_quit (thumber->loop);
 		/* unhandled message */
 		break;
 	}
@@ -242,6 +245,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	GstCaps           *caps;
 
 	/* Resetting */
+	thumber->bugged       = FALSE;
+
 	thumber->loop         = NULL;
 	thumber->source       = NULL;
 	thumber->decodebin    = NULL;
@@ -336,7 +341,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
 
 	// g_timeout_add_seconds (10, g_main_loop_quit, thumber->loop);
-	g_main_loop_run (thumber->loop);
+	if (!(thumber->bugged)) 
+		g_main_loop_run (thumber->loop);
 
 	cleanup:
 
