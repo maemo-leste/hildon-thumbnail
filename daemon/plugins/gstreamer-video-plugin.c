@@ -145,8 +145,8 @@ callback_newpad (GstElement       *decodebin,
 	GstStructure *str;
 	GstPad       *videopad;
 
-	videopad = gst_element_get_pad (thumber->bin, "sink");
-	if (GST_PAD_IS_LINKED (videopad)) {
+	videopad = gst_element_get_static_pad (thumber->bin, "sink");
+	if (!videopad || GST_PAD_IS_LINKED (videopad)) {
 		g_object_unref (videopad);
 		g_mutex_unlock (thumber->pipe_lock);
 		return;
@@ -235,14 +235,14 @@ callback_bus(GstBus           *bus,
 			break;
 		}
 
-		gst_message_parse_state_changed (message, &old_state, &new_state, NULL);
+		//gst_message_parse_state_changed (message, &old_state, &new_state, NULL);
 
 		if (old_state == new_state) {
 			break;
 		}
 
 		format = GST_FORMAT_TIME;
-		gst_element_query_duration (thumber->pipeline, &format, &duration);
+		//gst_element_query_duration (thumber->pipeline, &format, &duration);
 		
 		if (duration != -1) {
 			position = duration * 5 / 100;
@@ -250,12 +250,12 @@ callback_bus(GstBus           *bus,
 			position = 1 * GST_SECOND;
 		}
 
-		gst_element_query_duration (thumber->pipeline, &format, &duration);
+		//gst_element_query_duration (thumber->pipeline, &format, &duration);
 
 		if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
-			if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
+	//		if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
 				//g_warning ("Seek failed");
-			}
+	//		}
 		}
 		break;
 
@@ -292,7 +292,6 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	thumber->had_callback = FALSE;
 	thumber->mutex        = g_mutex_new ();
 	thumber->condition    = g_cond_new ();
-	thumber->set_state    = FALSE;
 
 	/* Preparing the source, decodebin and pipeline */
 	thumber->pipeline     = gst_pipeline_new("source pipeline");
@@ -376,7 +375,6 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
 
 	/* Run */
-	thumber->set_state = FALSE;
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
 
 	g_get_current_time (&timev);
@@ -397,7 +395,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 
 	if (thumber->pipeline) {
 
-		if (thumber->pipeline && !thumber->set_state)
+		if (thumber->pipeline && !thumber->bugged)
 			gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
 
 		/* This should free all the elements in the pipeline FIXME 
