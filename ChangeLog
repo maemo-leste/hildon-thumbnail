@@ -1,3 +1,8 @@
+2008-11-14  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.c: Fixed the locking to cope with
+	the video plugin
+
 2008-11-14  Mikael Ottela    <mikael.ottela@ixonos.com>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Fixed some bugs in the 
