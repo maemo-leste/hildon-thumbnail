@@ -52,7 +52,9 @@ typedef struct {
 
 	guint           mtime;
 
-	GMainLoop      *loop;
+	GCond          *condition;
+	gboolean        had_callback;
+	GMutex         *mutex;
 
 	GstElement     *pipeline;
 	GstElement     *source;
@@ -122,7 +124,12 @@ callback_thumbnail (GstElement       *image_sink,
 			   thumber->size, thumber->size,
 			   24, thumber->uri, thumber->mtime);
 
-	g_main_loop_quit (thumber->loop);
+	if (thumber->condition) {
+		g_mutex_lock (thumber->mutex);
+		g_cond_broadcast (thumber->condition);
+		thumber->had_callback = TRUE;
+		g_mutex_unlock (thumber->mutex);
+	}
 
 	return TRUE;
 }
@@ -178,21 +185,42 @@ callback_bus(GstBus           *bus,
 			g_error_free (error);
 		g_free(message_str);
 		thumber->bugged = TRUE;
-		g_main_loop_quit (thumber->loop);
+
+		if (thumber->condition) {
+			g_mutex_lock (thumber->mutex);
+			g_cond_broadcast (thumber->condition);
+			thumber->had_callback = TRUE;
+			g_mutex_unlock (thumber->mutex);
+		}
+
 		break;
-	
+
 	case GST_MESSAGE_WARNING:
 		gst_message_parse_warning(message, &error, &message_str);
 		g_warning("GStreamer warning: %s\n", message_str);
 		if (error)
 			g_error_free(error);
 		g_free(message_str);
-		g_main_loop_quit (thumber->loop);
+
+		if (thumber->condition) {
+			g_mutex_lock (thumber->mutex);
+			g_cond_broadcast (thumber->condition);
+			thumber->had_callback = TRUE;
+			g_mutex_unlock (thumber->mutex);
+		}
+
 		break;
 
 	case GST_MESSAGE_EOS:
 		thumber->bugged = TRUE;
-		g_main_loop_quit (thumber->loop);
+
+		if (thumber->condition) {
+			g_mutex_lock (thumber->mutex);
+			g_cond_broadcast (thumber->condition);
+			thumber->had_callback = TRUE;
+			g_mutex_unlock (thumber->mutex);
+		}
+
 		break;
 
 	case GST_MESSAGE_STATE_CHANGED:
@@ -243,17 +271,21 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	GstBus            *bus;
 	GstPad            *videopad;
 	GstCaps           *caps;
+	GTimeVal           timev;
 
 	/* Resetting */
 	thumber->bugged       = FALSE;
 
-	thumber->loop         = NULL;
 	thumber->source       = NULL;
 	thumber->decodebin    = NULL;
 	thumber->bin          = NULL;
 	thumber->video_scaler = NULL;
 	thumber->video_filter = NULL;
 	thumber->video_sink   = NULL;
+
+	thumber->had_callback = FALSE;
+	thumber->mutex = g_mutex_new ();
+	thumber->condition = g_cond_new ();
 
 	/* Preparing the source, decodebin and pipeline */
 	thumber->pipeline     = gst_pipeline_new("source pipeline");
@@ -337,14 +369,21 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
 
 	/* Run */
-	thumber->loop = g_main_loop_new (NULL, FALSE);
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
 
-	// g_timeout_add_seconds (10, g_main_loop_quit, thumber->loop);
-	if (!(thumber->bugged)) 
-		g_main_loop_run (thumber->loop);
+	g_get_current_time (&timev);
+	g_time_val_add  (&timev, 10000000); /* 10 seconds */
+
+	g_mutex_lock (thumber->mutex);
+	if (!thumber->had_callback)
+		g_cond_timed_wait (thumber->condition, thumber->mutex, &timev);
+	g_mutex_unlock (thumber->mutex);
+
 
 	cleanup:
+
+	g_cond_free (thumber->condition);
+	g_mutex_free (thumber->mutex);
 
 	if (thumber->pipeline) {
 		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
@@ -371,8 +410,6 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 			gst_object_unref (thumber->video_sink);
 	}
 
-	if (thumber->loop)
-		g_main_loop_unref (thumber->loop);
 }
 
 const gchar** 
