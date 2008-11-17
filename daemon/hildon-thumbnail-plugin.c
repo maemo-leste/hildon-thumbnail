@@ -77,6 +77,55 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 	return module;
 }
 
+
+
+typedef gboolean (*NeedsOutFunc) (const guchar *rgb8_pixmap, 
+			 guint width, guint height,
+			 guint rowstride, guint bits_per_sample,
+			 OutType type,
+			 guint64 mtime, 
+			 const gchar *uri);
+
+
+gboolean
+hildon_thumbnail_outplugins_needs_out (const guchar *rgb8_pixmap, 
+						   guint width, guint height,
+						   guint rowstride, guint bits_per_sample,
+						   OutType type,
+						   guint64 mtime, 
+						   const gchar *uri)
+{
+	GList *copy = g_list_copy (outplugs);
+	GQuark domain;
+	gboolean retval = FALSE;
+
+	g_static_rec_mutex_lock (&mutex);
+	copy = g_list_copy (outplugs);
+
+	while (copy && !retval) {
+		GModule *module = copy->data;
+		NeedsOutFunc needs_out_func;
+
+		if (g_module_symbol (module, "hildon_thumbnail_outplugin_needs_out", (gpointer *) &needs_out_func)) {
+			IsActiveFunc isac_func;
+			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
+				if (isac_func ()) {
+					retval = needs_out_func (rgb8_pixmap, width, height, rowstride, bits_per_sample, type, mtime, uri);
+				} 
+			} 
+		}
+
+		copy = g_list_next (copy);
+	}
+
+	g_static_rec_mutex_unlock (&mutex);
+
+	g_list_free (copy);
+
+	return retval;
+}
+
+
 typedef void (*OutFunc) (const guchar *rgb8_pixmap, 
 			 guint width, guint height,
 			 guint rowstride, guint bits_per_sample,
@@ -97,7 +146,6 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,
 	GList *copy = g_list_copy (outplugs);
 	GString *errors = NULL;
 	GQuark domain;
-	gboolean dounl = TRUE;
 
 	g_static_rec_mutex_lock (&mutex);
 	copy = g_list_copy (outplugs);

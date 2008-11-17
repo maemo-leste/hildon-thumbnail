@@ -92,20 +92,30 @@ create_output (OutType target, unsigned char *data, guint width, guint height, g
 {
 	GError *error = NULL;
 
-	hildon_thumbnail_outplugins_do_out (data, 
-					    width,
-					    height,
-					    width*3,
-					    bpp/3,
-					    target,
-					    mtime, 
-					    uri, 
-					    &error);
+	if (hildon_thumbnail_outplugins_needs_out (data, 
+						   width,
+						   height,
+						   width*3,
+						   bpp/3,
+						   target,
+						   mtime, 
+						   uri)) {
 
-	if (error) {
-		g_warning("%s\n", error->message);
-		g_error_free(error);
-		return FALSE;
+		hildon_thumbnail_outplugins_do_out (data, 
+						    width,
+						    height,
+						    width*3,
+						    bpp/3,
+						    target,
+						    mtime, 
+						    uri, 
+						    &error);
+
+		if (error) {
+			g_warning("%s\n", error->message);
+			g_error_free(error);
+			return FALSE;
+		}
 	}
 
 	return TRUE;

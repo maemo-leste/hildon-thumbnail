@@ -65,6 +65,12 @@ void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap,
 						   guint64 mtime, 
 						   const gchar *uri, 
 						   GError **error);
+gboolean    hildon_thumbnail_outplugins_needs_out (const guchar *rgb8_pixmap, 
+						   guint width, guint height,
+						   guint rowstride, guint bits_per_sample,
+						   OutType type,
+						   guint64 mtime, 
+						   const gchar *uri);
 
 G_END_DECLS
 

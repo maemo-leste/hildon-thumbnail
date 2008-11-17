@@ -29,6 +29,9 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <utime.h>
+
 #include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
@@ -43,6 +46,50 @@ static gboolean had_init = FALSE;
 static gboolean is_active = TRUE;
 static GFileMonitor *monitor = NULL;
 
+
+gboolean
+hildon_thumbnail_outplugin_needs_out (const guchar *rgb8_pixmap, 
+				guint width, guint height,
+				guint rowstride, guint bits_per_sample,
+				OutType type,
+				guint64 mtime, 
+				const gchar *uri)
+{
+	gboolean retval;
+	gchar *large, *normal, *cropped, *filen;
+
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
+					       NULL, NULL, NULL, FALSE);
+
+	switch (type) {
+		case OUTTYPE_LARGE:
+			filen = large;
+		break;
+		case OUTTYPE_NORMAL:
+			filen = normal;
+		break;
+		case OUTTYPE_CROPPED:
+			filen = cropped;
+		break;
+	}
+
+	retval = FALSE;
+
+	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
+		struct stat st;
+		g_stat (filen, &st);
+		if (st.st_mtime != mtime)
+			retval = TRUE;
+	} else
+		retval = TRUE;
+
+	g_free (normal);
+	g_free (large);
+	g_free (cropped);
+
+	return retval;
+}
+
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
 				guint width, guint height,
@@ -54,6 +101,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 {
 	GdkPixbuf *pixbuf;
 	gchar *large, *normal, *cropped, *filen;
+	struct utimbuf buf;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
 					       NULL, NULL, NULL, FALSE);
@@ -79,6 +127,10 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 			 error, NULL);
 
 	g_object_unref (pixbuf);
+
+	buf.actime = buf.modtime = mtime;
+
+	utime (filen, &buf);
 
 	g_free (normal);
 	g_free (large);
