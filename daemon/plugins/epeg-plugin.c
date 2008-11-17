@@ -176,10 +176,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 					   G_FILE_QUERY_INFO_NONE,
 					   NULL, &nerror);
 
-		if (nerror) {
-			had_err = TRUE;
+		if (nerror)
 			goto nerror_handler;
-		}
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
@@ -239,10 +237,11 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE,
 							    mtime, uri, 
 							    &nerror);
-		}
 
-		if (nerror)
-			goto nerror_handler;
+			if (nerror)
+				goto nerror_handler;
+
+		}
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri)) {
 
@@ -263,10 +262,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			g_object_unref (pixbuf_cropped);
 
+			if (nerror)
+				goto nerror_handler;
 		}
-
-		if (nerror)
-			goto nerror_handler;
 
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri)) {
@@ -290,14 +288,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			g_object_unref (pixbuf_normal);
 
-		}
+			if (nerror)
+				goto nerror_handler;
 
-		if (nerror)
-			goto nerror_handler;
+		}
 
 		nerror_handler:
 
-		if (had_err) {
+		if (had_err || nerror) {
 			gchar *msg;
 			if (nerror) {
 				msg = g_strdup (nerror->message);
@@ -315,7 +313,6 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (pixbuf_large)
 			g_object_unref (pixbuf_large);
-
 		if (file)
 			g_object_unref (file);
 		if (finfo)

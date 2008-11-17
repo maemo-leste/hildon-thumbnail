@@ -1,0 +1,179 @@
+Makefile.am
+-----------
+
+plugin_flags = -module -avoid-version -no-undefined
+pluginsdir = $(libdir)/hildon-thumbnailer/plugins
+
+plugins_LTLIBRARIES = libhildon-thumbnailer-mine.la
+
+libhildon_thumbnailer_mine_la_SOURCES = mine-plugin.c
+libhildon_thumbnailer_mine_la_LDFLAGS = $(plugin_flags)
+libhildon_thumbnailer_mine_la_CFLAGS = $(GLIB_CFLAGS) ...
+libhildon_thumbnailer_mine_la_LIBADD = $(GLIB_LIBS) ... 
+
+mine-plugin.c
+-------------
+#include <glib.h>
+#include <hildon-thumbnail-plugin.h>
+
+#define MINE_ERROR_DOMAIN "HildonThumbnailerMine"
+#define MINE_ERROR        g_quark_from_static_string (MINE_ERROR_DOMAIN)
+
+static gchar **supported     = NULL;
+static gboolean do_cropped   = TRUE;
+static GFileMonitor *monitor = NULL;
+
+const gchar** 
+hildon_thumbnail_plugin_supported (void)
+{
+	if (!supported) {
+		supported = (gchar **) g_malloc0 (sizeof (gchar *) * 2);
+		supported[0] = g_strdup ("image/mine");
+		supported[1] = NULL;
+	}
+	return (const gchar**) supported;
+}
+
+static void
+handle (const gchar *uri, HildonThumbnailPluginOutType type, GError **error)
+{
+	/* For you to implement */
+}
+
+void
+hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, 
+				GStrv *failed_uris, GError **error)
+{
+	guint i = 0;
+	GString *errors = NULL;
+	GList *failed = NULL;
+
+	while (uris[i] != NULL) {
+		GError *nerror = NULL;
+
+		handle (uris[i], HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		handle (uris[i], HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		handle (uris[i], HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+		
+		nerror_handler:
+
+		if (nerror) {
+			if (!errors)
+				errors = g_string_new ("");
+			g_string_append_printf (errors, "[`%s': %s] ", 
+						uri, nerror->message);
+			failed = g_list_prepend (failed, g_strdup (uri));
+			g_error_free (nerror);
+			nerror = NULL;
+		}
+	}
+
+	if (errors && failed) {
+		guint t = 0;
+		GList *copy = failed;
+		GStrv furis = (GStrv) g_malloc0 (sizeof (gchar*) * 
+						 (g_list_length (failed) + 1));
+		t = 0;
+		while (copy) {
+			furis[t] = copy->data;
+			copy = g_list_next (copy);
+			t++;
+		}
+		furis[t] = NULL;
+		*failed_uris = furis;
+		g_list_free (failed);
+		g_set_error (error, EPEG_ERROR, 0,
+			     errors->str);
+		g_string_free (errors, TRUE);
+	}
+}
+
+gboolean  
+hildon_thumbnail_plugin_stop (void)
+{
+	if (supported)
+		g_strfreev (supported);
+	supported = NULL;
+	if (monitor)
+		g_object_unref (monitor);
+	return FALSE;
+}
+
+static void
+reload_config (const gchar *config) 
+{
+	GKeyFile *keyfile;
+	GStrv mimetypes;
+	guint i = 0, length;
+	GError *error = NULL;
+	keyfile = g_key_file_new ();
+	if (!g_key_file_load_from_file (keyfile, config, 
+					G_KEY_FILE_NONE, NULL)) {
+		do_cropped = TRUE;
+		g_key_file_free (keyfile);
+		return;
+	}
+	do_cropped = g_key_file_get_boolean (keyfile, "Hildon Thumbnailer", 
+					     "DoCropping", &error);
+	if (error) {
+		do_cropped = TRUE;
+		g_error_free (error);
+	}
+	g_key_file_free (keyfile);
+}
+
+static void 
+on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, 
+		 GFileMonitorEvent event_type, gpointer user_data)
+{
+	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || 
+	    event_type == G_FILE_MONITOR_EVENT_CREATED) {
+		gchar *config = g_file_get_path (file);
+		reload_config (config);
+		g_free (config);
+	}
+}
+
+void 
+hildon_thumbnail_plugin_init (gboolean *cropping, 
+			      hildon_thumbnail_register_func func, 
+			      gpointer thumbnailer, GModule *module, 
+			      GError **error)
+{
+	gchar *config = g_build_filename (g_get_user_config_dir (), 
+					  "hildon-thumbnailer", 
+					  "mine-plugin.conf", NULL);
+	GFile *file = g_file_new_for_path (config);
+	guint i = 0;
+	const gchar **supported;
+	const gchar *uri_schemes[2] = { "file", NULL };
+	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, 
+					NULL, NULL);
+	g_signal_connect (G_OBJECT (monitor), "changed", 
+			  G_CALLBACK (on_file_changed), NULL);
+	g_object_unref (file);
+	reload_config (config);
+	*cropping = do_cropped;
+	if (func) {
+		supported = hildon_thumbnail_plugin_supported ();
+		while (supported && supported[i] != NULL) {
+			func (thumbnailer, supported[i], module, 
+			      (const GStrv) uri_schemes, 1);
+			i++;
+		}
+	}
+
+	g_free (config);
+}
+

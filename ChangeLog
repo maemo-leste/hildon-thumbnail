@@ -1,5 +1,10 @@
 2008-11-17  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/epeg-plugin.c: Bugfix in error handling
+	* daemon/README.yourplugin: Added documentation for plugin writers
+
+2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+
 	* debian/libhildon-thumbnail-dev.install
 	* configure.ac
 	* daemon/hildon-thumbnail-daemon.c
