@@ -79,6 +79,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint,
 			g_error_free (nerror);
 			nerror = NULL;
 		}
+		i++;
 	}
 
 	if (errors && failed) {
