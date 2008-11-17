@@ -155,30 +155,6 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 	dbus_g_method_return (context, num);
 }
 
-#ifndef strcasestr
-static char *
-strcasestr (char *haystack, char *needle)
-{
-	char *p, *startn = 0, *np = 0;
-
-	for (p = haystack; *p; p++) {
-		if (np) {
-			if (toupper(*p) == toupper(*np)) {
-				if (!*++np)
-					return startn;
-			} else
-				np = 0;
-		} else if (toupper(*p) == toupper(*needle)) {
-			np = needle + 1;
-			startn = p;
-		}
-	}
-
-	return 0;
-}
-#endif
-
-
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
  * happens in a thread, we must care about proper locking, too.

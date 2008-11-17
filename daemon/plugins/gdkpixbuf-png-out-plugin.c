@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -145,7 +146,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					   NULL, NULL);
 
 
-	g_sprintf (mtime_str, "%lu", mtime);
+	g_sprintf (mtime_str, "%Lu", mtime);
 
 	gdk_pixbuf_savev (pixbuf, filen, "png", 
 			  (char **) default_keys, 
@@ -171,8 +172,6 @@ static void
 reload_config (const gchar *config) 
 {
 	GKeyFile *keyfile;
-	GStrv mimetypes;
-	guint i = 0, length;
 	GError *error = NULL;
 
 	keyfile = g_key_file_new ();

@@ -79,8 +79,6 @@ typedef struct {
 } VideoThumbnailer;
 
 
-static gboolean callback_bus(GstBus *bus, GstMessage *message, VideoThumbnailer *thumber);
-
 #ifndef g_sprintf
 gint                g_sprintf                           (gchar *string,
                                                          gchar const *format,
@@ -285,7 +283,6 @@ callback_bus(GstBus           *bus,
 static void
 video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 {
-	GstBus            *bus;
 	GstPad            *videopad;
 	GstCaps           *caps;
 	GTimeVal           timev;
@@ -458,9 +455,6 @@ void
 hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris, GError **error)
 {
 	VideoThumbnailer *thumber;
-	gchar *large    = NULL;
-	gchar *normal   = NULL;
-	gchar *cropped  = NULL;
 	guint i         = 0;
 	GString *errors = NULL;
 	GList *failed   = NULL;

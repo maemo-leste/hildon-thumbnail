@@ -28,6 +28,7 @@
 #endif
 
 #include <string.h>
+#include <ctype.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -292,9 +293,6 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 
 	dbus_g_method_return (context, num);
 }
-
-
-
 
 #ifndef strcasestr
 static char *

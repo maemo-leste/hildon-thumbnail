@@ -96,7 +96,6 @@ hildon_thumbnail_outplugins_needs_out (const guchar *rgb8_pixmap,
 						   const gchar *uri)
 {
 	GList *copy = g_list_copy (outplugs);
-	GQuark domain;
 	gboolean retval = FALSE;
 
 	g_static_rec_mutex_lock (&mutex);

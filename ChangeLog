@@ -1,3 +1,15 @@
+2008-11-17  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Cleaning up a bit.  Removed unused local variables all over the
+	place, and also:
+
+	* daemon/albumart.c: Removed strcasestr.
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c: Include
+	<glib/gstdio.h> for g_stat.
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c: Likewise.
+	(hildon_thumbnail_outplugin_out): Use "%Lu" for 64 bit quantity.
+	* daemon/thumbnailer.c: Include <ctype.h> for toupper.
+
 2008-11-17  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/hildon-thumbnail-plugin.h

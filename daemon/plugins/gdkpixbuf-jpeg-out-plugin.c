@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -145,8 +146,6 @@ static void
 reload_config (const gchar *config) 
 {
 	GKeyFile *keyfile;
-	GStrv mimetypes;
-	guint i = 0, length;
 	GError *error = NULL;
 
 	keyfile = g_key_file_new ();

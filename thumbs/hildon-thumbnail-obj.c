@@ -381,7 +381,6 @@ static void
 hildon_thumbnail_request_finalize (GObject *object)
 {
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (object);
-	guint i;
 
 	if (r_priv->uris)
 		g_strfreev (r_priv->uris);

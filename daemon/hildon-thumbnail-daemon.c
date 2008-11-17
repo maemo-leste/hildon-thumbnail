@@ -230,7 +230,7 @@ on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileM
 static void
 on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
-	Thumbnailer *thumbnailer = user_data;
+	/* Thumbnailer *thumbnailer = user_data; */
 	gchar *path = g_file_get_path (file);
 
 	if (path && g_str_has_suffix (path, "." G_MODULE_SUFFIX)) {
