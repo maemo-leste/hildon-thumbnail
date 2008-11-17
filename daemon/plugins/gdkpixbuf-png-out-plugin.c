@@ -55,12 +55,7 @@ static GFileMonitor *monitor = NULL;
 
 
 gboolean
-hildon_thumbnail_outplugin_needs_out (const guchar *rgb8_pixmap, 
-				guint width, guint height,
-				guint rowstride, guint bits_per_sample,
-				OutType type,
-				guint64 mtime, 
-				const gchar *uri)
+hildon_thumbnail_outplugin_needs_out (OutType type, guint64 mtime, const gchar *uri)
 {
 	gboolean retval;
 	gchar *large, *normal, *cropped, *filen;

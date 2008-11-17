@@ -7,7 +7,6 @@
 	* daemon/hildon-thumbnail-plugin.c: Performance improvements:
 	avoiding rescaling when there's no need to recreate the thumbnail
 
-
 2008-11-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.10
