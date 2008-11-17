@@ -50,7 +50,7 @@ typedef struct {
 	OutType         target;
 	guint           size;
 
-	guint           mtime;
+	guint64         mtime;
 
 	GCond          *condition;
 	gboolean        had_callback, set_state;
@@ -90,14 +90,7 @@ create_output (OutType target, unsigned char *data, guint width, guint height, g
 {
 	GError *error = NULL;
 
-	if (hildon_thumbnail_outplugins_needs_out (data, 
-						   width,
-						   height,
-						   width*3,
-						   bpp/3,
-						   target,
-						   mtime, 
-						   uri)) {
+	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
 
 		hildon_thumbnail_outplugins_do_out (data, 
 						    width,
@@ -461,37 +454,68 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 	while (uris[i] != NULL) {
 		GError *nerror = NULL;
+		GFile *file = NULL;
+		GFileInfo *finfo = NULL;
+		guint64 mtime;
+
+		file = g_file_new_for_uri (uris[i]);
+
+		finfo = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+					   G_FILE_QUERY_INFO_NONE,
+					   NULL, &nerror);
+
+		if (nerror)
+			goto nerror_handler;
+
+		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+
+		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uris[i]) &&
+		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uris[i]) &&
+		     hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i]))
+			goto nerror_handler;
 
 		/* Create the thumbnailer struct */
 		thumber = g_slice_new0 (VideoThumbnailer);
 
 		thumber->pipe_lock = g_mutex_new ();
 
+		thumber->mtime        = mtime;
 		thumber->has_audio    = thumber->has_video = FALSE;
 		thumber->video_fps_n  = thumber->video_fps_d = -1;
 		thumber->video_height = thumber->video_width = -1;
 		thumber->uri          = uris[i];
-		thumber->target       = OUTTYPE_NORMAL;
-		thumber->size         = 128;
+		
 
-		video_thumbnail_create (thumber, &nerror);
+		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uris[i])) {
+			thumber->target       = OUTTYPE_NORMAL;
+			thumber->size         = 128;
 
-		if (nerror)
-			goto nerror_handler;
+			video_thumbnail_create (thumber, &nerror);
 
-		thumber->target       = OUTTYPE_LARGE;
-		thumber->size         = 256;
+			if (nerror)
+				goto nerror_handler;
+		}
 
-		video_thumbnail_create (thumber, &nerror);
+		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uris[i])) {
 
-		if (nerror)
-			goto nerror_handler;
+			thumber->target       = OUTTYPE_LARGE;
+			thumber->size         = 256;
 
-		if (do_cropped) {
+			video_thumbnail_create (thumber, &nerror);
+
+			if (nerror)
+				goto nerror_handler;
+		}
+
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i])) {
 			thumber->target       = OUTTYPE_CROPPED;
 			thumber->size         = 124;
 
 			video_thumbnail_create (thumber, &nerror);
+
+			if (nerror)
+				goto nerror_handler;
+
 		}
 
 		nerror_handler:
@@ -499,6 +523,12 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		g_mutex_free (thumber->pipe_lock);
 
 		g_slice_free (VideoThumbnailer, thumber);
+
+		if (finfo)
+			g_object_unref (finfo);
+
+		if (file)
+			g_object_unref (file);
 
 		if (nerror) {
 			if (!errors)

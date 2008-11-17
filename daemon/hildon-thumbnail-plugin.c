@@ -79,21 +79,15 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 
 
-typedef gboolean (*NeedsOutFunc) (const guchar *rgb8_pixmap, 
-			 guint width, guint height,
-			 guint rowstride, guint bits_per_sample,
-			 OutType type,
-			 guint64 mtime, 
-			 const gchar *uri);
+typedef gboolean (*NeedsOutFunc) (OutType type,
+			 	  guint64 mtime, 
+			 	  const gchar *uri);
 
 
 gboolean
-hildon_thumbnail_outplugins_needs_out (const guchar *rgb8_pixmap, 
-						   guint width, guint height,
-						   guint rowstride, guint bits_per_sample,
-						   OutType type,
-						   guint64 mtime, 
-						   const gchar *uri)
+hildon_thumbnail_outplugins_needs_out (OutType type,
+				       guint64 mtime, 
+				       const gchar *uri)
 {
 	GList *copy = g_list_copy (outplugs);
 	gboolean retval = FALSE;
@@ -109,7 +103,7 @@ hildon_thumbnail_outplugins_needs_out (const guchar *rgb8_pixmap,
 			IsActiveFunc isac_func;
 			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
 				if (isac_func ()) {
-					retval = needs_out_func (rgb8_pixmap, width, height, rowstride, bits_per_sample, type, mtime, uri);
+					retval = needs_out_func (type, mtime, uri);
 				} 
 			} 
 		}

@@ -153,13 +153,12 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		gboolean had_err = FALSE;
 		guchar *data;
 		GdkPixbuf *pixbuf_large = NULL, 
-				  *pixbuf_normal, 
-				  *pixbuf_cropped;
+			  *pixbuf_normal, 
+			  *pixbuf_cropped;
 		guint64 mtime;
 		GFileInfo *finfo = NULL;
 		GError *nerror = NULL;
 		guint ow, oh;
-
 		const guchar *rgb8_pixels;
 		guint width; guint height;
 		guint rowstride; 
@@ -182,6 +181,11 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		}
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+
+		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uri) &&
+		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uri) &&
+		     hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri))
+			goto nerror_handler;
 
 		im = epeg_file_open (path);
 
@@ -220,96 +224,72 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 									  destroy_pixbuf, im);
 		}
 
-		rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
-		width = gdk_pixbuf_get_width (pixbuf_large);
-		height = gdk_pixbuf_get_height (pixbuf_large);
-		rowstride = gdk_pixbuf_get_rowstride (pixbuf_large);
+		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uri)) {
 
-		if (hildon_thumbnail_outplugins_needs_out (rgb8_pixels, 
-							   width,
-							   height,
-							   rowstride,
-							   8,
-							   OUTTYPE_LARGE,
-							   mtime, 
-							   uri)) {
+			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
+			width = gdk_pixbuf_get_width (pixbuf_large);
+			height = gdk_pixbuf_get_height (pixbuf_large);
+			rowstride = gdk_pixbuf_get_rowstride (pixbuf_large);
 
 			hildon_thumbnail_outplugins_do_out (rgb8_pixels, 
 							    width,
 							    height,
-							    rowstride,
-							    8,
+							    rowstride, 8,
 							    OUTTYPE_LARGE,
-							    mtime, 
-							    uri, 
+							    mtime, uri, 
 							    &nerror);
 		}
 
 		if (nerror)
 			goto nerror_handler;
 
-		pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri)) {
 
-		rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);
-		width = gdk_pixbuf_get_width (pixbuf_cropped);
-		height = gdk_pixbuf_get_height (pixbuf_cropped);
-		rowstride = gdk_pixbuf_get_rowstride (pixbuf_cropped);
+			pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
 
-		if (hildon_thumbnail_outplugins_needs_out (rgb8_pixels, 
-							   width,
-							   height,
-							   rowstride,
-							   8,
-							   OUTTYPE_CROPPED,
-							   mtime, 
-							   uri)) {
+			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);
+			width = gdk_pixbuf_get_width (pixbuf_cropped);
+			height = gdk_pixbuf_get_height (pixbuf_cropped);
+			rowstride = gdk_pixbuf_get_rowstride (pixbuf_cropped);
 
 			hildon_thumbnail_outplugins_do_out (rgb8_pixels, 
 							    width,
 							    height,
-							    rowstride,
-							    8,
+							    rowstride, 8,
 							    OUTTYPE_CROPPED,
-							    mtime, 
-							    uri, 
+							    mtime, uri, 
 							    &nerror);
-		}
 
-		g_object_unref (pixbuf_cropped);
+			g_object_unref (pixbuf_cropped);
+
+		}
 
 		if (nerror)
 			goto nerror_handler;
 
-		pixbuf_normal = gdk_pixbuf_scale_simple (pixbuf_large,
-							 128, 128,
-							 GDK_INTERP_HYPER);
 
-		rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_normal);
-		width = gdk_pixbuf_get_width (pixbuf_normal);
-		height = gdk_pixbuf_get_height (pixbuf_normal);
-		rowstride = gdk_pixbuf_get_rowstride (pixbuf_normal);
+		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uri)) {
 
-		if (hildon_thumbnail_outplugins_needs_out (rgb8_pixels, 
-							   width,
-							   height,
-							   rowstride,
-							   8,
-							   OUTTYPE_NORMAL,
-							   mtime, 
-							   uri)) {
+			pixbuf_normal = gdk_pixbuf_scale_simple (pixbuf_large,
+								 128, 128,
+								 GDK_INTERP_HYPER);
 
-		    hildon_thumbnail_outplugins_do_out (rgb8_pixels, 
-						    width,
-						    height,
-						    rowstride,
-						    8,
-						    OUTTYPE_NORMAL,
-						    mtime, 
-						    uri, 
-						    &nerror);
+			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_normal);
+			width = gdk_pixbuf_get_width (pixbuf_normal);
+			height = gdk_pixbuf_get_height (pixbuf_normal);
+			rowstride = gdk_pixbuf_get_rowstride (pixbuf_normal);
+
+			hildon_thumbnail_outplugins_do_out (rgb8_pixels, 
+							    width,
+							    height,
+							    rowstride, 8,
+							    OUTTYPE_NORMAL,
+							    mtime, uri, 
+							    &nerror);
+
+			g_object_unref (pixbuf_normal);
+
 		}
-
-		g_object_unref (pixbuf_normal);
 
 		if (nerror)
 			goto nerror_handler;
