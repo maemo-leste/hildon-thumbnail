@@ -8,12 +8,14 @@ plugins_LTLIBRARIES = libhildon-thumbnailer-mine.la
 
 libhildon_thumbnailer_mine_la_SOURCES = mine-plugin.c
 libhildon_thumbnailer_mine_la_LDFLAGS = $(plugin_flags)
-libhildon_thumbnailer_mine_la_CFLAGS = $(GLIB_CFLAGS) ...
-libhildon_thumbnailer_mine_la_LIBADD = $(GLIB_LIBS) ... 
+libhildon_thumbnailer_mine_la_CFLAGS = $(GLIB_CFLAGS) $(GIO_CFLAGS) ...
+libhildon_thumbnailer_mine_la_LIBADD = $(GLIB_LIBS) $(GIO_LIBS) ... 
 
 mine-plugin.c
 -------------
 #include <glib.h>
+#include <gio/gio.h>
+
 #include <hildon-thumbnail-plugin.h>
 
 #define MINE_ERROR_DOMAIN "HildonThumbnailerMine"
