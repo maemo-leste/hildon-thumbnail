@@ -1,5 +1,7 @@
 2008-11-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
+	Released 3.0.10
+	
 	Cleaning up a bit.  Removed unused local variables all over the
 	place, and also:
 
