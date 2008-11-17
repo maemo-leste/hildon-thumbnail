@@ -313,7 +313,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		}
 
 		if (pixbuf_large)
-				g_object_unref (pixbuf_large);
+			g_object_unref (pixbuf_large);
 
 		if (file)
 			g_object_unref (file);
