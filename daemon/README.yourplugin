@@ -96,7 +96,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint,
 		furis[t] = NULL;
 		*failed_uris = furis;
 		g_list_free (failed);
-		g_set_error (error, EPEG_ERROR, 0,
+		g_set_error (error, MINE_ERROR, 0,
 			     errors->str);
 		g_string_free (errors, TRUE);
 	}
