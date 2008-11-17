@@ -192,7 +192,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uri) &&
 		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uri) &&
-		     hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri))
+		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri))
 			goto nerror_handler;
 
 		stream = g_file_read (file, NULL, &nerror);

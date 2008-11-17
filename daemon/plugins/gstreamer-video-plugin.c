@@ -471,7 +471,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uris[i]) &&
 		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uris[i]) &&
-		     hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i]))
+		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i]))
 			goto nerror_handler;
 
 		/* Create the thumbnailer struct */
