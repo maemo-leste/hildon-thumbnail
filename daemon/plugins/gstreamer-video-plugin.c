@@ -134,6 +134,7 @@ callback_thumbnail (GstElement       *image_sink,
 	return TRUE;
 }
 
+
 static void
 callback_newpad (GstElement       *decodebin,
 		 GstPad           *pad,
@@ -167,6 +168,7 @@ callback_newpad (GstElement       *decodebin,
 }
 
 
+/*
 static gboolean
 callback_bus(GstBus           *bus,
 	     GstMessage       *message, 
@@ -226,7 +228,6 @@ callback_bus(GstBus           *bus,
 		}
 
 		break;
-
 	case GST_MESSAGE_STATE_CHANGED:
 
 		old_state = new_state = GST_STATE_NULL;
@@ -235,14 +236,14 @@ callback_bus(GstBus           *bus,
 			break;
 		}
 
-		//gst_message_parse_state_changed (message, &old_state, &new_state, NULL);
+		gst_message_parse_state_changed (message, &old_state, &new_state, NULL);
 
 		if (old_state == new_state) {
 			break;
 		}
 
 		format = GST_FORMAT_TIME;
-		//gst_element_query_duration (thumber->pipeline, &format, &duration);
+		gst_element_query_duration (thumber->pipeline, &format, &duration);
 		
 		if (duration != -1) {
 			position = duration * 5 / 100;
@@ -250,19 +251,18 @@ callback_bus(GstBus           *bus,
 			position = 1 * GST_SECOND;
 		}
 
-		//gst_element_query_duration (thumber->pipeline, &format, &duration);
+		gst_element_query_duration (thumber->pipeline, &format, &duration);
 
 		if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
-	//		if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
-				//g_warning ("Seek failed");
-	//		}
+			if (!gst_element_seek_simple (thumber->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, position)) {
+				g_warning ("Seek failed");
+			}
 		}
 		break;
-
 	case GST_MESSAGE_APPLICATION:
 	case GST_MESSAGE_TAG:
 	default:
-		/* unhandled message */
+		// unhandled message 
 		break;
 	}
 	g_mutex_unlock (thumber->pipe_lock);
@@ -270,6 +270,7 @@ callback_bus(GstBus           *bus,
 
   return TRUE;
 }
+*/
 
 static void
 video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
@@ -298,6 +299,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	thumber->source       = gst_element_factory_make ("filesrc", "source");
 	thumber->decodebin    = gst_element_factory_make ("decodebin", "decodebin");
 
+	g_object_ref (thumber->decodebin);
+
 	if (!(thumber->pipeline && thumber->source && thumber->decodebin)) {
 		g_set_error (error, GSTP_ERROR, 0,
 			     "Couldn't create pipeline elements");
@@ -308,16 +311,20 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 			  thumber->source, thumber->decodebin,
 			  NULL);
 
+	/* Doing this causes warnings at gst_element_set_state
 	bus = gst_pipeline_get_bus (GST_PIPELINE (thumber->pipeline));
 	gst_bus_add_watch (bus, (GstBusFunc) callback_bus, thumber);
 	gst_object_unref (bus);
+	*/
 
 	g_object_set (thumber->source, "location", 
 		      g_filename_from_uri (thumber->uri, NULL, NULL), 
 		      NULL);
 
+	
 	g_signal_connect (thumber->decodebin, "new-decoded-pad", 
 			  G_CALLBACK (callback_newpad), thumber);
+	
 
 	if (!gst_element_link_many(thumber->source, thumber->decodebin, NULL)) {
 		g_set_error (error, GSTP_ERROR, 0,
@@ -395,8 +402,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 
 	if (thumber->pipeline) {
 
-		if (thumber->pipeline && !thumber->bugged)
-			gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
+		//if (thumber->pipeline && !thumber->bugged)
+		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
 
 		/* This should free all the elements in the pipeline FIXME 
 		 * Check that this is the case */
@@ -415,6 +422,9 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 		if (thumber->video_sink)
 			gst_object_unref (thumber->video_sink);
 	}
+
+	g_object_unref (thumber->decodebin);
+
 	g_mutex_unlock (thumber->pipe_lock);
 
 }

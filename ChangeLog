@@ -1,3 +1,8 @@
+2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Fixed a criticial warning
+	in the video thumbnailer plugin
+
 2008-11-14  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Replaced a GMainLoop with a
