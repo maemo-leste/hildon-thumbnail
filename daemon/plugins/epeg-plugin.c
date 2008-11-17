@@ -43,7 +43,7 @@
 #include "utils.h"
 #include "epeg-plugin.h"
 
-#include <plugin/hildon-thumbnail-plugin.h>
+#include <hildon-thumbnail-plugin.h>
 
 
 static gchar **supported = NULL;

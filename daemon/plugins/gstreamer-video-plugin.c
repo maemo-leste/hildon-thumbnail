@@ -33,7 +33,7 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 
-#include <plugin/hildon-thumbnail-plugin.h>
+#include <hildon-thumbnail-plugin.h>
 
 #include "utils.h"
 

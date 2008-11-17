@@ -13,7 +13,7 @@
 	* daemon/plugin-runner.c
 	* daemon/thumbnailer.c
 	* daemon/plugin
-	* daemon/plugin/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-plugin.h
 	* daemon/plugin/Makefile.am
 	* daemon/Makefile.am
 	* daemon/hildon-thumbnail-plugin.c: Making the plugin API public

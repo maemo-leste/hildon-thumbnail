@@ -42,7 +42,7 @@
 
 #include "utils.h"
 
-#include <plugin/hildon-thumbnail-plugin.h>
+#include <hildon-thumbnail-plugin.h>
 
 static gboolean had_init = FALSE;
 static gboolean is_active = FALSE;

@@ -1,4 +1,4 @@
-SUBDIRS = . plugin plugins
+SUBDIRS = . plugins
 
 INCLUDES = -I. \
 	$(DBUS_CFLAGS) \
@@ -12,6 +12,9 @@ INCLUDES = -I. \
 
 
 noinst_LTLIBRARIES = libshared.la
+
+libhildonthumbnailplugindir=$(includedir)/hildon-thumbnail
+libhildonthumbnailplugin_HEADERS = hildon-thumbnail-plugin.h
 
 libshared_la_SOURCES = utils.h utils.c
 

@@ -43,7 +43,7 @@
 #include "utils.h"
 #include "gdkpixbuf-plugin.h"
 
-#include <plugin/hildon-thumbnail-plugin.h>
+#include <hildon-thumbnail-plugin.h>
 
 #ifndef gdk_pixbuf_new_from_stream_at_scale
 /* It's implemented in pixbuf-io-loader.c in this case */

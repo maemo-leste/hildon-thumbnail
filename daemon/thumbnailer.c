@@ -38,7 +38,7 @@
 #include "thumbnailer-marshal.h"
 #include "thumbnailer-glue.h"
 
-#include <plugin/hildon-thumbnail-plugin.h>
+#include <hildon-thumbnail-plugin.h>
 
 #include "dbus-utils.h"
 #include "utils.h"

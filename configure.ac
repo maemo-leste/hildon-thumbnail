@@ -177,7 +177,6 @@ AC_CONFIG_LINKS(thumbs/pixbuf-io-loader.c:daemon/plugins/pixbuf-io-loader.c)
 
 AC_OUTPUT(Makefile \
 	  daemon/Makefile \
-	  daemon/plugin/Makefile \
 	  daemon/plugins/Makefile \
 	  thumbs/Makefile \
           albumart-providers/Makefile \
