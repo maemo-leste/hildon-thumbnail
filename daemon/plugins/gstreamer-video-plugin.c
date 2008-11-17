@@ -47,7 +47,9 @@ static gboolean had_init = FALSE;
 
 typedef struct {
 	const gchar    *uri;
-	OutType         target;
+
+	HildonThumbnailPluginOutType
+		        target;
 	guint           size;
 
 	guint64         mtime;
@@ -86,7 +88,7 @@ gint                g_sprintf                           (gchar *string,
 #endif
 
 static gboolean
-create_output (OutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime)
+create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime)
 {
 	GError *error = NULL;
 
@@ -469,9 +471,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uris[i]) &&
-		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uris[i]) &&
-		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i]))
+		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i]) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i]) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i]))
 			goto nerror_handler;
 
 		/* Create the thumbnailer struct */
@@ -486,8 +488,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		thumber->uri          = uris[i];
 		
 
-		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uris[i])) {
-			thumber->target       = OUTTYPE_NORMAL;
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i])) {
+			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL;
 			thumber->size         = 128;
 
 			video_thumbnail_create (thumber, &nerror);
@@ -496,9 +498,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 		}
 
-		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uris[i])) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i])) {
 
-			thumber->target       = OUTTYPE_LARGE;
+			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE;
 			thumber->size         = 256;
 
 			video_thumbnail_create (thumber, &nerror);
@@ -507,8 +509,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 		}
 
-		if (do_cropped && hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uris[i])) {
-			thumber->target       = OUTTYPE_CROPPED;
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i])) {
+			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED;
 			thumber->size         = 124;
 
 			video_thumbnail_create (thumber, &nerror);
@@ -615,7 +617,7 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 }
 
 void 
-hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer thumbnailer, GModule *module, GError **error)
+hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func func, gpointer thumbnailer, GModule *module, GError **error)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gstreamer-video-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);

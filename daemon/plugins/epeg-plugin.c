@@ -182,9 +182,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uri) &&
-		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uri) &&
-		    !hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri))
+		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri))
 			goto nerror_handler;
 
 		im = epeg_file_open (path);
@@ -224,7 +224,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 									  destroy_pixbuf, im);
 		}
 
-		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_LARGE, mtime, uri)) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri)) {
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
 			width = gdk_pixbuf_get_width (pixbuf_large);
@@ -235,7 +235,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
-							    OUTTYPE_LARGE,
+							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE,
 							    mtime, uri, 
 							    &nerror);
 		}
@@ -243,7 +243,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (nerror)
 			goto nerror_handler;
 
-		if (do_cropped && hildon_thumbnail_outplugins_needs_out (OUTTYPE_CROPPED, mtime, uri)) {
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri)) {
 
 			pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
 
@@ -256,7 +256,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
-							    OUTTYPE_CROPPED,
+							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED,
 							    mtime, uri, 
 							    &nerror);
 
@@ -268,7 +268,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			goto nerror_handler;
 
 
-		if (hildon_thumbnail_outplugins_needs_out (OUTTYPE_NORMAL, mtime, uri)) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri)) {
 
 			pixbuf_normal = gdk_pixbuf_scale_simple (pixbuf_large,
 								 128, 128,
@@ -283,7 +283,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
-							    OUTTYPE_NORMAL,
+							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL,
 							    mtime, uri, 
 							    &nerror);
 
@@ -399,7 +399,7 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 }
 
 void 
-hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer thumbnailer, GModule *module, GError **error)
+hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func func, gpointer thumbnailer, GModule *module, GError **error)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "epeg-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);

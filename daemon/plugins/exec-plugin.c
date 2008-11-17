@@ -411,7 +411,7 @@ on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMon
 }
 
 void 
-hildon_thumbnail_plugin_init (gboolean *cropping, register_func func, gpointer thumbnailer, GModule *module, GError **error)
+hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func func, gpointer thumbnailer, GModule *module, GError **error)
 {
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);

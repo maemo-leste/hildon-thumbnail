@@ -79,15 +79,13 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 
 
-typedef gboolean (*NeedsOutFunc) (OutType type,
-			 	  guint64 mtime, 
-			 	  const gchar *uri);
+typedef gboolean (*NeedsOutFunc) (HildonThumbnailPluginOutType type,
+				  guint64 mtime, const gchar *uri);
 
 
 gboolean
-hildon_thumbnail_outplugins_needs_out (OutType type,
-				       guint64 mtime, 
-				       const gchar *uri)
+hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
+				       guint64 mtime, const gchar *uri)
 {
 	GList *copy = g_list_copy (outplugs);
 	gboolean retval = FALSE;
@@ -119,22 +117,17 @@ hildon_thumbnail_outplugins_needs_out (OutType type,
 }
 
 
-typedef void (*OutFunc) (const guchar *rgb8_pixmap, 
-			 guint width, guint height,
-			 guint rowstride, guint bits_per_sample,
-			 OutType type,
-			 guint64 mtime, 
-			 const gchar *uri, 
-			 GError **error);
+typedef void (*OutFunc) (const guchar *rgb8_pixmap, guint width, guint height, 
+			 guint rowstride, guint bits_per_sample, 
+			 HildonThumbnailPluginOutType type, guint64 mtime, 
+			 const gchar *uri, GError **error);
 
 void
-hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap, 
-				    guint width, guint height,
-				    guint rowstride, guint bits_per_sample,
-				    OutType type,
-				    guint64 mtime, 
-				    const gchar *uri, 
-				    GError **error)
+hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width, 
+				    guint height, guint rowstride, 
+				    guint bits_per_sample, 
+				    HildonThumbnailPluginOutType type, guint64 mtime, 
+				    const gchar *uri, GError **error)
 {
 	GList *copy = g_list_copy (outplugs);
 	GString *errors = NULL;
@@ -228,10 +221,11 @@ hildon_thumbnail_plugin_get_supported (GModule *module)
 }
 
 
-typedef void (*InitFunc) (gboolean *cropping, register_func func, gpointer instance, GModule *module, GError **error);
+typedef void (*InitFunc) (gboolean *cropping, hildon_thumbnail_register_func func, 
+			  gpointer instance, GModule *module, GError **error);
 
 void
-hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, register_func in_func, gpointer instance, GError **error)
+hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, hildon_thumbnail_register_func in_func, gpointer instance, GError **error)
 {
 	InitFunc func;
 

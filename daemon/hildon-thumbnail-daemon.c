@@ -89,7 +89,7 @@ init_plugins (DBusGConnection *connection, Thumbnailer *thumbnailer)
 		module = hildon_thumbnail_plugin_load (full);
 		if (module)
 			hildon_thumbnail_plugin_do_init (module, &cropping,
-							 (register_func) thumbnailer_register_plugin,
+							 (hildon_thumbnail_register_func) thumbnailer_register_plugin,
 							 thumbnailer,
 							 &error);
 		if (error) {
@@ -204,7 +204,7 @@ on_plugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileM
 					GError *error = NULL;
 
 					hildon_thumbnail_plugin_do_init (module, &cropping,
-							 (register_func) thumbnailer_register_plugin,
+							 (hildon_thumbnail_register_func) thumbnailer_register_plugin,
 							 thumbnailer,
 							 &error);
 					if (error) {

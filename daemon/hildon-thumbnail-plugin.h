@@ -34,18 +34,22 @@
 G_BEGIN_DECLS
 
 typedef enum {
-	OUTTYPE_LARGE,
-	OUTTYPE_NORMAL,
-	OUTTYPE_CROPPED,
-} OutType;
+	HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE,
+	HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL,
+	HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED,
+} HildonThumbnailPluginOutType;
 
-typedef void (*register_func) (gpointer self, const gchar *mime_type, GModule *module, const GStrv uri_schemes, gint priority);
+typedef void (*hildon_thumbnail_register_func)    (gpointer self, 
+						   const gchar *mime_type, 
+						   GModule *module, 
+						   const GStrv uri_schemes, 
+						   gint priority);
 
 GModule *   hildon_thumbnail_plugin_load          (const gchar *module_name);
 GStrv       hildon_thumbnail_plugin_get_supported (GModule *module);
 void        hildon_thumbnail_plugin_do_init       (GModule *module, 
 						   gboolean *cropping,
-						   register_func func,
+						   hildon_thumbnail_register_func func,
 						   gpointer self,
 						   GError **error);
 void        hildon_thumbnail_plugin_do_create     (GModule *module, 
@@ -61,11 +65,11 @@ void        hildon_thumbnail_outplugin_unload     (GModule *module);
 void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap, 
 						   guint width, guint height,
 						   guint rowstride, guint bits_per_sample,
-						   OutType type,
+						   HildonThumbnailPluginOutType type,
 						   guint64 mtime, 
 						   const gchar *uri, 
 						   GError **error);
-gboolean    hildon_thumbnail_outplugins_needs_out (OutType type,
+gboolean    hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 						   guint64 mtime, 
 						   const gchar *uri);
 

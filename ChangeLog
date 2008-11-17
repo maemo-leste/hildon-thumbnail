@@ -1,5 +1,18 @@
 2008-11-17  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/hildon-thumbnail-plugin.c: Namespacing public plugin
+	API
+
+2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/gstreamer-video-plugin.c

@@ -54,8 +54,11 @@ static GFileMonitor *monitor = NULL;
 #define SOFTWARE_OPTION "tEXt::Software"
 
 
+//gchar *
+//hildon_thumbnail_outplugin_ (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)
+
 gboolean
-hildon_thumbnail_outplugin_needs_out (OutType type, guint64 mtime, const gchar *uri)
+hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)
 {
 	gboolean retval;
 	gchar *large, *normal, *cropped, *filen;
@@ -64,13 +67,13 @@ hildon_thumbnail_outplugin_needs_out (OutType type, guint64 mtime, const gchar *
 					       NULL, NULL, NULL, TRUE);
 
 	switch (type) {
-		case OUTTYPE_LARGE:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE:
 			filen = large;
 		break;
-		case OUTTYPE_NORMAL:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL:
 			filen = normal;
 		break;
-		case OUTTYPE_CROPPED:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED:
 			filen = cropped;
 		break;
 	}
@@ -96,7 +99,7 @@ void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
 				guint width, guint height,
 				guint rowstride, guint bits_per_sample,
-				OutType type,
+				HildonThumbnailPluginOutType type,
 				guint64 mtime, 
 				const gchar *uri, 
 				GError **error)
@@ -124,13 +127,13 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					       NULL, NULL, NULL, TRUE);
 
 	switch (type) {
-		case OUTTYPE_LARGE:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE:
 			filen = large;
 		break;
-		case OUTTYPE_NORMAL:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL:
 			filen = normal;
 		break;
-		case OUTTYPE_CROPPED:
+		case HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED:
 			filen = cropped;
 		break;
 	}
