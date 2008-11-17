@@ -225,11 +225,11 @@ daemon_register_func (gpointer self, const gchar *mime_type, GModule *module, co
 	while (uri_schemes[i] != NULL) {
 
 		dbus_g_proxy_call (self, "Register",
-						   &nerror, 
-						   G_TYPE_STRING, uri_schemes[i],
-						   G_TYPE_STRING, mime_type,
-						   G_TYPE_INVALID,
-						   G_TYPE_INVALID);
+				   &nerror, 
+				   G_TYPE_STRING, uri_schemes[i],
+				   G_TYPE_STRING, mime_type,
+				   G_TYPE_INVALID,
+				   G_TYPE_INVALID);
 
 		if (nerror) {
 			g_critical ("Failed to init: %s\n", nerror->message);
