@@ -1,11 +1,14 @@
 hildon-thumbnail (3.0.10~unreleased) unstable; urgency=low
 
-  * 
+  [ Philip Van Hoof ]
+  * Output plugins.
+  * Bug fixes.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 07 Nov 2008 17:28:07 +0200
 
 hildon-thumbnail (3.0.9) unstable; urgency=low
 
+  [ Philip Van Hoof ]
   * Support for finding thumbnails in root directories of mounted volumes.
   * Thumbnails are now JPEG
   * API and Bug fixes.
