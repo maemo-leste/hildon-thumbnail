@@ -1,3 +1,4 @@
 usr/lib/libhildonthumbnail.so
 usr/include/hildon-thumbnail/
+usr/include/hildon-thumbnail/plugin/
 usr/lib/pkgconfig/hildon-thumbnail.pc

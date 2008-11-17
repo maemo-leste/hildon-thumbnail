@@ -24,7 +24,7 @@
  *
  */
 
-#include "hildon-thumbnail-plugin.h"
+#include <plugin/hildon-thumbnail-plugin.h>
 
 static GList *outplugs = NULL;
 static GStaticRecMutex mutex = G_STATIC_REC_MUTEX_INIT;

@@ -40,8 +40,8 @@
 
 #include "utils.h"
 #include "exec-plugin.h"
-#include "hildon-thumbnail-plugin.h"
 
+#include <plugin/hildon-thumbnail-plugin.h>
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;

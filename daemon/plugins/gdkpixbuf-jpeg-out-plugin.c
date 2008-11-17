@@ -41,7 +41,8 @@
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
 
 #include "utils.h"
-#include "hildon-thumbnail-plugin.h"
+
+#include <plugin/hildon-thumbnail-plugin.h>
 
 static gboolean had_init = FALSE;
 static gboolean is_active = TRUE;

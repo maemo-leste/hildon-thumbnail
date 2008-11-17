@@ -1,5 +1,25 @@
 2008-11-17  Philip Van Hoof  <philip@codeminded.be>
 
+	* debian/libhildon-thumbnail-dev.install
+	* configure.ac
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/plugin-runner.c
+	* daemon/thumbnailer.c
+	* daemon/plugin
+	* daemon/plugin/hildon-thumbnail-plugin.h
+	* daemon/plugin/Makefile.am
+	* daemon/Makefile.am
+	* daemon/hildon-thumbnail-plugin.c: Making the plugin API public
+
+2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/hildon-thumbnail-daemon.c
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/plugins/gdkpixbuf-plugin.c

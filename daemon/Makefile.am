@@ -1,6 +1,6 @@
-SUBDIRS = . plugins
+SUBDIRS = . plugin plugins
 
-INCLUDES = \
+INCLUDES = -I. \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \

@@ -33,7 +33,8 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 
-#include "hildon-thumbnail-plugin.h"
+#include <plugin/hildon-thumbnail-plugin.h>
+
 #include "utils.h"
 
 #define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"

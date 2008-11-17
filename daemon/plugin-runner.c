@@ -29,7 +29,7 @@
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
 
-#include "hildon-thumbnail-plugin.h"
+#include <plugin/hildon-thumbnail-plugin.h>
 
 #define MANAGER_SERVICE        "org.freedesktop.thumbnailer"
 #define MANAGER_PATH           "/org/freedesktop/thumbnailer/Manager"

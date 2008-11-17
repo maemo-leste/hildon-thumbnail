@@ -27,7 +27,7 @@
 #include <dbus/dbus-glib-bindings.h>
 #include <gio/gio.h>
 
-#include "hildon-thumbnail-plugin.h"
+#include <plugin/hildon-thumbnail-plugin.h>
 
 #include "thumbnailer.h"
 #include "albumart.h"
