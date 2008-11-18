@@ -61,15 +61,18 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 {
 #ifdef HAVE_SQLITE3
 	gchar *retval = NULL;
-	gchar *dbfile;
 	sqlite3_stmt *stmt;
 	gint result = SQLITE_OK;
 
-	dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
-				   "meta.db", NULL);
 
-	if (!db)
-		sqlite3_open (dbfile, &db);
+	if (!db) {
+		gchar *dbfile;
+		dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
+				   "meta.db", NULL);
+		if (g_file_test (dbfile, G_FILE_TEST_EXISTS))
+			sqlite3_open (dbfile, &db);
+		g_free (dbfile);
+	}
 
 	if (db) {
 		const unsigned char *tmp;
@@ -101,7 +104,6 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 			}
 		}
 	}
-	g_free (dbfile);
 
 	return retval;
 #else
@@ -195,16 +197,16 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	if (!nerror) {
 #ifdef HAVE_SQLITE3
 		gchar *dbfile;
-		sqlite3_stmt *stmt;
 		gboolean create;
 
-		dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
+		if (!db) {
+			gchar *dbfile;
+			dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
 					   "meta.db", NULL);
-
-		create = !g_file_test (dbfile, G_FILE_TEST_EXISTS);
-
-		if (!db)
+			create = !g_file_test (dbfile, G_FILE_TEST_EXISTS);
 			sqlite3_open (dbfile, &db);
+			g_free (dbfile);
+		}
 
 		if (db) {
 			gchar *sql;
@@ -222,7 +224,6 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 			g_free (sql);
 		}
 
-		g_free (dbfile);
 #endif
 
 		buf.actime = buf.modtime = mtime;
