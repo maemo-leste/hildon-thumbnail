@@ -138,7 +138,7 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 
 
 static void
-cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 max_mtime)
+cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 since)
 {
 	const gchar *filen;
 	for (filen = g_dir_read_name (dir); filen; filen = g_dir_read_name (dir)) {
@@ -148,7 +148,7 @@ cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 max_mt
 			if (orig && g_str_has_prefix (orig, uri_match)) {
 				struct stat st;
 				g_stat (fulln, &st);
-				if (st.st_mtime > max_mtime) {
+				if (st.st_mtime <= since) {
 					g_unlink (fulln);
 				}
 				g_free (orig);
