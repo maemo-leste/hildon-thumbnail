@@ -53,7 +53,7 @@
 
     <method name="Cleanup">
       <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
-      <arg type="s" name="uri_match" direction="in" />
+      <arg type="s" name="uri_prefix" direction="in" />
       <arg type="x" name="since" direction="in" />
     </method>
 
