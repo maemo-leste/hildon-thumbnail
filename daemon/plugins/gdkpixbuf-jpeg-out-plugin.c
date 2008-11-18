@@ -53,7 +53,7 @@ static gboolean is_active = TRUE;
 static GFileMonitor *monitor = NULL;
 
 #ifdef HAVE_SQLITE3
-sqlite3 *db = NULL;
+static sqlite3 *db = NULL;
 #endif
 
 gchar *
