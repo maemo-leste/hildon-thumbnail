@@ -179,6 +179,15 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 max_mtime)
 		g_dir_close (dir);
 	}
 	g_free (dirname);
+
+	dirname = g_build_filename (g_get_home_dir (), ".thumbnails", "cropped", NULL);
+	dir = g_dir_open (dirname, 0, NULL);
+	if (dir) {
+		cleanup (dir, dirname, uri_match, max_mtime);
+		g_dir_close (dir);
+	}
+	g_free (dirname);
+
 }
 
 gboolean
