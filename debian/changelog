@@ -1,6 +1,6 @@
 hildon-thumbnail (3.0.11~unreleased) unstable; urgency=low
 
-  * Build-Depend on libqlite3-dev.
+  * Build-Depend on libsqlite3-dev.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 17 Nov 2008 14:54:44 +0200
 
