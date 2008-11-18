@@ -193,7 +193,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 				    HildonThumbnailPluginOutType type, guint64 mtime, 
 				    const gchar *uri, GError **error)
 {
-	GList *copy = g_list_copy (outplugs);
+	GList *copy;
 	GString *errors = NULL;
 	GQuark domain;
 
