@@ -72,6 +72,8 @@ void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap,
 gboolean    hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 						   guint64 mtime, 
 						   const gchar *uri);
+gchar *     hildon_thumbnail_outplugins_get_orig  (const gchar *path);
+
 
 G_END_DECLS
 

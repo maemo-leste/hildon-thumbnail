@@ -42,12 +42,72 @@
 
 #include "utils.h"
 
+#ifdef HAVE_SQLITE3
+#include <sqlite3.h>
+#endif
+
 #include <hildon-thumbnail-plugin.h>
 
 static gboolean had_init = FALSE;
 static gboolean is_active = TRUE;
 static GFileMonitor *monitor = NULL;
 
+#ifdef HAVE_SQLITE3
+sqlite3 *db = NULL;
+#endif
+
+gchar *
+hildon_thumbnail_outplugin_get_orig (const gchar *path)
+{
+#ifdef HAVE_SQLITE3
+	gchar *retval = NULL;
+	gchar *dbfile;
+	sqlite3_stmt *stmt;
+	gint result = SQLITE_OK;
+
+	dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
+				   "meta.db", NULL);
+
+	if (!db)
+		sqlite3_open (dbfile, &db);
+
+	if (db) {
+		const unsigned char *tmp;
+		gchar *sql = g_strdup_printf ("select URI from jpegthumbnails where Path = '%s'",
+					      path);
+		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
+		g_free (sql);
+
+		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
+			result = sqlite3_step (stmt);
+
+			if (result == SQLITE_ERROR) {
+				sqlite3_reset (stmt);
+				result = SQLITE_OK;
+				continue;
+			}
+
+			if (result == SQLITE_BUSY) {
+				g_usleep (10);
+				result = SQLITE_OK;
+				continue;
+			}
+
+			tmp = sqlite3_column_text (stmt, 0);
+
+			if (tmp) {
+				retval = g_strdup (tmp);
+				break;
+			}
+		}
+	}
+	g_free (dbfile);
+
+	return retval;
+#else
+	return NULL;
+#endif
+}
 
 gboolean
 hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)
@@ -87,6 +147,12 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 	return retval;
 }
 
+
+#ifdef HAVE_SQLITE3
+static gint 
+callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azColName) { }
+#endif
+
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
 				guint width, guint height,
@@ -99,6 +165,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	GdkPixbuf *pixbuf;
 	gchar *large, *normal, *cropped, *filen;
 	struct utimbuf buf;
+	GError *nerror = NULL;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
 					       NULL, NULL, NULL, FALSE);
@@ -121,13 +188,44 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					   NULL, NULL);
 
 	gdk_pixbuf_save (pixbuf, filen, "jpeg", 
-			 error, NULL);
+			 &nerror, NULL);
 
 	g_object_unref (pixbuf);
 
-	buf.actime = buf.modtime = mtime;
+	if (!nerror) {
+#ifdef HAVE_SQLITE3
+		gchar *dbfile;
+		sqlite3_stmt *stmt;
+		gboolean create;
 
-	utime (filen, &buf);
+		dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
+					   "meta.db", NULL);
+
+		create = !g_file_test (dbfile, G_FILE_TEST_EXISTS);
+
+		if (!db)
+			sqlite3_open (dbfile, &db);
+
+		if (db) {
+			gchar *sql, *errm = NULL;
+			if (create) {
+				sqlite3_exec (db, "create table jpegthumbnails (Path, URI, MTime)" , 
+					      callback, 0, NULL);
+			}
+			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %d)",
+					       filen, uri, mtime);
+			sqlite3_exec (db, sql, callback, 0, &errm);
+			g_free (sql);
+		}
+
+		g_free (dbfile);
+#endif
+
+		buf.actime = buf.modtime = mtime;
+		utime (filen, &buf);
+	} else
+		g_propagate_error (error, nerror);
+
 
 	g_free (normal);
 	g_free (large);
@@ -178,6 +276,11 @@ hildon_thumbnail_outplugin_stop (void)
 {
 	if (monitor)
 		g_object_unref (monitor);
+#ifdef HAVE_SQLITE3
+	if (db)
+		sqlite3_close (db);
+	db = NULL;
+#endif
 	return FALSE;
 }
 

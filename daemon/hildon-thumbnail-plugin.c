@@ -31,6 +31,39 @@ static GStaticRecMutex mutex = G_STATIC_REC_MUTEX_INIT;
 
 typedef gboolean (*IsActiveFunc) (void);
 typedef gboolean (*StopFunc) (void);
+typedef gchar * (*GetOrigFunc) (const gchar *path);
+
+gchar * 
+hildon_thumbnail_outplugins_get_orig (const gchar *path)
+{
+	GList *copy;
+	gchar *retval = NULL;
+
+	g_static_rec_mutex_lock (&mutex);
+	copy = g_list_copy (outplugs);
+
+	while (copy && !retval) {
+		GModule *module = copy->data;
+		GetOrigFunc orig_func;
+
+		if (g_module_symbol (module, "hildon_thumbnail_outplugin_get_orig", (gpointer *) &orig_func)) {
+			IsActiveFunc isac_func;
+			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
+				if (isac_func ()) {
+					retval = orig_func (path);
+				} 
+			} 
+		}
+
+		copy = g_list_next (copy);
+	}
+
+	g_static_rec_mutex_unlock (&mutex);
+
+	g_list_free (copy);
+
+	return retval;
+}
 
 void
 hildon_thumbnail_outplugin_unload (GModule *module)
@@ -87,7 +120,7 @@ gboolean
 hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 				       guint64 mtime, const gchar *uri)
 {
-	GList *copy = g_list_copy (outplugs);
+	GList *copy;
 	gboolean retval = FALSE;
 
 	g_static_rec_mutex_lock (&mutex);

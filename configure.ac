@@ -84,21 +84,37 @@ AC_ARG_ENABLE(gstreamer,
 
 if test "x$enable_gstreamer" = "xyes"; then
    PKG_CHECK_MODULES(GSTREAMER,[gstreamer-0.10 >= 0.10.0],
-   		[have_gstreamer=yes],
-		[have_gstreamer=no])
+   			       [have_gstreamer=yes],
+			       [have_gstreamer=no])
    AC_SUBST(GSTREAMER_CFLAGS)
    AC_SUBST(GSTREAMER_LIBS)
 fi
 
 AM_CONDITIONAL(HAVE_GSTREAMER, test "$have_gstreamer" = "yes")
 
+PKG_CHECK_MODULES(PNG,[libpng >= 1.2],
+		      [have_png=yes],
+		      [have_png=no])
+AC_SUBST(PNG_CFLAGS)
+AC_SUBST(PNG_LIBS)
+AM_CONDITIONAL(HAVE_PNG, test "$have_png" = "yes")
+
 PKG_CHECK_MODULES(EPEG,[epeg >= 0.9.0],
-		[have_epeg=yes],
-		[have_epeg=no])
+		       [have_epeg=yes],
+		       [have_epeg=no])
 AC_SUBST(EPEG_CFLAGS)
 AC_SUBST(EPEG_LIBS)
 AM_CONDITIONAL(HAVE_EPEG, test "$have_epeg" = "yes")
 
+PKG_CHECK_MODULES(SQLITE3, [sqlite3],
+			   [have_sqlite3=yes],
+			   [have_sqlite3=no])
+AC_SUBST(SQLITE3_CFLAGS)
+AC_SUBST(SQLITE3_LIBS)
+
+if test "$have_sqlite3" = "yes"; then
+  AC_DEFINE(HAVE_SQLITE3, [], [SQLite3])
+fi
 
 ##################################################
 # Check for gtk-doc.

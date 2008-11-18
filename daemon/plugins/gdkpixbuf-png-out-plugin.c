@@ -29,6 +29,11 @@
 #include "config.h"
 #endif
 
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
 #include <utime.h>
 
@@ -39,6 +44,13 @@
 #include <dbus/dbus-glib-bindings.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <png.h>
+
 
 #include "utils.h"
 
@@ -55,8 +67,73 @@ static GFileMonitor *monitor = NULL;
 #define SOFTWARE_OPTION "tEXt::Software"
 
 
-//gchar *
-//hildon_thumbnail_outplugin_ (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)
+gchar *
+hildon_thumbnail_outplugin_get_orig (const gchar *path)
+{
+	gint	     fd_png;
+	FILE	    *png;
+	png_structp  png_ptr;
+	png_infop    info_ptr;
+	png_uint_32  width, height;
+	gint	     num_text;
+	png_textp    text_ptr;
+	gint	     bit_depth, color_type;
+	gint	     interlace_type, compression_type, filter_type;
+	gchar       *retval = NULL;
+
+#if defined(__linux__)
+	if ((fd_png = g_open (path, (O_RDONLY | O_NOATIME))) == -1) {
+#else
+	if ((fd_png = g_open (path, O_RDONLY)) == -1) {
+#endif
+		return NULL;
+	}
+
+	if ((png = fdopen (fd_png, "r"))) {
+		png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+						  NULL,
+						  NULL,
+						  NULL);
+		if (!png_ptr) {
+			fclose (png);
+			return NULL;
+		}
+
+		info_ptr = png_create_info_struct (png_ptr);
+		if (!info_ptr) {
+			png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
+			fclose (png);
+			return NULL;
+		}
+
+		png_init_io (png_ptr, png);
+		png_read_info (png_ptr, info_ptr);
+
+		if (png_get_text (png_ptr, info_ptr, &text_ptr, &num_text) > 0) {
+			gint i;
+			gint j;
+
+			for (i = 0; i < num_text; i++) {
+				if (!text_ptr[i].key) {
+					continue;
+				}
+				if (strcasecmp ("Thumb::URI", text_ptr[i].key) != 0) {
+					continue;
+				}
+				if (text_ptr[i].text && text_ptr[i].text[0] != '\0') {
+					retval = g_strdup (text_ptr[i].text);
+					break;
+				}
+			}
+		}
+		png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
+		fclose (png);
+	} else {
+		close (fd_png);
+	}
+
+	return retval;
+}
 
 gboolean
 hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)

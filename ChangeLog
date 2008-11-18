@@ -1,5 +1,16 @@
 2008-11-17  Philip Van Hoof  <philip@codeminded.be>
 
+	* config.h.in
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/Makefile.am
+	* daemon/hildon-thumbnail-plugin.c
+	* configure.ac: Storing metadata in a SQLite in case of JPeg and in
+	tExt in case of PNG
+
+2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/plugins/epeg-plugin.c: Bugfix in error handling
 	* daemon/README.yourplugin: Added documentation for plugin writers
 
