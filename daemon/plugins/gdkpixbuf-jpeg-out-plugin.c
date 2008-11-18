@@ -207,18 +207,18 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 			sqlite3_open (dbfile, &db);
 
 		if (db) {
-			gchar *sql, *errm = NULL;
+			gchar *sql;
 			if (create) {
 				sqlite3_exec (db, "create table jpegthumbnails (Path, URI, MTime)" , 
 					      callback, 0, NULL);
 			}
 			sql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s'",
 					       filen);
-			sqlite3_exec (db, sql, callback, 0, &errm);
+			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);
 			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %d)",
 					       filen, uri, mtime);
-			sqlite3_exec (db, sql, callback, 0, &errm);
+			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);
 		}
 
