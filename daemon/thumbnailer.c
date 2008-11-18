@@ -27,6 +27,10 @@
 #include "config.h"
 #endif
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <string.h>
 #include <ctype.h>
 #include <glib.h>
@@ -295,29 +299,6 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 
 	dbus_g_method_return (context, num);
 }
-
-#ifndef strcasestr
-static char *
-strcasestr (char *haystack, char *needle)
-{
-	char *p, *startn = 0, *np = 0;
-
-	for (p = haystack; *p; p++) {
-		if (np) {
-			if (toupper(*p) == toupper(*np)) {
-				if (!*++np)
-					return startn;
-			} else
-				np = 0;
-		} else if (toupper(*p) == toupper(*needle)) {
-			np = needle + 1;
-			startn = p;
-		}
-	}
-
-	return 0;
-}
-#endif
 
 static gboolean 
 strv_contains (GStrv list, gchar *uri)
