@@ -67,6 +67,7 @@ static GFileMonitor *monitor = NULL;
 #define SOFTWARE_OPTION "tEXt::Software"
 
 
+
 gchar *
 hildon_thumbnail_outplugin_get_orig (const gchar *path)
 {
@@ -133,6 +134,51 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 	}
 
 	return retval;
+}
+
+
+static void
+cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 max_mtime)
+{
+	const gchar *filen;
+	for (filen = g_dir_read_name (dir); filen; filen = g_dir_read_name (dir)) {
+		if (g_str_has_suffix (filen, "png")) {
+			gchar *fulln = g_build_filename (dirname, filen, NULL);
+			gchar *orig = hildon_thumbnail_outplugin_get_orig (fulln);
+			if (orig && g_str_has_prefix (orig, uri_match)) {
+				struct stat st;
+				g_stat (fulln, &st);
+				if (st.st_mtime > max_mtime) {
+					g_unlink (fulln);
+				}
+				g_free (orig);
+			}
+			g_free (fulln);
+		}
+	}
+}
+
+void
+hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 max_mtime)
+{
+	GDir *dir;
+	gchar *dirname;
+
+	dirname = g_build_filename (g_get_home_dir (), ".thumbnails", "large", NULL);
+	dir = g_dir_open (dirname, 0, NULL);
+	if (dir) {
+		cleanup (dir, dirname, uri_match, max_mtime);
+		g_dir_close (dir);
+	}
+	g_free (dirname);
+
+	dirname = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", NULL);
+	dir = g_dir_open (dirname, 0, NULL);
+	if (dir) {
+		cleanup (dir, dirname, uri_match, max_mtime);
+		g_dir_close (dir);
+	}
+	g_free (dirname);
 }
 
 gboolean

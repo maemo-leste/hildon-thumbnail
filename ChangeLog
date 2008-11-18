@@ -1,4 +1,15 @@
-2008-11-17  Philip Van Hoof  <philip@codeminded.be>
+2008-11-18  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/thumbnailer.xml
+	* daemon/hildon-thumbnail-plugin.c: Added a DBus API for cleaning up
+	thumbnails
+
+2008-11-18  Philip Van Hoof  <philip@codeminded.be>
 
 	* config.h.in
 	* daemon/hildon-thumbnail-plugin.h

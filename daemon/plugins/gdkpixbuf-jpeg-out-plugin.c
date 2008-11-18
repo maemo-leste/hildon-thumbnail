@@ -54,7 +54,64 @@ static GFileMonitor *monitor = NULL;
 
 #ifdef HAVE_SQLITE3
 static sqlite3 *db = NULL;
+static gint callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azColName) { }
 #endif
+
+void
+hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 max_mtime)
+{
+#ifdef HAVE_SQLITE3
+	sqlite3_stmt *stmt;
+	gint result = SQLITE_OK;
+
+	if (!db) {
+		gchar *dbfile;
+		dbfile = g_build_filename (g_get_home_dir (), ".thumbnails", 
+				   "meta.db", NULL);
+		if (g_file_test (dbfile, G_FILE_TEST_EXISTS))
+			sqlite3_open (dbfile, &db);
+		g_free (dbfile);
+	}
+
+	if (db) {
+		const unsigned char *path;
+		const unsigned char *uri;
+		guint64 mtime;
+		gchar *sql = g_strdup_printf ("select Path, MTime, URI from jpegthumbnails where URI LIKE '%s%'",
+					      path);
+		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
+		g_free (sql);
+
+		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
+			result = sqlite3_step (stmt);
+
+			if (result == SQLITE_ERROR) {
+				sqlite3_reset (stmt);
+				result = SQLITE_OK;
+				continue;
+			}
+
+			if (result == SQLITE_BUSY) {
+				g_usleep (10);
+				result = SQLITE_OK;
+				continue;
+			}
+
+			path = sqlite3_column_text (stmt, 0);
+			mtime = sqlite3_column_int64 (stmt, 1);
+			uri = sqlite3_column_text (stmt, 2);
+
+			if (mtime > max_mtime) {
+				sql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s' and URI = '%s' and mtime = %d",
+						       path, mtime, uri);
+				sqlite3_exec (db, sql, callback, 0, NULL);
+				g_free (sql);
+				g_unlink (path);
+			}
+		}
+	}
+#endif
+}
 
 gchar *
 hildon_thumbnail_outplugin_get_orig (const gchar *path)
@@ -148,12 +205,6 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 
 	return retval;
 }
-
-
-#ifdef HAVE_SQLITE3
-static gint 
-callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azColName) { }
-#endif
 
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 

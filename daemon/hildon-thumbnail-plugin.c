@@ -32,6 +32,37 @@ static GStaticRecMutex mutex = G_STATIC_REC_MUTEX_INIT;
 typedef gboolean (*IsActiveFunc) (void);
 typedef gboolean (*StopFunc) (void);
 typedef gchar * (*GetOrigFunc) (const gchar *path);
+typedef void (*CleanupFunc) (const gchar *uri_match, guint64 max_mtime);
+
+gchar *
+hildon_thumbnail_outplugins_cleanup (const gchar *uri_match, 
+				     guint64 max_mtime)
+{
+	GList *copy;
+
+	g_static_rec_mutex_lock (&mutex);
+	copy = g_list_copy (outplugs);
+
+	while (copy) {
+		GModule *module = copy->data;
+		CleanupFunc clean_func;
+
+		if (g_module_symbol (module, "hildon_thumbnail_outplugin_cleanup", (gpointer *) &clean_func)) {
+			IsActiveFunc isac_func;
+			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
+				if (isac_func ()) {
+					clean_func (uri_match, max_mtime);
+				} 
+			} 
+		}
+
+		copy = g_list_next (copy);
+	}
+
+	g_static_rec_mutex_unlock (&mutex);
+
+	g_list_free (copy);
+}
 
 gchar * 
 hildon_thumbnail_outplugins_get_orig (const gchar *path)

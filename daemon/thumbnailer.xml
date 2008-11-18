@@ -51,5 +51,11 @@
       <arg type="as" name="uris" direction="in" />
     </method>
 
+    <method name="Cleanup">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+      <arg type="s" name="uri_match" direction="in" />
+      <arg type="x" name="max_mtime" direction="in" />
+    </method>
+
   </interface>
 </node>
