@@ -74,15 +74,15 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 	}
 
 	if (db) {
-		const unsigned char *path;
-		const unsigned char *uri;
-		guint64 mtime;
-		gchar *sql = g_strdup_printf ("select Path, MTime, URI from jpegthumbnails where URI LIKE '%s%'",
-					      path);
+		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%' AND MTime <= %d",
+					      uri_match, since);
 		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
 		g_free (sql);
 
 		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
+			gchar *dsql;
+			const unsigned char *path;
+
 			result = sqlite3_step (stmt);
 
 			if (result == SQLITE_ERROR) {
@@ -98,16 +98,11 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 			}
 
 			path = sqlite3_column_text (stmt, 0);
-			mtime = sqlite3_column_int64 (stmt, 1);
-			uri = sqlite3_column_text (stmt, 2);
-
-			if (mtime <= since) {
-				sql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s'",
-						       path);
-				sqlite3_exec (db, sql, callback, 0, NULL);
-				g_free (sql);
-				g_unlink (path);
-			}
+			dsql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s'",
+					       path);
+			sqlite3_exec (db, dsql, callback, 0, NULL);
+			g_free (dsql);
+			g_unlink (path);
 		}
 	}
 #endif
