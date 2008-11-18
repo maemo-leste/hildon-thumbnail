@@ -79,7 +79,6 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
 
 		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
-			gchar *dsql;
 			const unsigned char *path;
 
 			result = sqlite3_step (stmt);
@@ -97,12 +96,12 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 			}
 
 			path = sqlite3_column_text (stmt, 0);
-			dsql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s'",
-					       path);
-			sqlite3_exec (db, dsql, callback, 0, NULL);
-			g_free (dsql);
 			g_unlink (path);
 		}
+		g_free (sql);
+		sql = g_strdup_printf ("delete from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%Lu'",
+					       uri_match, since);
+		sqlite3_exec (db, sql, callback, 0, NULL);
 		g_free (sql);
 	}
 #endif
