@@ -74,10 +74,9 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 	}
 
 	if (db) {
-		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%' AND MTime <= %d",
+		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%Lu'",
 					      uri_match, since);
 		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
-		g_free (sql);
 
 		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
 			gchar *dsql;
@@ -104,6 +103,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 			g_free (dsql);
 			g_unlink (path);
 		}
+		g_free (sql);
 	}
 #endif
 }
@@ -264,7 +264,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					       filen);
 			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);
-			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %d)",
+			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %Lu)",
 					       filen, uri, mtime);
 			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);

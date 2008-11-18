@@ -896,6 +896,7 @@ void
 thumbnailer_cleanup (Thumbnailer *object, gchar *uri_match, guint64 since, DBusGMethodInvocation *context)
 {
 	hildon_thumbnail_outplugins_cleanup (uri_match, since);
+	dbus_g_method_return (context);
 }
 
 static void
