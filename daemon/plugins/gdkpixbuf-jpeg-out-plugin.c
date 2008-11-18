@@ -101,7 +101,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 			mtime = sqlite3_column_int64 (stmt, 1);
 			uri = sqlite3_column_text (stmt, 2);
 
-			if (mtime < since) {
+			if (mtime <= since) {
 				sql = g_strdup_printf ("delete from jpegthumbnails where Path = '%s' and URI = '%s' and mtime = %d",
 						       path, mtime, uri);
 				sqlite3_exec (db, sql, callback, 0, NULL);
