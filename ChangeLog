@@ -1,5 +1,18 @@
 2008-11-19  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/gstreamer-video-plugin.c: Demo for animated video
+	thumbnails: Make a file like this to enable:
+
+	 cat  $HOME/.config/hildon-thumbnailer/gstreamer-video-plugin.conf 
+
+	 [Hildon Thumbnailer]
+	 DoVideoThumbnails=1
+	 DoCropping=1
+
+	Also install http://freedesktop.org/wiki/GstOpenMAX
+
+2008-11-19  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/plugins/gstreamer-video-plugin.c: Preparing the plugin for
 	animated video thumbnails
 

@@ -28,6 +28,8 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <utime.h>
 #include <string.h>
 #include <glib.h>
 #include <gst/gst.h>
@@ -434,161 +436,34 @@ animated_thumbnail_get_thumb_path (const gchar *uri, gchar **thumb_path)
 	g_free (ascii_digest);
 }
 
+#define PIPELINE "gst-launch avimux name=mux ! filesink location=\"%s\"  d. !  " \
+	"queue ! videorate ! videoscale ! \"video/x-raw-yuv, width=160, height=96, framerate=(fraction)10/1\"" \
+	" ! omx_mpeg4enc ! queue ! mux.video_0 filesrc location=\"%s\" ! decodebin2 name=d"
+
 static void
 animated_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 {
-	GstPad            *videopad;
-	GstCaps           *caps;
-	GTimeVal           timev;
-	gchar             *destination;
+	if (strstr (thumber->uri, "file://")) {
+		// This is for a demo, we need to codify this pipeling of course 
+		struct utimbuf buf;
+		gchar *cmd;
+		gchar *destination;
 
-	/* Resetting */
-	thumber->bugged       = FALSE;
+		animated_thumbnail_get_thumb_path (thumber->uri, &destination);
 
-	thumber->source       = NULL;
-	thumber->decodebin    = NULL;
-	thumber->bin          = NULL;
-	thumber->video_scaler = NULL;
-	thumber->video_filter = NULL;
-	thumber->video_sink   = NULL;
+		cmd = g_strdup_printf (PIPELINE, destination, thumber->uri+7);
 
-	thumber->had_callback = FALSE;
-	thumber->mutex        = g_mutex_new ();
-	thumber->condition    = g_cond_new ();
+		system (cmd);
 
-	/* Preparing the source, decodebin and pipeline */
-	thumber->pipeline     = gst_pipeline_new("source pipeline");
-	thumber->source       = gst_element_factory_make ("filesrc", "source");
-	thumber->decodebin    = gst_element_factory_make ("decodebin", "decodebin");
+		buf.actime = buf.modtime = thumber->mtime;
+		utime (destination, &buf);
 
-	g_object_ref (thumber->decodebin);
-
-	if (!(thumber->pipeline && thumber->source && thumber->decodebin)) {
-		g_set_error (error, GSTP_ERROR, 0,
-			     "Couldn't create pipeline elements");
-		goto cleanup;
+		g_free (cmd);
+		g_free (destination);
 	}
-
-	gst_bin_add_many (GST_BIN(thumber->pipeline),
-			  thumber->source, thumber->decodebin,
-			  NULL);
-
-	/* Doing this causes warnings at gst_element_set_state
-	bus = gst_pipeline_get_bus (GST_PIPELINE (thumber->pipeline));
-	gst_bus_add_watch (bus, (GstBusFunc) callback_bus, thumber);
-	gst_object_unref (bus);
-	*/
-
-	g_object_set (thumber->source, "location", 
-		      g_filename_from_uri (thumber->uri, NULL, NULL), 
-		      NULL);
-
-	g_signal_connect (thumber->decodebin, "new-decoded-pad", 
-			  G_CALLBACK (callback_newpad), thumber);
-
-	if (!gst_element_link_many(thumber->source, thumber->decodebin, NULL)) {
-		g_set_error (error, GSTP_ERROR, 0,
-			"Failed to link source pipeline elements");
-		goto cleanup;
-	}
-
-	/* Preparing the sink bin and elements 
-	 TODO: make a MPEG sink here
-
-	animated_thumbnail_get_thumb_path (thumber->uri, &destination);
-
-	thumber->bin          = gst_bin_new("sink bin");
-	thumber->video_scaler = gst_element_factory_make("videoscale", "video_scaler");
-	thumber->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
-	thumber->video_sink   = gst_element_factory_make("fakesink", "video_sink");
-	*/
-
-	if (!(thumber->bin && thumber->video_scaler && thumber->video_filter && thumber->video_sink)) {
-		g_set_error (error, GSTP_ERROR, 0,
-			"Couldn't create sink bin elements");
-		goto cleanup;
-	}
-
-	gst_bin_add_many (GST_BIN(thumber->bin),
-			  thumber->video_scaler, 
-			  thumber->video_filter, 
-			  thumber->video_sink,
-			  NULL);
-
-	if (!gst_element_link_many(thumber->video_scaler, thumber->video_filter, NULL)) {
-		g_set_error (error, GSTP_ERROR, 0,
-			"Failed to link sink bin elements");
-		goto cleanup;
-	}
-
-	caps = gst_caps_new_simple ("video/x-raw-rgb",
-				    "width", G_TYPE_INT, thumber->size,
-				    "height", G_TYPE_INT, thumber->size,
-				    "bpp", G_TYPE_INT, 24,
-				    "depth", G_TYPE_INT, 24,
-				    NULL);
-
-	if (!gst_element_link_filtered(thumber->video_filter, thumber->video_sink, caps)) {
-		g_set_error (error, GSTP_ERROR, 0,
-			"Failed to link sink bin elements");
-		goto cleanup;
-	}
-
-	gst_caps_unref (caps);
-
-	/* TODO: Make it stream for 5 seconds here
-	g_object_set (thumber->video_sink, "signal-handoffs", TRUE, NULL);
-
-	g_signal_connect (thumber->video_sink, "preroll-handoff",
-			  G_CALLBACK(callback_thumbnail), thumber);
-	*/
-
-	videopad = gst_element_get_pad (thumber->video_scaler, "sink");
-	gst_element_add_pad (thumber->bin, gst_ghost_pad_new ("sink", videopad));
-	gst_object_unref (videopad);
-	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
-
-	/* Run */
-	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
-
-	g_get_current_time (&timev);
-	g_time_val_add  (&timev, 5000000); /* 5 seconds worth of timeout */
-
-	g_mutex_lock (thumber->mutex);
-	if (!thumber->had_callback)
-		g_cond_timed_wait (thumber->condition, thumber->mutex, &timev);
-	g_mutex_unlock (thumber->mutex);
-
-	cleanup:
-
-	g_cond_free (thumber->condition);
-	thumber->condition = NULL;
-	g_mutex_free (thumber->mutex);
-
-	g_mutex_lock (thumber->pipe_lock);
-
-	if (thumber->pipeline) {
-		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
-		gst_object_unref (thumber->pipeline);
-	} else {
-		if (thumber->source)
-			gst_object_unref (thumber->source);
-		if (thumber->decodebin)
-			gst_object_unref (thumber->decodebin);
-		if (thumber->bin)
-			gst_object_unref (thumber->bin);
-		if (thumber->video_scaler)
-			gst_object_unref (thumber->video_scaler);
-		if (thumber->video_filter)
-			gst_object_unref (thumber->video_filter);
-		if (thumber->video_sink)
-			gst_object_unref (thumber->video_sink);
-	}
-
-	g_object_unref (thumber->decodebin);
-	g_mutex_unlock (thumber->pipe_lock);
 
 }
+
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
