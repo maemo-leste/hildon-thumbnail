@@ -436,7 +436,7 @@ animated_thumbnail_get_thumb_path (const gchar *uri, gchar **thumb_path)
 	g_free (ascii_digest);
 }
 
-#define PIPELINE "gst-launch avimux name=mux ! filesink location=\"%s\"  d. !  " \
+#define PIPELINE "/usr/bin/gst-launch avimux name=mux ! filesink location=\"%s\"  d. !  " \
 	"queue ! videorate ! videoscale ! \"video/x-raw-yuv, width=160, height=96, framerate=(fraction)10/1\"" \
 	" ! omx_mpeg4enc ! queue ! mux.video_0 filesrc location=\"%s\" ! decodebin2 name=d"
 
