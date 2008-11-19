@@ -1,5 +1,12 @@
 2008-11-19  Philip Van Hoof  <philip@codeminded.be>
 
+	* config.h.in
+	* daemon/plugins/gstreamer-video-plugin.c
+	* configure.ac: Support for the same thing but detecting we are on
+	a desktop or not. And then using the pipeline for a desktop.
+
+2008-11-19  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/plugins/gstreamer-video-plugin.c: Demo for animated video
 	thumbnails: Make a file like this to enable:
 
