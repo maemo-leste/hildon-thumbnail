@@ -83,9 +83,7 @@ typedef struct {
 
 
 #ifndef g_sprintf
-gint                g_sprintf                           (gchar *string,
-                                                         gchar const *format,
-                                                         ...);
+gint g_sprintf (gchar *string, gchar const *format, ...);
 #endif
 
 static gboolean
@@ -95,14 +93,9 @@ create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint w
 
 	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
 
-		hildon_thumbnail_outplugins_do_out (data, 
-						    width,
-						    height,
-						    width*3,
-						    bpp/3,
-						    target,
-						    mtime, 
-						    uri, 
+		hildon_thumbnail_outplugins_do_out (data, width, height,
+						    width*3, bpp/3,
+						    target, mtime, uri, 
 						    &error);
 
 		if (error) {
@@ -125,8 +118,8 @@ callback_thumbnail (GstElement       *image_sink,
 	    (unsigned char *) GST_BUFFER_DATA(buffer);
 
 	create_output (thumber->target, data_photo,
-			   thumber->size, thumber->size,
-			   24, thumber->uri, thumber->mtime);
+		       thumber->size, thumber->size,
+		       24, thumber->uri, thumber->mtime);
 
 	if (thumber->condition) {
 		g_mutex_lock (thumber->mutex);
@@ -314,7 +307,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 			  thumber->source, thumber->decodebin,
 			  NULL);
 
-	/* Doing this causes warnings at gst_element_set_state
+	/* FIXME: Doing this causes warnings at gst_element_set_state
 	bus = gst_pipeline_get_bus (GST_PIPELINE (thumber->pipeline));
 	gst_bus_add_watch (bus, (GstBusFunc) callback_bus, thumber);
 	gst_object_unref (bus);
@@ -324,10 +317,8 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 		      g_filename_from_uri (thumber->uri, NULL, NULL), 
 		      NULL);
 
-	
 	g_signal_connect (thumber->decodebin, "new-decoded-pad", 
 			  G_CALLBACK (callback_newpad), thumber);
-	
 
 	if (!gst_element_link_many(thumber->source, thumber->decodebin, NULL)) {
 		g_set_error (error, GSTP_ERROR, 0,
@@ -388,7 +379,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
 
 	g_get_current_time (&timev);
-	g_time_val_add  (&timev, 1000000); /* 1 seconds */
+	g_time_val_add  (&timev, 1000000); /* 1 seconds worth of timeout */
 
 	g_mutex_lock (thumber->mutex);
 	if (!thumber->had_callback)
@@ -404,12 +395,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	g_mutex_lock (thumber->pipe_lock);
 
 	if (thumber->pipeline) {
-
-		//if (thumber->pipeline && !thumber->bugged)
 		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
-
-		/* This should free all the elements in the pipeline FIXME 
-		 * Check that this is the case */
 		gst_object_unref (thumber->pipeline);
 	} else {
 		if (thumber->source)
@@ -432,19 +418,209 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 
 }
 
+
+static void
+animated_thumbnail_get_thumb_path (const gchar *uri, gchar **thumb_path)
+{
+	gchar *thumb_filename;
+	gchar *ascii_digest;
+
+	ascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, uri, -1);
+	thumb_filename = g_strdup_printf ("%s.mpeg", ascii_digest);
+
+	*thumb_path = g_build_filename (g_get_home_dir (), ".thumbnails", "animated", thumb_filename, NULL);
+
+	g_free (thumb_filename);
+	g_free (ascii_digest);
+}
+
+static void
+animated_thumbnail_create (VideoThumbnailer *thumber, GError **error)
+{
+	GstPad            *videopad;
+	GstCaps           *caps;
+	GTimeVal           timev;
+	gchar             *destination;
+
+	/* Resetting */
+	thumber->bugged       = FALSE;
+
+	thumber->source       = NULL;
+	thumber->decodebin    = NULL;
+	thumber->bin          = NULL;
+	thumber->video_scaler = NULL;
+	thumber->video_filter = NULL;
+	thumber->video_sink   = NULL;
+
+	thumber->had_callback = FALSE;
+	thumber->mutex        = g_mutex_new ();
+	thumber->condition    = g_cond_new ();
+
+	/* Preparing the source, decodebin and pipeline */
+	thumber->pipeline     = gst_pipeline_new("source pipeline");
+	thumber->source       = gst_element_factory_make ("filesrc", "source");
+	thumber->decodebin    = gst_element_factory_make ("decodebin", "decodebin");
+
+	g_object_ref (thumber->decodebin);
+
+	if (!(thumber->pipeline && thumber->source && thumber->decodebin)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			     "Couldn't create pipeline elements");
+		goto cleanup;
+	}
+
+	gst_bin_add_many (GST_BIN(thumber->pipeline),
+			  thumber->source, thumber->decodebin,
+			  NULL);
+
+	/* Doing this causes warnings at gst_element_set_state
+	bus = gst_pipeline_get_bus (GST_PIPELINE (thumber->pipeline));
+	gst_bus_add_watch (bus, (GstBusFunc) callback_bus, thumber);
+	gst_object_unref (bus);
+	*/
+
+	g_object_set (thumber->source, "location", 
+		      g_filename_from_uri (thumber->uri, NULL, NULL), 
+		      NULL);
+
+	g_signal_connect (thumber->decodebin, "new-decoded-pad", 
+			  G_CALLBACK (callback_newpad), thumber);
+
+	if (!gst_element_link_many(thumber->source, thumber->decodebin, NULL)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link source pipeline elements");
+		goto cleanup;
+	}
+
+	/* Preparing the sink bin and elements 
+	 TODO: make a MPEG sink here
+
+	animated_thumbnail_get_thumb_path (thumber->uri, &destination);
+
+	thumber->bin          = gst_bin_new("sink bin");
+	thumber->video_scaler = gst_element_factory_make("videoscale", "video_scaler");
+	thumber->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
+	thumber->video_sink   = gst_element_factory_make("fakesink", "video_sink");
+	*/
+
+	if (!(thumber->bin && thumber->video_scaler && thumber->video_filter && thumber->video_sink)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Couldn't create sink bin elements");
+		goto cleanup;
+	}
+
+	gst_bin_add_many (GST_BIN(thumber->bin),
+			  thumber->video_scaler, 
+			  thumber->video_filter, 
+			  thumber->video_sink,
+			  NULL);
+
+	if (!gst_element_link_many(thumber->video_scaler, thumber->video_filter, NULL)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link sink bin elements");
+		goto cleanup;
+	}
+
+	caps = gst_caps_new_simple ("video/x-raw-rgb",
+				    "width", G_TYPE_INT, thumber->size,
+				    "height", G_TYPE_INT, thumber->size,
+				    "bpp", G_TYPE_INT, 24,
+				    "depth", G_TYPE_INT, 24,
+				    NULL);
+
+	if (!gst_element_link_filtered(thumber->video_filter, thumber->video_sink, caps)) {
+		g_set_error (error, GSTP_ERROR, 0,
+			"Failed to link sink bin elements");
+		goto cleanup;
+	}
+
+	gst_caps_unref (caps);
+
+	/* TODO: Make it stream for 5 seconds here
+	g_object_set (thumber->video_sink, "signal-handoffs", TRUE, NULL);
+
+	g_signal_connect (thumber->video_sink, "preroll-handoff",
+			  G_CALLBACK(callback_thumbnail), thumber);
+	*/
+
+	videopad = gst_element_get_pad (thumber->video_scaler, "sink");
+	gst_element_add_pad (thumber->bin, gst_ghost_pad_new ("sink", videopad));
+	gst_object_unref (videopad);
+	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
+
+	/* Run */
+	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
+
+	g_get_current_time (&timev);
+	g_time_val_add  (&timev, 5000000); /* 5 seconds worth of timeout */
+
+	g_mutex_lock (thumber->mutex);
+	if (!thumber->had_callback)
+		g_cond_timed_wait (thumber->condition, thumber->mutex, &timev);
+	g_mutex_unlock (thumber->mutex);
+
+	cleanup:
+
+	g_cond_free (thumber->condition);
+	thumber->condition = NULL;
+	g_mutex_free (thumber->mutex);
+
+	g_mutex_lock (thumber->pipe_lock);
+
+	if (thumber->pipeline) {
+		gst_element_set_state (thumber->pipeline, GST_STATE_NULL);
+		gst_object_unref (thumber->pipeline);
+	} else {
+		if (thumber->source)
+			gst_object_unref (thumber->source);
+		if (thumber->decodebin)
+			gst_object_unref (thumber->decodebin);
+		if (thumber->bin)
+			gst_object_unref (thumber->bin);
+		if (thumber->video_scaler)
+			gst_object_unref (thumber->video_scaler);
+		if (thumber->video_filter)
+			gst_object_unref (thumber->video_filter);
+		if (thumber->video_sink)
+			gst_object_unref (thumber->video_sink);
+	}
+
+	g_object_unref (thumber->decodebin);
+	g_mutex_unlock (thumber->pipe_lock);
+
+}
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
 {
-
-/* 	iter = gst_format_iterate_definitions(); */
-	
-/* 	while (gst_iterator_next(iter, (gpointer) &def) == 1) { */
-/* 		g_debug ("Got: %s", def.nick); */
-/* 	} */
-
-	/* FIXME: Returning hardcoded values for now */
+	/* FIXME: Returning hardcoded values for now
+	iter = gst_format_iterate_definitions(); 
+	while (gst_iterator_next(iter, (gpointer) &def) == 1) { 
+		g_debug ("Got: %s", def.nick); 
+	} */
 
 	return (const gchar**) supported;
+}
+
+
+static gboolean
+animated_thumbnail_needs_out (guint64 mtime, const gchar *uri)
+{
+	gchar *filen;
+	gboolean retval = FALSE;
+
+	animated_thumbnail_get_thumb_path (uri, &filen);
+
+	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
+		struct stat st;
+		g_stat (filen, &st);
+		if (st.st_mtime != mtime)
+			retval = TRUE;
+	} else
+		retval = TRUE;
+
+	g_free (filen);
+
+	return retval;
 }
 
 void
@@ -521,6 +697,18 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		}
 
+		if (do_vidthumbs && animated_thumbnail_needs_out (mtime, uris[i])) {
+
+			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED + 1;
+			thumber->size         = 256;
+
+			animated_thumbnail_create (thumber, &nerror);
+
+			if (nerror)
+				goto nerror_handler;
+
+		}
+
 		nerror_handler:
 
 		g_mutex_free (thumber->pipe_lock);
@@ -574,10 +762,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 gboolean 
 hildon_thumbnail_plugin_stop (void)
 {
-	/* gst_deinit (); */
-
 	if (monitor)
 		g_object_unref (monitor);
+
+	/* We don't do this because we are a resident module (hence why we 
+	 * return TRUE here).
+
+	 gst_deinit (); */
+
 	return TRUE;
 }
 
@@ -625,6 +817,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	guint i = 0;
 	const gchar **supported;
 	GError *nerror = NULL;
+
 	/* TODO: Perhaps we can add a few remote ones here too (streaming media) */
 	const gchar *uri_schemes[2] = { "file", NULL };
 
