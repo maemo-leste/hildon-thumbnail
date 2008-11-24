@@ -47,7 +47,7 @@ on_button_clicked (GtkButton *button, gpointer user_data)
 		on_art_back, image, NULL);
 
 	r2 = hildon_albumart_factory_queue_thumbnail (f, artist, album, "album",
-		256, 256,
+		256, 256, TRUE,
 		on_art_back, imaget, NULL);
 
 	g_object_unref (f);
