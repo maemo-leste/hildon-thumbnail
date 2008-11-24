@@ -127,6 +127,7 @@ HildonAlbumartRequest*
  * @kind: (allow-none) (default "album"): Usually "album", "podcast" or "radio"
  * @width: Wanted width
  * @height: Wanted height
+ * @cropped: cropped or not
  * @callback: (allow-none): A callback that will be executed when the art is ready
  * @user_data: (allow-none): User-supplied data for @callback and @destroy
  * @destroy: (allow-none): a #GDestroyNotify to destroy @user_data as soon as @callback has ran
