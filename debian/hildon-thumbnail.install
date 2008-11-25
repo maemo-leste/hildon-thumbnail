@@ -15,4 +15,5 @@ usr/share/dbus-1/services/com.nokia.albumart.GoogleImages.service
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-exec.so
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-gdkpixbuf.so
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-epeg.so
+usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-gstreamer-video.so
 usr/lib/hildon-thumbnailer/output-plugins/libhildon-thumbnailer-jpeg.so
