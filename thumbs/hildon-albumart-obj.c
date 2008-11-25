@@ -273,6 +273,10 @@ hildon_albumart_factory_queue (HildonAlbumartFactory *self,
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
 	HildonAlbumartFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (self);
 
+
+	g_debug ("Albumart n request for %s,%s,%s\n",
+		 artist_or_title, album, kind);
+
 	r_priv->artist_or_title = g_strdup (artist_or_title);
 	r_priv->album = g_strdup (album);
 	r_priv->kind = g_strdup (kind);
@@ -356,6 +360,10 @@ hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 	ArtReqInfo *info = g_slice_new (ArtReqInfo);
 	HildonAlbumartRequest *request = g_object_new (HILDON_TYPE_ALBUMART_REQUEST, NULL);
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
+
+
+	g_debug ("Albumart nt request for %s,%s,%s\n",
+		 artist_or_title, album, kind);
 
 	r_priv->artist_or_title = g_strdup (artist_or_title);
 	r_priv->album = g_strdup (album);

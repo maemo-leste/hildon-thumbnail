@@ -356,6 +356,9 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 	ArtsItem *item;
 	gboolean have_all = FALSE;
 
+	g_debug ("Albumart request for %s,%s,%s\n",
+		 artist_or_title, album, kind);
+
 	hildon_thumbnail_util_get_albumart_path (artist, album, kind, &path);
 
 	have_all = g_file_test (path, G_FILE_TEST_EXISTS);

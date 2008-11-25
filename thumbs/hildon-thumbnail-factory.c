@@ -474,6 +474,9 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	g_return_val_if_fail(uri != NULL && mime_type != NULL && callback != NULL,
 			     NULL);
 
+	g_debug ("Thumbnail request for %s at %dx%d %s\n",
+		 uri, width, height, cropped?"CROPPED":"NON-CROPPED");
+
 	for (y = 0; y < 2; y++) {
 
 		g_free (normal); normal = NULL;

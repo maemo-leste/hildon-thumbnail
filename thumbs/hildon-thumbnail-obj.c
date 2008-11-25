@@ -456,6 +456,9 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	gchar *paths[3] = { NULL, NULL, NULL };
 	gchar *lpaths[3] = { NULL, NULL, NULL };
 
+	g_debug ("Thumbnail n request for %s at %dx%d %s\n",
+		 uri, width, height, cropped?"CROPPED":"NON-CROPPED");
+
 	for (y = 0 ; y < 2 && !have; y++ ) {
 
 		have = TRUE;
