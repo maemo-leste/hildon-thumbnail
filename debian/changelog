@@ -1,4 +1,4 @@
-hildon-thumbnail (3.0.11~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.11) unstable; urgency=low
 
   [ Philip Van Hoof ]
   * Build-Depend on libsqlite3-dev.
@@ -6,7 +6,7 @@ hildon-thumbnail (3.0.11~unreleased) unstable; urgency=low
   * Animated video thumbnails.
   * Improved plugin API, public and documented.
   
- -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 25 Nov 2008 12:53:49 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 25 Nov 2008 13:15:03 +0200
 
 hildon-thumbnail (3.0.10) unstable; urgency=low
 
