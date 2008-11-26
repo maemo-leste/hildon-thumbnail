@@ -428,7 +428,7 @@ animated_thumbnail_get_thumb_path (const gchar *uri, gchar **thumb_path)
 	gchar *ascii_digest;
 
 	ascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, uri, -1);
-	thumb_filename = g_strdup_printf ("%s.mpeg", ascii_digest);
+	thumb_filename = g_strdup_printf ("%s.avi", ascii_digest);
 
 	*thumb_path = g_build_filename (g_get_home_dir (), ".thumbnails", "animated", thumb_filename, NULL);
 
