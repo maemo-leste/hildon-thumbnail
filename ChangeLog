@@ -1,3 +1,8 @@
+2008-11-28  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/thumbnailer.c
+	* daemon/thumbnail-manager.c: Fixed the GetSupported DBus method
+
 2008-11-25  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.11

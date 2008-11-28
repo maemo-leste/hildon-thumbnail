@@ -476,10 +476,21 @@ void
 thumbnail_manager_i_have (ThumbnailManager *object, const gchar *mime_type)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
+	GList *list;
+	gboolean found = FALSE;
 
 	g_mutex_lock (priv->mutex);
-	priv->thumber_has = g_list_prepend (priv->thumber_has, 
-					    g_strdup (mime_type));
+	list = priv->thumber_has;
+	while (list) {
+		if (strcmp (list->data, mime_type) == 0) {
+			found = TRUE;
+			break;
+		}
+		list = g_list_next (list);
+	}
+	if (!found)
+		priv->thumber_has = g_list_prepend (priv->thumber_has, 
+						    g_strdup (mime_type));
 	g_mutex_unlock (priv->mutex);
 }
 
