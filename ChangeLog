@@ -1,5 +1,10 @@
 2008-11-28  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/thumbnailer.c: Fixed a bug when there where more than
+	one URI in a request that had the same URI schema
+
+2008-11-28  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/thumbnailer.c
 	* daemon/thumbnail-manager.c: Fixed the GetSupported DBus method
 

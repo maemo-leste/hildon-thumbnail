@@ -472,7 +472,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 						     /* XU2 */ urls[i]);
 				}
 
-				hash = g_hash_table_lookup (schemes, mime_type);
+				hash = g_hash_table_lookup (schemes, uri_scheme);
 
 				if (!hash) {
 					hash = g_hash_table_new (g_str_hash, g_str_equal);
