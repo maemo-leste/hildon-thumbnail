@@ -1,7 +1,11 @@
-hildon-thumbnail (3.0.12~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.12) unstable; urgency=low
 
+  [ Philip Van Hoof ]
+  * Bug fixes
+  
+  [ Marius Vollmer ]
   * Added libgstreamer0.10-dev to Build-Dependencies.
-
+  
  -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 25 Nov 2008 13:18:02 +0200
 
 hildon-thumbnail (3.0.11) unstable; urgency=low
