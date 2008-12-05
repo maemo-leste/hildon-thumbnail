@@ -1,3 +1,11 @@
+hildon-thumbnail (3.0.13) unstable; urgency=low
+
+  [ Philip Van Hoof ]
+  * Don't include the libhildon-thumbnailer-gstreamer-video.so plugin for
+    now, it's too crashy.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 05 Dec 2008 15:06:38 +0200
+
 hildon-thumbnail (3.0.12) unstable; urgency=low
 
   [ Philip Van Hoof ]

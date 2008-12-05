@@ -1,3 +1,10 @@
+2008-12-05  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.13
+
+	* Don't include the libhildon-thumbnailer-gstreamer-video.so
+	plugin for now, it's too crashy.
+
 2008-12-01  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.12
