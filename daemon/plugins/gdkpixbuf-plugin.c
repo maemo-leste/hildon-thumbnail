@@ -302,7 +302,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride,
-							    gdk_pixbuf_get_bits_per_sample (pixbuf),
+							    gdk_pixbuf_get_bits_per_sample (pixbuf_cropped),
 							    FALSE,
 							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED,
 							    mtime, 
