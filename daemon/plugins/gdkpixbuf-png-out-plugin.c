@@ -232,6 +232,7 @@ void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
 				guint width, guint height,
 				guint rowstride, guint bits_per_sample,
+				gboolean has_alpha,
 				HildonThumbnailPluginOutType type,
 				guint64 mtime, 
 				const gchar *uri, 
@@ -272,7 +273,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	}
 
 	pixbuf = gdk_pixbuf_new_from_data ((const guchar*) rgb8_pixmap, 
-					   GDK_COLORSPACE_RGB, FALSE, 
+					   GDK_COLORSPACE_RGB, has_alpha, 
 					   bits_per_sample, width, height, rowstride,
 					   NULL, NULL);
 
