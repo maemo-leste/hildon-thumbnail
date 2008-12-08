@@ -234,6 +234,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
+							    FALSE,
 							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE,
 							    mtime, uri, 
 							    &nerror);
@@ -256,6 +257,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
+							    FALSE,
 							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED,
 							    mtime, uri, 
 							    &nerror);
@@ -282,6 +284,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    width,
 							    height,
 							    rowstride, 8,
+							    FALSE,
 							    HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL,
 							    mtime, uri, 
 							    &nerror);

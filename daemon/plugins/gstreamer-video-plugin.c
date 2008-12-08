@@ -96,7 +96,7 @@ create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint w
 	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
 
 		hildon_thumbnail_outplugins_do_out (data, width, height,
-						    width*3, bpp/3,
+						    width*3, bpp/3, FALSE,
 						    target, mtime, uri, 
 						    &error);
 

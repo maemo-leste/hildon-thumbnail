@@ -65,6 +65,7 @@ void        hildon_thumbnail_outplugin_unload     (GModule *module);
 void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap, 
 						   guint width, guint height,
 						   guint rowstride, guint bits_per_sample,
+						   gboolean has_alpha,
 						   HildonThumbnailPluginOutType type,
 						   guint64 mtime, 
 						   const gchar *uri, 
