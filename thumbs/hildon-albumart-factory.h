@@ -268,7 +268,7 @@ void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *a
  *
  * Deprecated use hildon_albumart_factory_join instead
  */
-void hildon_albumart_factory_wait();
+void hildon_albumart_factory_wait(void);
 
 /**
  * hildon_albumart_factory_clean_cache:

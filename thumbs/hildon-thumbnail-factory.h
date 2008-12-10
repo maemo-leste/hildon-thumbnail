@@ -361,7 +361,7 @@ void hildon_thumbnail_factory_move_front_all_from(HildonThumbnailFactoryHandle h
  *
  * Deprecated use hildon_thumbnail_factory_join instead
  */
-void hildon_thumbnail_factory_wait();
+void hildon_thumbnail_factory_wait(void);
 
 /**
  * hildon_thumbnail_factory_clean_cache:
