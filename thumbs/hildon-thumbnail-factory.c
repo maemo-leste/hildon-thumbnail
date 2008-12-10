@@ -119,7 +119,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = g_strdup (cropped);
-		} else if (item->width >= 128) {
+		} else if (item->width > 128 || item->height > 128) {
 			path = g_strdup (large);
 		} else {
 			path = g_strdup (normal);
@@ -221,7 +221,7 @@ on_task_finished (DBusGProxy *proxy,
 
 			if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 				path = cropped;
-			} else if (item->width >= 128 || item->height >= 128) {
+			} else if (item->width > 128 || item->height > 128) {
 				path = large;
 			} else {
 				path = normal;
@@ -494,7 +494,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
 				break;
-		} else if (width >= 128 || height >= 128) {
+		} else if (width > 128 || height > 128) {
 			if (g_file_test (large, G_FILE_TEST_EXISTS))
 				break;
 		} else {
@@ -514,7 +514,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = cropped;
 			luri = local_cropped;
-		} else if (width >= 128) {
+		} else if (width > 128) {
 			path = large;
 			luri = local_large;
 		} else {
@@ -852,7 +852,7 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 			path = g_strdup (cropped);
 		g_object_unref (fcropped);
 
-	} else if (width < 128 || height < 128) {
+	} else if (width <= 128 || height <= 128) {
 
 		GFile *fnormal = g_file_new_for_uri (local_normal);
 		if (g_file_query_exists (fnormal, NULL))
