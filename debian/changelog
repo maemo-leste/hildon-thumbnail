@@ -1,8 +1,10 @@
-hildon-thumbnail (3.0.14~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.14) unstable; urgency=low
 
-  * 
+  [ Philip Van Hoof ]
+  * Bug fixes in code and build scripts.
+  * Transparency.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 05 Dec 2008 15:11:39 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 10 Dec 2008 14:52:00 +0200
 
 hildon-thumbnail (3.0.13) unstable; urgency=low
 
