@@ -852,7 +852,7 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 			path = g_strdup (cropped);
 		g_object_unref (fcropped);
 
-	} else if (width < 128) {
+	} else if (width <= 128 || height <= 128) {
 
 		GFile *fnormal = g_file_new_for_uri (local_normal);
 		if (g_file_query_exists (fnormal, NULL))
