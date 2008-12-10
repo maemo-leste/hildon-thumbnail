@@ -221,7 +221,7 @@ on_task_finished (DBusGProxy *proxy,
 
 			if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 				path = cropped;
-			} else if (item->width >= 128) {
+			} else if (item->width >= 128 || item->height >= 128) {
 				path = large;
 			} else {
 				path = normal;
@@ -494,7 +494,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
 				break;
-		} else if (width >= 128) {
+		} else if (width >= 128 || height >= 128) {
 			if (g_file_test (large, G_FILE_TEST_EXISTS))
 				break;
 		} else {

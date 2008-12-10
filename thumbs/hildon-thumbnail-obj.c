@@ -150,7 +150,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 		} else {
 			filei = local;
 		}
-	} else if (r_priv->width >= 128) {
+	} else if (r_priv->width >= 128 || r_priv->height >= 128) {
 		local = g_file_new_for_uri (lpaths[1]);
 		if (!g_file_query_exists (local, NULL)) {
 			filei = g_file_new_for_path (paths[1]);
