@@ -345,6 +345,8 @@ intercept_callback (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *er
 
 		g_free (path);
 		g_free (uri);
+	} else {
+		thumb_callback (NULL, user_data, NULL, error);
 	}
 
 }
