@@ -1,3 +1,7 @@
+2008-12-12  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-albumart-obj.c: Error passing
+
 2008-12-10  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.14
