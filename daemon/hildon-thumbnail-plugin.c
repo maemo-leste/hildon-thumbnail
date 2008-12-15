@@ -230,7 +230,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 	}
 
 	if (errors) {
-		g_set_error (error, domain, 0, errors->str);
+		g_set_error (error, domain, 0, "%s", errors->str);
 		g_string_free (errors, TRUE);
 	}
 

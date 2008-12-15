@@ -196,7 +196,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 				g_string_append (r_priv->errors, " - ");
 				g_string_append (r_priv->errors, error->message);
 				g_clear_error (&error);
-				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+				g_set_error (&error, FACTORY_ERROR, 0, "%s", r_priv->errors->str);
 			}
 		}
 
@@ -218,12 +218,12 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 
 		if (r_priv->errors && !err_d) {
 			if (!error)
-				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+				g_set_error (&error, FACTORY_ERROR, 0, "%s", r_priv->errors->str);
 			else {
 				g_string_append (r_priv->errors, " - ");
 				g_string_append (r_priv->errors, error->message);
 				g_clear_error (&error);
-				g_set_error (&error, FACTORY_ERROR, 0, r_priv->errors->str);
+				g_set_error (&error, FACTORY_ERROR, 0, "%s", r_priv->errors->str);
 			}
 		}
 
