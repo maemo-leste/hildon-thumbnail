@@ -4,6 +4,13 @@
 
 2008-12-15  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c: Fixed a crash
+
+2008-12-15  Philip Van Hoof  <philip@codeminded.be>
+
 	* daemon/utils.c: Filenames for album-art
 
 2008-12-12  Philip Van Hoof  <philip@codeminded.be>

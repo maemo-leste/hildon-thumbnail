@@ -338,7 +338,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		g_list_free (failed);
 
 		g_set_error (error, EXEC_ERROR, 0,
-			     errors->str);
+			     "%s", errors->str);
+
 		g_string_free (errors, TRUE);
 	}
 
