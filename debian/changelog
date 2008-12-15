@@ -1,9 +1,9 @@
-hildon-thumbnail (3.0.15~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.15) unstable; urgency=low
 
   [Philip Van Hoof]
-  * Bug #95505: Album art for artists is implemented
+  * Album art for artists is implemented.  Fixes: NB#95505.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 10 Dec 2008 14:57:42 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 15 Dec 2008 11:38:46 +0200
 
 hildon-thumbnail (3.0.14) unstable; urgency=low
 

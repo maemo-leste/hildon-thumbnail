@@ -1,3 +1,7 @@
+2008-12-15  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.15
+
 2008-12-15  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/utils.c: Filenames for album-art
