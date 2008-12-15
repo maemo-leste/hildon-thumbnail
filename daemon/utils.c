@@ -234,9 +234,11 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 {
 	gchar *art_filename;
 	gchar *dir;
-	gchar *str;
-	gchar *down;
+	gchar *down1, *down2;
+	gchar *str1 = NULL, *str2 = NULL;
 	gchar *f_a = NULL, *f_b = NULL;
+
+	/* http://live.gnome.org/MediaArtStorageSpec */
 
 	*path = NULL;
 
@@ -244,22 +246,22 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 		return;
 	}
 
-	if (a)
+	if (a && strlen (a) > 1)
 		f_a = strip_characters (a);
+	else 
+		f_a = g_strdup ("  ");
 
-	if (b)
+	if (b && strlen (b) > 1)
 		f_b = strip_characters (b);
+	else
+		f_b = g_strdup ("  ");
 
-	str = g_strconcat (a ? f_a : "", 
-			   " ", 
-			   b ? f_b : "", 
-			   NULL);
+
+	down1 = g_utf8_strdown (f_a, -1);
+	down2 = g_utf8_strdown (f_b, -1);
 
 	g_free (f_a);
 	g_free (f_b);
-
-	down = g_utf8_strdown (str, -1);
-	g_free (str);
 
 	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
 
@@ -267,11 +269,13 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 		g_mkdir_with_parents (dir, 0770);
 	}
 
-	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
-	g_free (down);
+	str1 = g_compute_checksum_for_string (G_CHECKSUM_MD5, down1, -1);
+	str2 = g_compute_checksum_for_string (G_CHECKSUM_MD5, down2, -1);
 
-	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix?prefix:"album", str);
-	g_free (str);
+	g_free (down1);
+	g_free (down2);
+
+	art_filename = g_strdup_printf ("%s-%s-%s.jpeg", prefix?prefix:"album", str1, str2);
 
 	*path = g_build_filename (dir, art_filename, NULL);
 	g_free (dir);

@@ -1,3 +1,7 @@
+2008-12-15  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/utils.c: Filenames for album-art
+
 2008-12-12  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-albumart-obj.c: Error passing
