@@ -232,6 +232,53 @@ strip_characters (const gchar *original)
 void
 hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
+#ifdef OLD_ART_PATH
+	gchar *art_filename;
+	gchar *dir;
+	gchar *str;
+	gchar *down;
+	gchar *f_a = NULL, *f_b = NULL;
+
+	*path = NULL;
+
+	if (!a && !b) {
+		return;
+	}
+
+	if (a)
+		f_a = strip_characters (a);
+
+	if (b)
+		f_b = strip_characters (b);
+
+	str = g_strconcat (a ? f_a : "", 
+			   " ", 
+			   b ? f_b : "", 
+			   NULL);
+
+	g_free (f_a);
+	g_free (f_b);
+
+	down = g_utf8_strdown (str, -1);
+	g_free (str);
+
+	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
+
+	if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
+		g_mkdir_with_parents (dir, 0770);
+	}
+
+	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
+	g_free (down);
+
+	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix?prefix:"album", str);
+	g_free (str);
+
+	*path = g_build_filename (dir, art_filename, NULL);
+	g_free (dir);
+	g_free (art_filename);
+
+#else
 	gchar *art_filename;
 	gchar *dir;
 	gchar *down1, *down2;
@@ -280,4 +327,5 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 	*path = g_build_filename (dir, art_filename, NULL);
 	g_free (dir);
 	g_free (art_filename);
+#endif
 }

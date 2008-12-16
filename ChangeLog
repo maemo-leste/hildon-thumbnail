@@ -1,3 +1,8 @@
+2008-12-16  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/utils.c
+	* daemon/Makefile.am: ifdef for the old album-art paths
+
 2008-12-15  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.15

@@ -8,7 +8,8 @@ INCLUDES = -I. \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
 	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
-	-DOUTPUTPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/output-plugins"\"
+	-DOUTPUTPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/output-plugins"\" \
+	-DOLD_ART_PATH
 
 
 noinst_LTLIBRARIES = libshared.la
