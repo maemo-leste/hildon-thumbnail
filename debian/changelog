@@ -1,6 +1,7 @@
-hildon-thumbnail (3.0.16~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.16) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Album art fixes.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 15 Dec 2008 11:43:21 +0200
 
