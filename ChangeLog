@@ -1,3 +1,8 @@
+2008-12-18   Suarez Romero Juan Antonio  <jasuarez@igalia.com>
+
+	* Bug# 96208: Single-char artist/album generates the same ID for
+	hildon-thumbnail
+
 2008-12-16  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.16
