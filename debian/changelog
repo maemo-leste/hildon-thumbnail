@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.17) unstable; urgency=low
+
+  [Philip Van Hoof]
+  * Album art naming fixes.  Fixes: NB#96208.  
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 19 Dec 2008 12:20:02 +0200
+
 hildon-thumbnail (3.0.16) unstable; urgency=low
 
   [Philip Van Hoof]
