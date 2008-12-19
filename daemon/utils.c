@@ -232,7 +232,7 @@ strip_characters (const gchar *original)
 void
 hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
-#ifdef OLD_ART_PATH
+/*#ifdef OLD_ART_PATH
 	gchar *art_filename;
 	gchar *dir;
 	gchar *str;
@@ -278,7 +278,7 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 	g_free (dir);
 	g_free (art_filename);
 
-#else
+#else*/
 	gchar *art_filename;
 	gchar *dir;
 	gchar *down1, *down2;
@@ -330,5 +330,5 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 	*path = g_build_filename (dir, art_filename, NULL);
 	g_free (dir);
 	g_free (art_filename);
-#endif
+/*#endif*/
 }
