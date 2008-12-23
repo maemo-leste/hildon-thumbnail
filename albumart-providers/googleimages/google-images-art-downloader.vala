@@ -23,10 +23,10 @@ public class GoogleImages : Object, Provider {
 		if (kind == null)
 			kind = "album";
 
-		if (album == null)
+		if (album == null || album == "")
 			album = "  ";
 
-		if (artist == null)
+		if (artist == null || artist == "")
 			artist = "  ";
 
 		// Convert the album and artist into something that will work for Google images
