@@ -24,10 +24,10 @@ public class GoogleImages : Object, Provider {
 			kind = "album";
 
 		if (album == null)
-			album = "";
+			album = "  ";
 
 		if (artist == null)
-			artist = "";
+			artist = "  ";
 
 		// Convert the album and artist into something that will work for Google images
 
@@ -98,9 +98,13 @@ public class GoogleImages : Object, Provider {
 								  "media-art", kind + "-" +
 								  Checksum.compute_for_string (
 										   ChecksumType.MD5, 
-										   (artist + " " + album).down (), 
-										   -1) + ".jpeg",
-								  null);
+										   (artist).down (), 
+										   -1) + "-" +
+								  Checksum.compute_for_string (
+										   ChecksumType.MD5, 
+										   (album).down (), 
+										   -1) +
+								   ".jpeg", null);
 
 				// Make sure the directory .album_arts is available
 

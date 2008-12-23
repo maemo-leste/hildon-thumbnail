@@ -1,3 +1,9 @@
+2008-12-23  Philip Van Hoof  <philip@codeminded.be>
+
+	* albumart-providers/googleimages/google-images-art-downloader.vala:
+	Fixed the album-art path. Careful Marius, this requires recompiling
+	the vala bits. Also mind the music-store plugin which is external!
+
 2008-12-19  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.17
