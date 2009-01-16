@@ -127,7 +127,7 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
 
 	if (local) {
-		int slen = strlen (filename);
+		int slen = filename ? strlen (filename) : 0;
 		if (filename && slen > 0 && local_dir) {
 			gchar *lthumb_filename;
 			gchar *lcropped_filename;
