@@ -1,3 +1,10 @@
+2009-01-16  Philip Van Hoof  <philip@codeminded.be>
+
+	* tests/Makefile.am
+	* daemon/utils.c
+	* configure.ac
+	* tests/testpaths.c: single character albums
+
 2008-12-23  Philip Van Hoof  <philip@codeminded.be>
 
 	* albumart-providers/googleimages/google-images-art-downloader.vala:

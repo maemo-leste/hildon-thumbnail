@@ -204,7 +204,7 @@ AM_CONDITIONAL(ENABLE_OSSO, test x$have_osso = xyes)
 
 AC_CONFIG_LINKS(thumbs/pixbuf-io-loader.c:daemon/plugins/pixbuf-io-loader.c)
 
-AC_OUTPUT(Makefile \
+AC_OUTPUT(Makefile tests/Makefile \
 	  daemon/Makefile \
 	  daemon/plugins/Makefile \
 	  thumbs/Makefile \

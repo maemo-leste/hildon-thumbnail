@@ -28,6 +28,25 @@
 #include <string.h>
 #include "utils.h"
 
+static gchar *
+my_compute_checksum_for_data (GChecksumType  checksum_type,
+                              const guchar  *data,
+                              gsize          length)
+{
+  GChecksum *checksum;
+  gchar *retval;
+
+  checksum = g_checksum_new (checksum_type);
+  if (!checksum)
+    return NULL;
+
+  g_checksum_update (checksum, data, length);
+  retval = g_strdup (g_checksum_get_string (checksum));
+  g_checksum_free (checksum);
+
+  return retval;
+}
+
 
 void
 hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, gchar **local_large, gchar **local_normal, gchar **local_cropped, gboolean as_png)
@@ -91,7 +110,7 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	if(!g_file_test (cropped_dir, G_FILE_TEST_EXISTS))
 		g_mkdir_with_parents (cropped_dir, 0770);
 
-	ascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, uri, -1);
+	ascii_digest = my_compute_checksum_for_data (G_CHECKSUM_MD5, (const guchar *) uri, strlen (uri));
 
 	if (as_png)
 		thumb_filename = g_strdup_printf ("%s.png", ascii_digest);
@@ -108,11 +127,13 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	*cropped = g_build_filename (cropped_dir, cropped_filename, NULL);
 
 	if (local) {
-		if (filename && strlen (filename) > 1 && local_dir) {
+		int slen = strlen (filename);
+		if (filename && slen > 0 && local_dir) {
 			gchar *lthumb_filename;
 			gchar *lcropped_filename;
 
-			lascii_digest = g_compute_checksum_for_string (G_CHECKSUM_MD5, filename, -1);
+			lascii_digest = my_compute_checksum_for_data (G_CHECKSUM_MD5, (const guchar *) filename, slen);
+
 			if (as_png)
 				lthumb_filename = g_strdup_printf ("%s.png", lascii_digest);
 			else
@@ -232,53 +253,6 @@ strip_characters (const gchar *original)
 void
 hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path)
 {
-/*#ifdef OLD_ART_PATH
-	gchar *art_filename;
-	gchar *dir;
-	gchar *str;
-	gchar *down;
-	gchar *f_a = NULL, *f_b = NULL;
-
-	*path = NULL;
-
-	if (!a && !b) {
-		return;
-	}
-
-	if (a)
-		f_a = strip_characters (a);
-
-	if (b)
-		f_b = strip_characters (b);
-
-	str = g_strconcat (a ? f_a : "", 
-			   " ", 
-			   b ? f_b : "", 
-			   NULL);
-
-	g_free (f_a);
-	g_free (f_b);
-
-	down = g_utf8_strdown (str, -1);
-	g_free (str);
-
-	dir = g_build_filename (g_get_user_cache_dir (), "media-art", NULL);
-
-	if (!g_file_test (dir, G_FILE_TEST_EXISTS)) {
-		g_mkdir_with_parents (dir, 0770);
-	}
-
-	str = g_compute_checksum_for_string (G_CHECKSUM_MD5, down, -1);
-	g_free (down);
-
-	art_filename = g_strdup_printf ("%s-%s.jpeg", prefix?prefix:"album", str);
-	g_free (str);
-
-	*path = g_build_filename (dir, art_filename, NULL);
-	g_free (dir);
-	g_free (art_filename);
-
-#else*/
 	gchar *art_filename;
 	gchar *dir;
 	gchar *down1, *down2;
@@ -293,17 +267,13 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 		return;
 	}
 
-	if (!a || *a == '\0') 
-		f_a = g_strdup ("  ");
-	else if (strlen (a) == 1)
-		f_a = g_strconcat (a, " ");
+	if (!a) 
+		f_a = g_strdup (" ");
 	else
 		f_a = strip_characters (a);
 
-	if (!b || *b == '\0')
-		f_b = g_strdup ("  ");
-	else if (strlen (b) == 1)
-		f_b = g_strconcat (b, " ");
+	if (!b)
+		f_b = g_strdup (" ");
 	else
 		f_b = strip_characters (b);
 
@@ -319,8 +289,8 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 		g_mkdir_with_parents (dir, 0770);
 	}
 
-	str1 = g_compute_checksum_for_string (G_CHECKSUM_MD5, down1, -1);
-	str2 = g_compute_checksum_for_string (G_CHECKSUM_MD5, down2, -1);
+	str1 = my_compute_checksum_for_data (G_CHECKSUM_MD5, (const guchar *) down1, strlen (down1));
+	str2 = my_compute_checksum_for_data (G_CHECKSUM_MD5, (const guchar *) down2, strlen (down2));
 
 	g_free (down1);
 	g_free (down2);
@@ -330,5 +300,5 @@ hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const g
 	*path = g_build_filename (dir, art_filename, NULL);
 	g_free (dir);
 	g_free (art_filename);
-/*#endif*/
 }
+
