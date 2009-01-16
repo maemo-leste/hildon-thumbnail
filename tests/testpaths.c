@@ -6,6 +6,8 @@
 
 int main ()
 {
+	/* don't use like this in software, you must free the result */
+
 	g_print ("%s\n", hildon_albumart_get_path ("a", "b", "album"));
 	g_print ("%s\n", hildon_albumart_get_path ("a", NULL, "album"));
 	g_print ("%s\n", hildon_albumart_get_path (NULL, "b", "album"));
