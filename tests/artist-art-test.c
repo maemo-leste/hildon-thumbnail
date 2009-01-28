@@ -50,6 +50,21 @@ on_button_clicked (GtkButton *button, gpointer user_data)
 		256, 256, TRUE,
 		on_art_back, imaget, NULL);
 
+
+	g_print ("Requesting Nelly!\n");
+
+	hildon_albumart_factory_queue_thumbnail(
+                 f,
+                 "Nelly Furtado",
+                 "2008 Grammy Nominees",
+                 "album",
+                 1, 1, TRUE,
+                 on_art_back, imaget, NULL);
+
+
+	g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
+                 "2008 Grammy Nominees", "album"));
+
 	g_object_unref (f);
 	g_object_unref (r1);
 	g_object_unref (r2);
