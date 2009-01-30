@@ -1,3 +1,7 @@
+2009-01-27  Philip Van Hoof  <philip@codeminded.be>
+
+	* debian/hildon-thumbnail.install: Enabling the GStreamer video plugin
+
 2009-01-16  Philip Van Hoof  <philip@codeminded.be>
 
 	* tests/Makefile.am
