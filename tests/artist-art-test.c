@@ -53,6 +53,9 @@ on_button_clicked (GtkButton *button, gpointer user_data)
 
 	g_print ("Requesting Nelly!\n");
 
+printf ("LOC: %s\n",hildon_thumbnail_get_uri("file:///home/user/.cache/media-art/album-325dca7d85d2b6a2f09f2486c125e5fc-681aeee31930af7af8d1ee209ba0195f.jpeg", 100, 100, FALSE));
+
+
 	hildon_albumart_factory_queue_thumbnail(
                  f,
                  "Nelly Furtado",

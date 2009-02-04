@@ -1,3 +1,7 @@
+2009-02-04  Philip Van Hoof  <philip@codeminded.be>
+
+	* deamon/  utils.c: leak fix found by jasuarez@fanzine.igalia.com
+
 2009-01-27  Philip Van Hoof  <philip@codeminded.be>
 
 	* debian/hildon-thumbnail.install: Enabling the GStreamer video plugin
