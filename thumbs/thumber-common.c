@@ -170,7 +170,7 @@ int hildon_thumber_main(
     height = atoi(argv[6]);
 
     g_type_init ();
-    g_thread_init (NULL);
+//    g_thread_init (NULL);
 
     filei = g_file_new_for_uri (uri);
     if(!g_file_query_exists (filei, NULL)) {

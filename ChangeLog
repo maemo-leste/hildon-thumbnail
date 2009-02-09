@@ -1,3 +1,7 @@
+2009-02-09  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* thumbs/thumber-common.c: Bugfix for Bug# 91639
+	
 2009-02-04  Philip Van Hoof  <philip@codeminded.be>
 
 	* deamon/  utils.c: leak fix found by jasuarez@fanzine.igalia.com
