@@ -1,3 +1,12 @@
+hildon-thumbnail (3.0.18) unstable; urgency=low
+
+  [Philip Van Hoof]
+  * Fixes: NB#99447, Tracker taking more time for indexing the images.
+  * Fixes: NB#91639, hildon-thumb-gdk-pixbuf crashs due to multiple
+    g_thread_init calls.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 16 Feb 2009 20:37:04 +0200
+
 hildon-thumbnail (3.0.17) unstable; urgency=low
 
   [Philip Van Hoof]
