@@ -115,8 +115,8 @@ initialize_priority (void)
 	ioprio_set (IOPRIO_WHO_PROCESS, 0, ioprio | ioclass);
 
 	nice (19);
- 	if (sched_getparam (0, &sp) == 0)
-		sched_setscheduler (0, SCHED_IDLE, &sp);
+/* 	if (sched_getparam (0, &sp) == 0)
+		sched_setscheduler (0, SCHED_IDLE, &sp); */
 }
 
 void
