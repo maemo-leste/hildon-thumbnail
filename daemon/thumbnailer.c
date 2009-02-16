@@ -55,7 +55,7 @@
 G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
 
 void keep_alive (void);
-
+void initialize_priority (void);
 
 typedef struct {
 	ThumbnailManager *manager;
@@ -361,6 +361,7 @@ subtract_strv (GStrv a, GStrv b)
  * new requests get a certain priority over older requests. Note that we are not
  * canceling currently running requests. Also note that the thread count of the 
  * pool is set to one. We could increase this number to add some parallelism */
+
 
 static void 
 do_the_work (WorkTask *task, gpointer user_data)
@@ -718,6 +719,15 @@ unqueued:
 	return;
 }
 
+
+static void 
+do_the_large_work (WorkTask *task, gpointer user_data)
+{
+	initialize_priority ();
+	do_the_work (task, user_data);
+}
+
+
 void
 thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context)
 {
@@ -1021,7 +1031,7 @@ thumbnailer_init (Thumbnailer *object)
 
 	/* We could increase the amount of threads to add some parallelism */
 
-	priv->large_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
+	priv->large_pool = g_thread_pool_new ((GFunc) do_the_large_work,NULL,1,TRUE,NULL);
 	priv->normal_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
 
 	/* This sort function makes the pool a LIFO */
