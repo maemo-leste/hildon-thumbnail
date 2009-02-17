@@ -2,8 +2,7 @@
 
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-factory.h: Added convenience function for
-	rotating (this is untested atm, don't release this until I removed
-	this warning please).
+	rotating (needs a new release asap) 
 
 2009-02-16  Marius Vollmer  <marius.vollmer@nokia.com>
 
