@@ -16,6 +16,7 @@ static void
 on_art_back (HildonAlbumartFactoryHandle handle, gpointer user_data, GdkPixbuf *albumart, GError *error)
 {
 	if (albumart) {
+
 		gtk_image_set_from_pixbuf (user_data, albumart);
 	}
 }
@@ -24,7 +25,10 @@ static void
 on_art_back (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *error, gpointer user_data)
 {
 	if (albumart) {
-		gtk_image_set_from_pixbuf (user_data, albumart);
+		GdkPixbuf *b = hildon_thumbnail_orientate ("file:///home/user/.cache/media-art/album-325dca7d85d2b6a2f09f2486c125e5fc-681aeee31930af7af8d1ee209ba0195f.jpeg", 
+		                                       "2", albumart);
+		gtk_image_set_from_pixbuf (user_data, b);
+		g_object_unref (b);
 	}
 }
 #endif

@@ -77,11 +77,8 @@ GType hildon_thumbnail_request_get_type (void);
  * @orientation: optional orientation (if you know it already, pass it here, NULL otherwise)
  * @image: GdkPixbuf of the thumbnail
  *
- * Rotates @image and then returns the rotated version. When rotated @image will
- * be unreferenced once. Which means that you should do something like this:
- * image = hildon_thumbnail_orientate (uri, image) and it wont create a memory
- * leak. If no rotation was necessary then @image will just be returned back to
- * you.
+ * Rotates @image and then returns the rotated version.. If no rotation was 
+ * necessary then @image will just be returned back to you with a reference added.
  *
  * Returns: @image or the rotated version of @image depending on the necessity 
  * of rotating.

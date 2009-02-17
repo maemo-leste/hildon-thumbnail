@@ -258,7 +258,7 @@ hildon_thumbnail_orientate (const gchar *uri, const gchar *orientation, GdkPixbu
 		}
 
 		/* Rotate 90 CW  */
-		if (g_strcmp0 (values[0], "6")) {
+		if (g_strcmp0 (orientation, "6")) {
 			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE);
 			rotated = TRUE;
 		}
@@ -283,8 +283,8 @@ hildon_thumbnail_orientate (const gchar *uri, const gchar *orientation, GdkPixbu
 	if (values)
 		g_strfreev (values);
 
-	if (rotated)
-		g_object_unref (image);
+	if (!rotated)
+		g_object_ref (image);
 
 	return ret;
 }
