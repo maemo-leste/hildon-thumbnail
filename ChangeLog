@@ -1,5 +1,7 @@
 2009-02-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
+	Released 3.0.19
+
 	* daemon/hildon-thumbnail-daemon.c (initialize_priority): Only use
 	SCHED_IDLE when it is defined.
 

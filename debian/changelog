@@ -1,8 +1,12 @@
-hildon-thumbnail (3.0.19~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.19) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Added convenience function for rotating.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 16 Feb 2009 20:43:01 +0200
+  [Marius Vollmer]
+  * Make it build even when SCHED_IDLE is not available.
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 17 Feb 2009 17:58:20 +0200
 
 hildon-thumbnail (3.0.18) unstable; urgency=low
 
