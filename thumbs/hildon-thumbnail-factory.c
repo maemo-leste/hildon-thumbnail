@@ -191,58 +191,66 @@ _gdk_pixbuf_copy_mirror (GdkPixbuf *src,
 
 
 GdkPixbuf* 
-hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image)
+hildon_thumbnail_orientate (const gchar *uri, const gchar *orientation, GdkPixbuf *image)
 {
-	GStrv keys, values = NULL;
 	gboolean rotated = FALSE;
 	GdkPixbuf *ret = image;
-	GError *error = NULL;
+	GStrv values = NULL;
 
-	keys = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+	if (!orientation) {
+		GStrv keys;
+		GError *error = NULL;
 
-	keys[0] = g_strdup ("Image:Orientation");
-	keys[1] = NULL;
+		keys = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
 
-	dbus_g_proxy_call (get_tracker_proxy (),
-	                   "Queue", &error,
-	                   G_TYPE_STRING, "Files",
-	                   G_TYPE_STRING, uri,
-	                   G_TYPE_STRV, keys,
-	                   G_TYPE_INVALID,
-	                   G_TYPE_STRV, &values,
-	                   G_TYPE_INVALID);
+		keys[0] = g_strdup ("Image:Orientation");
+		keys[1] = NULL;
 
-	if (error) {
-		g_warning ("%s\n", error->message);
-		g_error_free (error);
+		dbus_g_proxy_call (get_tracker_proxy (),
+				   "Get", &error,
+				   G_TYPE_STRING, "Files",
+				   G_TYPE_STRING, uri,
+				   G_TYPE_STRV, keys,
+				   G_TYPE_INVALID,
+				   G_TYPE_STRV, &values,
+				   G_TYPE_INVALID);
+
+		if (error) {
+			g_warning ("%s\n", error->message);
+			g_error_free (error);
+			g_strfreev (keys);
+			if (values)
+				g_strfreev (values);
+
+			return image;
+		}
+
 		g_strfreev (keys);
-		if (values)
-			g_strfreev (values);
-		return image;
+		orientation = values[0];
 	}
 
-	if (values && values[0]) {
+	if (orientation) {
 
 		/* Mirror horizontal */
-		if (g_strcmp0 (values[0], "2")) {
+		if (g_strcmp0 (orientation, "2")) {
 			ret = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
 			rotated = TRUE;
 		}
 
 		/* Rotate 180 */
-		if (g_strcmp0 (values[0], "3")) {
+		if (g_strcmp0 (orientation, "3")) {
 			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_UPSIDEDOWN);
 			rotated = TRUE;
 		}
 
 		/* Mirror vertical */
-		if (g_strcmp0 (values[0], "4")) {
+		if (g_strcmp0 (orientation, "4")) {
 			ret = _gdk_pixbuf_copy_mirror (image, FALSE, TRUE);
 			rotated = TRUE;
 		}
 
 		/* Mirror horizontal and rotate 270 CW */
-		if (g_strcmp0 (values[0], "5")) {
+		if (g_strcmp0 (orientation, "5")) {
 			GdkPixbuf *temp = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
 			ret = gdk_pixbuf_rotate_simple (temp, GDK_PIXBUF_ROTATE_CLOCKWISE);
 			g_object_unref (temp);
@@ -257,7 +265,7 @@ hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image)
 
 		/* Mirror horizontal and rotate 90 CW  */
 		
-		if (g_strcmp0 (values[0], "7")) {
+		if (g_strcmp0 (orientation, "7")) {
 			GdkPixbuf *temp = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
 			ret = gdk_pixbuf_rotate_simple (temp, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE);
 			g_object_unref (temp);
@@ -265,19 +273,18 @@ hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image)
 		}
 
 		/* Rotate 270 CW  */
-		if (g_strcmp0 (values[0], "8")) {
+		if (g_strcmp0 (orientation, "8")) {
 			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_CLOCKWISE);
 			rotated = TRUE;
 		}
 
-		g_strfreev (values);
 	}
+
+	if (values)
+		g_strfreev (values);
 
 	if (rotated)
 		g_object_unref (image);
-
-
-	g_strfreev (keys);
 
 	return ret;
 }

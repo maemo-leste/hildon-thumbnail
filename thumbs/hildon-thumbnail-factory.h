@@ -73,7 +73,8 @@ GType hildon_thumbnail_request_get_type (void);
 
 /** 
  * hildon_thumbnail_orientate:
- * @uri: URI of the original image
+ * @uri: URI of the original image (not needed if you pass @orientation)
+ * @orientation: optional orientation (if you know it already, pass it here, NULL otherwise)
  * @image: GdkPixbuf of the thumbnail
  *
  * Rotates @image and then returns the rotated version. When rotated @image will
@@ -85,7 +86,7 @@ GType hildon_thumbnail_request_get_type (void);
  * Returns: @image or the rotated version of @image depending on the necessity 
  * of rotating.
  **/
-GdkPixbuf* hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image) G_GNUC_WARN_UNUSED_RESULT; 
+GdkPixbuf* hildon_thumbnail_orientate (const gchar *uri, const gchar *orientation, GdkPixbuf *image) G_GNUC_WARN_UNUSED_RESULT; 
 
 /** 
  * HildonThumbnailRequestPixbufCallback:
