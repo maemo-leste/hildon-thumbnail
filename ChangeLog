@@ -1,3 +1,11 @@
+2009-02-17  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* daemon/hildon-thumbnail-daemon.c (initialize_priority): Only use
+	SCHED_IDLE when it is defined.
+
+	* Makefile.am (SUBDIRS): Added "tests" so that it ends up in the
+	dist tarball.
+
 2009-02-17  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* thumbs/hildon-thumbnail-factory.c
