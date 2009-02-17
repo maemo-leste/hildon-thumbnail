@@ -1,3 +1,10 @@
+2009-02-17  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-factory.h: Added convenience function for
+	rotating (this is untested atm, don't release this until I removed
+	this warning please).
+
 2009-02-16  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.18

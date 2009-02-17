@@ -97,6 +97,191 @@ typedef struct {
 	guint64 size;
 } ThumbsCacheFile;
 
+#define TRACKER_METADATA_SERVICE	 "org.freedesktop.Tracker"
+#define TRACKER_METADATA_PATH		 "/org/freedesktop/Tracker/Metadata"
+#define TRACKER_METADATA_INTERFACE	 "org.freedesktop.Tracker.Metadata"
+
+static DBusGProxy*
+get_tracker_proxy (void)
+{
+	static DBusGProxy *proxy = NULL;
+
+	if (!proxy) {
+		GError          *error = NULL;
+		DBusGConnection *connection;
+
+		connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+
+		if (!error) {
+			proxy = dbus_g_proxy_new_for_name (connection,
+			                                   TRACKER_METADATA_SERVICE,
+			                                   TRACKER_METADATA_PATH,
+			                                   TRACKER_METADATA_INTERFACE);
+		} else {
+			g_error_free (error);
+		}
+	}
+
+	return proxy;
+}
+
+/* Copied from GThumb (and/or many other projects that have copied this too)
+ * Returns a copy of pixbuf mirrored and or flipped.
+ * TO do a 180 degree rotations set both mirror and flipped TRUE
+ * if mirror and flip are FALSE, result is a simple copy.
+ */
+static GdkPixbuf *
+_gdk_pixbuf_copy_mirror (GdkPixbuf *src,
+                         gboolean mirror,
+                         gboolean flip)
+{
+	GdkPixbuf *dest;
+	int        has_alpha;
+	int        w, h, srs;
+	int        drs;
+	guchar    *s_pix;
+	guchar    *d_pix;
+	guchar    *sp;
+	guchar    *dp;
+	int        i, j;
+	int        a;
+
+	if (!src) return NULL;
+
+	w = gdk_pixbuf_get_width (src);
+	h = gdk_pixbuf_get_height (src);
+	has_alpha = gdk_pixbuf_get_has_alpha (src);
+	srs = gdk_pixbuf_get_rowstride (src);
+	s_pix = gdk_pixbuf_get_pixels (src);
+
+	dest = gdk_pixbuf_new (GDK_COLORSPACE_RGB, has_alpha, 8, w, h);
+	drs = gdk_pixbuf_get_rowstride (dest);
+	d_pix = gdk_pixbuf_get_pixels (dest);
+
+	a = has_alpha ? 4 : 3;
+
+	for (i = 0; i < h; i++) {
+		sp = s_pix + (i * srs);
+		if (flip)
+			dp = d_pix + ((h - i - 1) * drs);
+		else
+			dp = d_pix + (i * drs);
+
+		if (mirror) {
+			dp += (w - 1) * a;
+			for (j = 0; j < w; j++) {
+				*(dp++) = *(sp++);      /* r */
+				*(dp++) = *(sp++);      /* g */
+				*(dp++) = *(sp++);      /* b */
+				if (has_alpha) *(dp) = *(sp++); /* a */
+				dp -= (a + 3);
+			}
+		} else {
+			for (j = 0; j < w; j++) {
+				*(dp++) = *(sp++);      /* r */
+				*(dp++) = *(sp++);      /* g */
+				*(dp++) = *(sp++);      /* b */
+				if (has_alpha) *(dp++) = *(sp++);       /* a */
+			}
+		}
+	}
+
+	return dest;
+}
+
+
+GdkPixbuf* 
+hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image)
+{
+	GStrv keys, values = NULL;
+	gboolean rotated = FALSE;
+	GdkPixbuf *ret = image;
+	GError *error = NULL;
+
+	keys = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+
+	keys[0] = g_strdup ("Image:Orientation");
+	keys[1] = NULL;
+
+	dbus_g_proxy_call (get_tracker_proxy (),
+	                   "Queue", &error,
+	                   G_TYPE_STRING, "Files",
+	                   G_TYPE_STRING, uri,
+	                   G_TYPE_STRV, keys,
+	                   G_TYPE_INVALID,
+	                   G_TYPE_STRV, &values,
+	                   G_TYPE_INVALID);
+
+	if (error) {
+		g_warning ("%s\n", error->message);
+		g_error_free (error);
+		g_strfreev (keys);
+		if (values)
+			g_strfreev (values);
+		return image;
+	}
+
+	if (values && values[0]) {
+
+		/* Mirror horizontal */
+		if (g_strcmp0 (values[0], "2")) {
+			ret = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
+			rotated = TRUE;
+		}
+
+		/* Rotate 180 */
+		if (g_strcmp0 (values[0], "3")) {
+			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_UPSIDEDOWN);
+			rotated = TRUE;
+		}
+
+		/* Mirror vertical */
+		if (g_strcmp0 (values[0], "4")) {
+			ret = _gdk_pixbuf_copy_mirror (image, FALSE, TRUE);
+			rotated = TRUE;
+		}
+
+		/* Mirror horizontal and rotate 270 CW */
+		if (g_strcmp0 (values[0], "5")) {
+			GdkPixbuf *temp = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
+			ret = gdk_pixbuf_rotate_simple (temp, GDK_PIXBUF_ROTATE_CLOCKWISE);
+			g_object_unref (temp);
+			rotated = TRUE;
+		}
+
+		/* Rotate 90 CW  */
+		if (g_strcmp0 (values[0], "6")) {
+			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE);
+			rotated = TRUE;
+		}
+
+		/* Mirror horizontal and rotate 90 CW  */
+		
+		if (g_strcmp0 (values[0], "7")) {
+			GdkPixbuf *temp = _gdk_pixbuf_copy_mirror (image, TRUE, FALSE);
+			ret = gdk_pixbuf_rotate_simple (temp, GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE);
+			g_object_unref (temp);
+			rotated = TRUE;
+		}
+
+		/* Rotate 270 CW  */
+		if (g_strcmp0 (values[0], "8")) {
+			ret = gdk_pixbuf_rotate_simple (image, GDK_PIXBUF_ROTATE_CLOCKWISE);
+			rotated = TRUE;
+		}
+
+		g_strfreev (values);
+	}
+
+	if (rotated)
+		g_object_unref (image);
+
+
+	g_strfreev (keys);
+
+	return ret;
+}
+
 static void thumb_item_free(ThumbsItem* item)
 {
 	g_free(item->uri);

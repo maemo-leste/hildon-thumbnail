@@ -72,6 +72,22 @@ GType hildon_thumbnail_factory_get_type (void);
 GType hildon_thumbnail_request_get_type (void);
 
 /** 
+ * hildon_thumbnail_orientate:
+ * @uri: URI of the original image
+ * @image: GdkPixbuf of the thumbnail
+ *
+ * Rotates @image and then returns the rotated version. When rotated @image will
+ * be unreferenced once. Which means that you should do something like this:
+ * image = hildon_thumbnail_orientate (uri, image) and it wont create a memory
+ * leak. If no rotation was necessary then @image will just be returned back to
+ * you.
+ *
+ * Returns: @image or the rotated version of @image depending on the necessity 
+ * of rotating.
+ **/
+GdkPixbuf* hildon_thumbnail_orientate (const gchar *uri, GdkPixbuf *image) G_GNUC_WARN_UNUSED_RESULT; 
+
+/** 
  * HildonThumbnailRequestPixbufCallback:
  * @self: the factory
  * @thumbnail: (allow-none): A pixbuf containing the thumbnail or %NULL. If application wishes to keep the structure, it must call g_object_ref() on it. The library does not cache returned pixbufs.
