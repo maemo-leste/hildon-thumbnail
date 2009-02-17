@@ -116,8 +116,12 @@ initialize_priority (void)
 
 	nice (19);
 
+	/* Maemo on X86 doesn't have new enough kernel headers.
+	 */
+#ifdef SCHED_IDLE
  	if (sched_getparam (0, &sp) == 0)
-		sched_setscheduler (0, SCHED_IDLE, &sp); 
+		sched_setscheduler (0, SCHED_IDLE, &sp);
+#endif
 }
 
 void
