@@ -359,6 +359,7 @@ hildon_thumbnail_outplugin_is_active (void)
 
 		reload_config (config);
 
+		g_free (config);
 		had_init = TRUE;
 	}
 

@@ -243,7 +243,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	if (!nerror) {
 #ifdef HAVE_SQLITE3
 		gchar *dbfile;
-		gboolean create;
+		gboolean create = FALSE;
 
 		if (!db) {
 			gchar *dbfile;
@@ -352,6 +352,7 @@ hildon_thumbnail_outplugin_is_active (void)
 
 		reload_config (config);
 
+		g_free (config);
 		had_init = TRUE;
 	}
 

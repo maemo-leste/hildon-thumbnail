@@ -229,6 +229,8 @@ read_cache_dir(gchar *path, GPtrArray *files)
 				g_error_free (error);
 				g_object_unref (filei);
 				g_free (file_path);
+				if (info)
+					g_object_unref (info);
 				continue;
 			}
 

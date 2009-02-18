@@ -215,9 +215,9 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, GErr
 		if (content_type)
 			*mime_type = g_strdup (content_type);
 		else if (mime_hint)
-			content_type = g_strdup (mime_hint);
+			*mime_type = g_strdup (mime_hint);
 		else 
-			content_type = g_strdup ("unknown/unknown");
+			*mime_type = g_strdup ("unknown/unknown");
 		g_object_unref (info);
 	}
 
@@ -476,20 +476,24 @@ do_the_work (WorkTask *task, gpointer user_data)
 				hash = g_hash_table_lookup (schemes, uri_scheme);
 
 				if (!hash) {
-					hash = g_hash_table_new (g_str_hash, g_str_equal);
+					hash = g_hash_table_new_full (g_str_hash, g_str_equal, 
+					                              (GDestroyNotify) NULL,
+					                              (GDestroyNotify) NULL);
 					g_hash_table_replace (schemes, uri_scheme, hash);
 					urls_for_mime = NULL;
 				} else 
 					urls_for_mime = g_hash_table_lookup (hash, mime_type);
 
 				urls_for_mime = g_list_prepend (urls_for_mime, uri);
-				g_hash_table_replace (hash, mime_type, urls_for_mime);
+				g_hash_table_replace (hash, mime_type, 
+				                      urls_for_mime);
 
 			} else if (has_thumb)
 				thumb_items = g_list_prepend (thumb_items, 
 						     /*XU3 */ g_strdup (urls[i]));
 		}
 
+		//g_free (mime_type);
 		i++;
 	}
 
@@ -682,6 +686,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 					g_object_unref (from_file);
 					g_object_unref (to_file);
+				}
+
+				for (z = 0; z < 3; z++) {
 					g_free (from[z]);
 					g_free (to[z]);
 				}

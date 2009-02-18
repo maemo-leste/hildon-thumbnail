@@ -1,3 +1,13 @@
+2009-02-18  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/hildon-thumbnail-daemon.c
+	* configure.ac: Usage of mallopt
+
+	* thumbs/hildon-albumart-factory.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/thumbnailer.c: Various small memory leaks
+
 2009-02-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.19

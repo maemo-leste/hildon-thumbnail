@@ -5,6 +5,9 @@ AM_INIT_AUTOMAKE(tar-ustar)
 
 AM_CONFIG_HEADER(config.h)
 
+AC_CHECK_HEADERS(malloc.h)
+AC_CHECK_FUNCS(mallopt)
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 

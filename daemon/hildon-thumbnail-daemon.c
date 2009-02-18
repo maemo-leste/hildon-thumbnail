@@ -26,6 +26,10 @@
 #include <linux/sched.h>
 #include <sched.h>
 
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
+
 #include <glib.h>
 #include <dbus/dbus-glib-bindings.h>
 #include <gio/gio.h>
@@ -351,7 +355,12 @@ main (int argc, char **argv)
 {
 	DBusGConnection *connection;
 	GError *error = NULL;
-	
+
+
+#if defined (HAVE_MALLOPT) && defined(M_MMAP_THRESHOLD)
+	mallopt (M_MMAP_THRESHOLD, 128 *1024);
+#endif
+
 	g_type_init ();
 
 	if (!g_thread_supported ())
