@@ -1041,23 +1041,23 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 		if (g_file_query_exists (fcropped, NULL))
 			path = g_strdup (local_cropped);
 		else 
-			path = g_strdup (cropped);
+			path = g_filename_to_uri(cropped, NULL, NULL);
 		g_object_unref (fcropped);
 
 	} else if (width <= 128 || height <= 128) {
 
 		GFile *fnormal = g_file_new_for_uri (local_normal);
 		if (g_file_query_exists (fnormal, NULL))
-			path = g_strdup_printf ("file://%s", local_normal);
+			path = g_filename_to_uri (local_normal, NULL, NULL);
 		else 
-			path = g_strdup_printf ("file://%s", normal);
+			path = g_filename_to_uri (normal, NULL, NULL);
 		g_object_unref (fnormal);
 	} else {
 		GFile *flarge = g_file_new_for_uri (local_large);
 		if (g_file_query_exists (flarge, NULL))
 			path = g_strdup (local_large);
 		else 
-			path = g_strdup_printf ("file://%s", large);
+			path = g_filename_to_uri (large, NULL, NULL);
 		g_object_unref (flarge);
 	}
 
