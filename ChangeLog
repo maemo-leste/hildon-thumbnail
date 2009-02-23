@@ -1,3 +1,7 @@
+2009-02-23  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* debian/hildon-thumbnail.install: Re-enabled the GStreamer plugin
+
 2009-02-18  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/hildon-thumbnail-daemon.c
