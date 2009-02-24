@@ -40,11 +40,11 @@
 #include "albumart.h"
 #include "thumbnail-manager.h"
 #include "albumart-manager.h"
+#include "thumb-hal.h"
 
 static GHashTable *registrations;
 static GHashTable *outregistrations;
 static gboolean do_shut_down_next_time = TRUE;
-
 
 
 #ifndef __NR_ioprio_set
@@ -406,6 +406,9 @@ main (int argc, char **argv)
 		g_signal_connect (G_OBJECT (monitoro), "changed", 
 				  G_CALLBACK (on_outputplugin_changed), thumbnailer);
 
+
+		thumb_hal_init ();
+
 		main_loop = g_main_loop_new (NULL, FALSE);
 
 		g_timeout_add_seconds (600, 
@@ -413,6 +416,8 @@ main (int argc, char **argv)
 				       main_loop);
 
 		g_main_loop_run (main_loop);
+
+		thumb_hal_shutdown ();
 
 		g_object_unref (monitor);
 		g_object_unref (file);

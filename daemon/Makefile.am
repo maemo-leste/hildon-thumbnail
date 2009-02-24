@@ -4,7 +4,7 @@ INCLUDES = -I. \
 	$(DBUS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
-	$(GIO_CFLAGS) \
+	$(GIO_CFLAGS) $(HAL_CFLAGS) \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
 	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
@@ -57,6 +57,8 @@ hildon_thumbnailerd_SOURCES = \
 	dbus-utils.c \
 	albumart.c \
 	albumart.h \
+	thumb-hal.c \
+	thumb-hal.h \
 	albumart-marshal.c \
 	albumart-marshal.h \
 	albumart-manager.c \
@@ -67,7 +69,7 @@ hildon_thumbnailerd_LDADD = \
 	$(DBUS_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \
-	$(GIO_LIBS) 
+	$(GIO_LIBS) $(HAL_LIBS)
 
 # Services
 org.freedesktop.thumbnailer_servicedir = $(DBUS_SERVICES_DIR)

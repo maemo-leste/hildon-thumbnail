@@ -46,6 +46,41 @@ AC_SUBST(GTK_LIBS)
 
 AM_CONDITIONAL(HAVE_MGTK, test "$have_gtk" = "yes")
 
+
+##################################################################
+# Check for HAL
+##################################################################
+HAL_REQUIRED=0.5
+
+AC_ARG_ENABLE(hal,
+              AS_HELP_STRING([--disable-hal],
+                             [disable HAL support for AC power detection]),,
+              [enable_hal=yes])
+
+if test "x$enable_hal" = "xyes"; then
+   PKG_CHECK_MODULES(HAL,
+                     [hal >= $HAL_REQUIRED hal-storage],
+                     [have_hal=yes] ,
+                     [have_hal=no])
+   AC_SUBST(HAL_CFLAGS)
+   AC_SUBST(HAL_LIBS)
+
+   if test "x$have_hal" = "xyes"; then
+      AC_DEFINE(HAVE_HAL, [], [Define if we have HAL])
+   fi
+else
+   have_hal="no  (disabled)"
+fi
+
+if test "x$enable_hal" = "xyes"; then
+   if test "x$have_hal" != "xyes"; then
+      AC_MSG_ERROR([Couldn't find HAL >= $HAL_REQUIRED and HAL storage.])
+   fi
+fi
+
+AM_CONDITIONAL(HAVE_HAL, test "x$have_hal" = "xyes")
+
+
 ####################################################################
 # DBus Service
 ####################################################################

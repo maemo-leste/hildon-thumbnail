@@ -1,3 +1,22 @@
+2009-02-24  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/thumb-hal.c
+	* daemon/thumb-hal.h
+	* daemon/Makefile.am: Dying whenever an unmount of a removable device
+	takes place, so that we ensure that we are not blocking the unmount
+	from taking place whenever we are working with a file located on it.
+
+	Although this isn't very nice, are thumbnails just cache. We are
+	activatable so the next request will let us restart anyway. And caches
+	should not be relied upon (consumers of the thumbnails must always
+	request thumbnails if they see that their thumbnail is not already
+	available).
+
+	This drastic action might however mean that some app's thumbnail
+	request will fail with a DBus timeout error.
+
 2009-02-23  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* debian/hildon-thumbnail.install: Re-enabled the GStreamer plugin
