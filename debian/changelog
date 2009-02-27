@@ -1,3 +1,11 @@
+hildon-thumbnail (3.0.20) unstable; urgency=low
+
+  [Philip Van Hoof]
+  * Fixes: NB#102446.
+  * Let the daemon die after a memory card has been unmounted.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 27 Feb 2009 16:39:50 +0200
+
 hildon-thumbnail (3.0.19) unstable; urgency=low
 
   [Philip Van Hoof]
