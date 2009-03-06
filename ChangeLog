@@ -1,3 +1,8 @@
+2009-03-06  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Disable animated video
+	thumbnails by default
+
 2009-02-27  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.20

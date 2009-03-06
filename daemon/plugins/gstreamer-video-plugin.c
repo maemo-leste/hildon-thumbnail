@@ -44,7 +44,7 @@
 
 static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
 static gboolean do_cropped = TRUE;
-static gboolean do_vidthumbs = TRUE;
+static gboolean do_vidthumbs = FALSE;
 static GFileMonitor *monitor = NULL;
 static gboolean had_init = FALSE;
 
