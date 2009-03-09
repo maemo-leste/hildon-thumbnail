@@ -89,14 +89,14 @@ gint g_sprintf (gchar *string, gchar const *format, ...);
 #endif
 
 static gboolean
-create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime)
+create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime, gboolean alpha)
 {
 	GError *error = NULL;
 
 	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
 
 		hildon_thumbnail_outplugins_do_out (data, width, height,
-						    width*3, bpp/3, FALSE,
+						    width*3, bpp/3, alpha,
 						    target, mtime, uri, 
 						    &error);
 
@@ -121,7 +121,7 @@ callback_thumbnail (GstElement       *image_sink,
 
 	create_output (thumber->target, data_photo,
 		       thumber->size, thumber->size,
-		       24, thumber->uri, thumber->mtime);
+		       24, thumber->uri, thumber->mtime, FALSE);
 
 	if (thumber->condition) {
 		g_mutex_lock (thumber->mutex);
