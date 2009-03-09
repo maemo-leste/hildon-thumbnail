@@ -42,7 +42,7 @@
 #define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"
 #define GSTP_ERROR		g_quark_from_static_string (GSTP_ERROR_DOMAIN)
 
-static gchar *supported[] = { "video/mp4", "video/mpeg", NULL };
+static gchar *supported[] = { "video/mp4", "video/mpeg", "video/quicktime", NULL };
 static gboolean do_cropped = TRUE;
 static gboolean do_vidthumbs = FALSE;
 static GFileMonitor *monitor = NULL;

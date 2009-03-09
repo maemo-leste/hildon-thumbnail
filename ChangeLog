@@ -1,3 +1,8 @@
+2009-03-09  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Added support for
+	video/quicktime (.mov files). Bugfix for Bug# 104293.
+
 2009-03-06  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Disable animated video
