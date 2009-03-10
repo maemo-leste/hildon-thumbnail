@@ -26,6 +26,10 @@
 #include <linux/sched.h>
 #include <sched.h>
 
+#ifndef SCHED_IDLE
+#define SCHED_IDLE 5
+#endif
+
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
 #endif
