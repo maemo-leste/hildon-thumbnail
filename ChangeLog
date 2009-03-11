@@ -1,3 +1,7 @@
+2009-03-11  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c: Fixed a crash when joining
+
 2009-03-09  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gdkpixbuf-plugin.c

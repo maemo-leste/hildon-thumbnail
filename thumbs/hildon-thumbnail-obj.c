@@ -295,6 +295,7 @@ have_all_for_request_cb (gpointer user_data)
 {
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (user_data);
 	create_pixbuf_and_callback (r_priv);
+	waiting_for_cb = FALSE;
 	return FALSE;
 }
 
@@ -506,8 +507,8 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 		mime_types[0] = g_strdup (mime_type);
 	}
 
+	waiting_for_cb = TRUE;
 	if (!have) {
-		waiting_for_cb = TRUE;
 		org_freedesktop_thumbnailer_Generic_queue_async (f_priv->proxy, 
 								 (const char **) r_priv->uris, 
 								 (const char **) mime_types,
@@ -603,10 +604,15 @@ hildon_thumbnail_request_join (HildonThumbnailRequest *self)
 {
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (self);
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
-	HildonThumbnailRequest *found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
+	HildonThumbnailRequest *found;
 
 	while (waiting_for_cb)
 		g_main_context_iteration (NULL, FALSE);
+
+	if (!r_priv->key)
+		return;
+
+	found = g_hash_table_lookup (f_priv->tasks, r_priv->key);
 
 	while (found) {
 		g_main_context_iteration (NULL, FALSE);
