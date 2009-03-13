@@ -376,10 +376,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
-	static gchar *remotefss[8] = { 
+	static gchar *remotefss[9] = { 
 		"smb://", "file:///media", 
 		"file:///mnt", "ftp://", 
 		"ftps://", "dav://", "nfs://",
+		"file:///home/user/MyDocs",
 		NULL };
 
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,

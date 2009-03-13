@@ -59,19 +59,15 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 	static gchar *normal_dir = NULL;
 	static gchar *cropped_dir = NULL;
 	gchar *local_dir = NULL;
-	GFile *file; GFileInfo *info;
 	gboolean local = (local_large || local_normal || local_cropped);
 
 	if (local) {
-		uri_t = g_strdup (uri);
-		ptr = strrchr (uri_t, '/');
+		GFileInfo *info;
+		GFile *file = g_file_new_for_uri (uri);
+		GFile *dir_file = g_file_get_parent (file);
+		GFile *thumb_file = g_file_get_child (dir_file, ".thumblocal");
 
-		if (ptr) {
-			*ptr = '\0';
-			local_dir = g_strdup_printf ("%s/.thumblocal", uri_t);
-		}
-
-		g_free (uri_t);
+		local_dir = g_file_get_uri (thumb_file);
 
 		file = g_file_new_for_uri (uri);
 		info = g_file_query_info (file,
@@ -85,6 +81,8 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 		}
 
 		g_object_unref (file);
+		g_object_unref (dir_file);
+		g_object_unref (thumb_file);
 	}
 
 	/* I know we leak, but it's better than doing memory fragementation on 

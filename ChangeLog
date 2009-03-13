@@ -1,3 +1,9 @@
+2009-03-13  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/utils.c
+	* daemon/thumbnailer.c: Fixed some issues with URI vs. paths
+
 2009-03-11  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c: Fixed a crash when joining
