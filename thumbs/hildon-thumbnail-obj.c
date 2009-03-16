@@ -506,9 +506,12 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	r_priv->destroy = destroy;
 	r_priv->cropped = cropped;
 
+	mime_types = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+
 	if (mime_type) {
-		mime_types = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
 		mime_types[0] = g_strdup (mime_type);
+	} else {
+		mime_types[0] = NULL;
 	}
 
 	waiting_for_cb = TRUE;
