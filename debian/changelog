@@ -1,8 +1,11 @@
-hildon-thumbnail (3.0.21~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.21) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Fixes: NB#104293. - Default thumbnails are shown for .mov files.
+  * Fixes: NB#104113. - Grey thumbnails are shown for some of the images.
+  * Other bug fixes.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 27 Feb 2009 16:54:02 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 17 Mar 2009 17:12:28 +0200
 
 hildon-thumbnail (3.0.20) unstable; urgency=low
 
