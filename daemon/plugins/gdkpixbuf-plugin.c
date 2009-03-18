@@ -212,6 +212,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			if (nerror)
 				goto nerror_handler;
 
+			pixbuf_large = gdk_pixbuf_apply_embedded_orientation (pixbuf_large);
+
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
 			width = gdk_pixbuf_get_width (pixbuf_large);
 			height = gdk_pixbuf_get_height (pixbuf_large);
@@ -228,6 +230,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    uri, 
 							    &nerror);
 
+			g_object_unref (pixbuf_large);
 			g_object_unref (pixbuf_large);
 
 			if (nerror)
@@ -252,6 +255,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			if (nerror)
 				goto nerror_handler;
 
+			pixbuf_normal = gdk_pixbuf_apply_embedded_orientation (pixbuf_normal);
+
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_normal);
 			width = gdk_pixbuf_get_width (pixbuf_normal);
 			height = gdk_pixbuf_get_height (pixbuf_normal);
@@ -268,6 +273,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    uri, 
 							    &nerror);
 
+			g_object_unref (pixbuf_normal);
 			g_object_unref (pixbuf_normal);
 
 			if (nerror)
@@ -289,8 +295,11 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			if (nerror)
 				goto nerror_handler;
 
+			pixbuf = gdk_pixbuf_apply_embedded_orientation (pixbuf);
+
 			pixbuf_cropped = crop_resize (pixbuf, 124, 124);
 
+			g_object_unref (pixbuf);
 			g_object_unref (pixbuf);
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);

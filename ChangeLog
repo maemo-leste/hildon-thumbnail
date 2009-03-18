@@ -1,3 +1,7 @@
+2009-03-18  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gdk-pixbuf-plugin.c: Bug# 91658 fixed
+
 2009-03-17  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.21
