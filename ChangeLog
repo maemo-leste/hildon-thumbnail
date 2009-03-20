@@ -1,3 +1,7 @@
+2009-03-20  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.22
+
 2009-03-20  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Seeking 30 seconds into the

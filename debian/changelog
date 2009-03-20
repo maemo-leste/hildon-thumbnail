@@ -1,8 +1,11 @@
-hildon-thumbnail (3.0.22~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.22) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Fixes: NB#92748 - Video thumbnailer doesn't seek.
+  * Fixes: NB#91658 - Inconsistency in thumbnail orientation for JPEG and TIFF images
+  * Let the daemon die when a memory card is to be unmounted.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 17 Mar 2009 17:20:14 +0200
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 20 Mar 2009 21:23:59 +0200
 
 hildon-thumbnail (3.0.21) unstable; urgency=low
 
