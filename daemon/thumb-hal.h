@@ -2,6 +2,7 @@
 #define __THUMB_HAL_H__
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 

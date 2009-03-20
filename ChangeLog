@@ -1,3 +1,11 @@
+2009-03-20  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* configure.ac
+	* daemon/thumb-hal.c
+	* daemon/thumb-hal.h: Removed necessity for libhal, replaced it with
+	GIO's pre-unmount event handling
+
 2009-03-18  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gdk-pixbuf-plugin.c: Bug# 91658 fixed
