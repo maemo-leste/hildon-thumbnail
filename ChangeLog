@@ -1,5 +1,12 @@
 2009-03-20  Philip Van Hoof  <pvanhoof@codeminded.be>
 
+	* daemon/plugins/gstreamer-video-plugin.c: Seeking 30 seconds into the
+	video before making a thumbnail of the video.
+
+	Fixes Bug# 92748
+
+2009-03-20  Philip Van Hoof  <pvanhoof@codeminded.be>
+
 	* config.h.in
 	* configure.ac
 	* daemon/thumb-hal.c

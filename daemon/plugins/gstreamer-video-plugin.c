@@ -271,6 +271,8 @@ callback_bus(GstBus           *bus,
 }
 */
 
+
+
 static void
 video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 {
@@ -376,6 +378,10 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_element_add_pad (thumber->bin, gst_ghost_pad_new ("sink", videopad));
 	gst_object_unref (videopad);
 	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
+
+	gst_element_seek (thumber->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+		GST_SEEK_TYPE_SET, 30000000000 /* 30 seconds worth of nanoseconds */,
+		GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
 	/* Run */
 	gst_element_set_state (thumber->pipeline, GST_STATE_PAUSED);
