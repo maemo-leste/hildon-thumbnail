@@ -892,7 +892,7 @@ thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *cont
 }
 
 void
-thumbnailer_cleanup (Thumbnailer *object, gchar *uri_prefix, guint64 since, DBusGMethodInvocation *context)
+thumbnailer_cleanup (Thumbnailer *object, gchar *uri_prefix, guint since, DBusGMethodInvocation *context)
 {
 	hildon_thumbnail_outplugins_cleanup (uri_prefix, since);
 	dbus_g_method_return (context);

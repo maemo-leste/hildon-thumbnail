@@ -36,7 +36,7 @@ typedef void (*CleanupFunc) (const gchar *uri_match, guint64 max_mtime);
 
 gchar *
 hildon_thumbnail_outplugins_cleanup (const gchar *uri_match, 
-				     guint64 since)
+				     guint since)
 {
 	GList *copy;
 

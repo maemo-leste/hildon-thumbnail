@@ -138,7 +138,7 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 
 
 static void
-cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 since)
+cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint since)
 {
 	const gchar *filen;
 	for (filen = g_dir_read_name (dir); filen; filen = g_dir_read_name (dir)) {
@@ -159,7 +159,7 @@ cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint64 since)
 }
 
 void
-hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 max_mtime)
+hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint max_mtime)
 {
 	GDir *dir;
 	gchar *dirname;

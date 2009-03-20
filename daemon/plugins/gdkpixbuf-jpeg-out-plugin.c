@@ -58,7 +58,7 @@ static gint callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azCol
 #endif
 
 void
-hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
+hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since)
 {
 #ifdef HAVE_SQLITE3
 	sqlite3_stmt *stmt;
@@ -74,7 +74,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 	}
 
 	if (db) {
-		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%Lu'",
+		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%u'",
 					      uri_match, since);
 		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
 
@@ -99,7 +99,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint64 since)
 			g_unlink (path);
 		}
 		g_free (sql);
-		sql = g_strdup_printf ("delete from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%Lu'",
+		sql = g_strdup_printf ("delete from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%u'",
 					       uri_match, since);
 		sqlite3_exec (db, sql, callback, 0, NULL);
 		g_free (sql);

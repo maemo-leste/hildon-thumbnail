@@ -5,6 +5,15 @@
 
 	Fixes Bug# 92748
 
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer.h
+	* daemon/thumbnailer.xml
+	* daemon/hildon-thumbnail-plugin.c: DBus API change for the 'since'
+	parameter of cleanup
+
 2009-03-20  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* config.h.in

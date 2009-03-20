@@ -62,7 +62,7 @@ void thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocati
 void thumbnailer_move (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_copy (Thumbnailer *object, GStrv from_urls, GStrv to_urls, DBusGMethodInvocation *context);
 void thumbnailer_delete (Thumbnailer *object, GStrv urls, DBusGMethodInvocation *context);
-void thumbnailer_cleanup (Thumbnailer *object, gchar *uri_prefix, guint64 mtime, DBusGMethodInvocation *context);
+void thumbnailer_cleanup (Thumbnailer *object, gchar *uri_prefix, guint mtime, DBusGMethodInvocation *context);
 
 void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, const GStrv uri_schemes, gint priority);
 void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
