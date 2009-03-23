@@ -1,3 +1,8 @@
+2009-03-23  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Added support for some
+	video formats
+
 2009-03-20  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.22
