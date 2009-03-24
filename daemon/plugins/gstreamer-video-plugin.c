@@ -84,6 +84,7 @@ typedef struct {
 	gint		audio_samplerate;
 
 	gboolean        bugged;
+	GError         *error;
 } VideoThumbnailer;
 
 
@@ -91,26 +92,16 @@ typedef struct {
 gint g_sprintf (gchar *string, gchar const *format, ...);
 #endif
 
-static gboolean
-create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime, gboolean alpha)
+static void
+create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime, gboolean alpha, GError **error)
 {
-	GError *error = NULL;
-
 	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
 
 		hildon_thumbnail_outplugins_do_out (data, width, height,
 						    width*3, bpp/3, alpha,
 						    target, mtime, uri, 
-						    &error);
-
-		if (error) {
-			g_warning("%s\n", error->message);
-			g_error_free(error);
-			return FALSE;
-		}
+						    error);
 	}
-
-	return TRUE;
 }
 
 static gboolean
@@ -124,7 +115,8 @@ callback_thumbnail (GstElement       *image_sink,
 
 	create_output (thumber->target, data_photo,
 		       thumber->size, thumber->size,
-		       24, thumber->uri, thumber->mtime, FALSE);
+		       24, thumber->uri, thumber->mtime, 
+		       FALSE, &thumber->error);
 
 	if (thumber->condition) {
 		g_mutex_lock (thumber->mutex);
@@ -292,6 +284,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	thumber->video_scaler = NULL;
 	thumber->video_filter = NULL;
 	thumber->video_sink   = NULL;
+	thumber->error        = NULL;
 
 	thumber->had_callback = FALSE;
 	thumber->mutex        = g_mutex_new ();
@@ -398,6 +391,10 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	g_mutex_unlock (thumber->mutex);
 
 	cleanup:
+
+	if (thumber->error) {
+		g_propagate_error (error, thumber->error);
+	}
 
 	g_cond_free (thumber->condition);
 	thumber->condition = NULL;

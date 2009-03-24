@@ -1,3 +1,7 @@
+2009-03-24  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gstreamer-video-plugin.c: Bugfix in error reporting
+
 2009-03-23  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Added support for some
