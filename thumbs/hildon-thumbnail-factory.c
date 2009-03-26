@@ -39,6 +39,7 @@
 #include <sys/wait.h>
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib/gprintf.h>
 #include <glib/gfileutils.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -104,16 +105,16 @@ typedef struct {
 static DBusGProxy*
 get_tracker_proxy (void)
 {
-	static DBusGProxy *proxy = NULL;
+	static DBusGProxy *proxy_ = NULL;
 
-	if (!proxy) {
+	if (!proxy_) {
 		GError          *error = NULL;
-		DBusGConnection *connection;
+		DBusGConnection *connection_;
 
-		connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+		connection_ = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
 
 		if (!error) {
-			proxy = dbus_g_proxy_new_for_name (connection,
+			proxy_ = dbus_g_proxy_new_for_name (connection_,
 			                                   TRACKER_METADATA_SERVICE,
 			                                   TRACKER_METADATA_PATH,
 			                                   TRACKER_METADATA_INTERFACE);
@@ -122,7 +123,7 @@ get_tracker_proxy (void)
 		}
 	}
 
-	return proxy;
+	return proxy_;
 }
 
 /* Copied from GThumb (and/or many other projects that have copied this too)
@@ -369,7 +370,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 }
 
 static void
-on_task_error (DBusGProxy *proxy,
+on_task_error (DBusGProxy *proxy_,
 		  guint       handle,
 		  GStrv       failed_uris,
 		  gint        error_code,
@@ -392,7 +393,7 @@ on_task_error (DBusGProxy *proxy,
 }
 
 static void
-on_task_finished (DBusGProxy *proxy,
+on_task_finished (DBusGProxy *proxy_,
 		  guint       handle,
 		  gpointer    user_data)
 {
@@ -569,7 +570,7 @@ hildon_thumbnail_factory_clean_cache(gint max_size, time_t min_mtime)
 static gboolean waiting_for_cb = FALSE;
 
 static void 
-on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
+on_got_handle (DBusGProxy *proxy_, guint OUT_handle, GError *error, gpointer userdata)
 {
 	ThumbsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
@@ -798,7 +799,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load(
 }
 
 static void 
-on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
+on_cancelled (DBusGProxy *proxy_, GError *error, gpointer userdata)
 {
 }
 
@@ -835,7 +836,7 @@ void hildon_thumbnail_factory_wait()
 	}
 }
 
-static void file_opp_reply  (DBusGProxy *proxy, GError *error, gpointer userdata)
+static void file_opp_reply  (DBusGProxy *proxy_, GError *error, gpointer userdata)
 {
 }
 
@@ -890,8 +891,9 @@ void hildon_thumbnail_factory_copy(const gchar *src_uri, const gchar *dest_uri)
 
 void hildon_thumbnail_factory_remove(const gchar *uri)
 {
-	g_return_if_fail(uri);
 	GStrv in;
+
+	g_return_if_fail(uri);
 
 	init();
 

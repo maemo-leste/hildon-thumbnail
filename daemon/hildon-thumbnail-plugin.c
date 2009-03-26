@@ -34,7 +34,7 @@ typedef gboolean (*StopFunc) (void);
 typedef gchar * (*GetOrigFunc) (const gchar *path);
 typedef void (*CleanupFunc) (const gchar *uri_match, guint64 max_mtime);
 
-gchar *
+void
 hildon_thumbnail_outplugins_cleanup (const gchar *uri_match, 
 				     guint since)
 {

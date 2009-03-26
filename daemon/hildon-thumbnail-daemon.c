@@ -34,6 +34,8 @@
 #include <malloc.h>
 #endif
 
+#include <unistd.h>
+
 #include <glib.h>
 #include <dbus/dbus-glib-bindings.h>
 #include <gio/gio.h>
@@ -45,6 +47,8 @@
 #include "thumbnail-manager.h"
 #include "albumart-manager.h"
 #include "thumb-hal.h"
+
+void keep_alive (void);
 
 static GHashTable *registrations;
 static GHashTable *outregistrations;
@@ -104,6 +108,8 @@ enum {
 
 #define IOPRIO_CLASS_SHIFT 13
 
+void initialize_priority (void);
+
 
 static inline int
 ioprio_set (int which, int who, int ioprio_val)
@@ -127,8 +133,11 @@ initialize_priority (void)
 	/* Maemo on X86 doesn't have new enough kernel headers.
 	 */
 #ifdef SCHED_IDLE
- 	if (sched_getparam (0, &sp) == 0)
-		sched_setscheduler (0, SCHED_IDLE, &sp);
+ 	if (sched_getparam (0, &sp) == 0) {
+		if (sched_setscheduler (0, SCHED_IDLE, &sp) == -1) {
+			/* Didn't work, but we ignore */
+		}
+	 }
 #endif
 }
 
@@ -377,7 +386,6 @@ main (int argc, char **argv)
 			    error ? error->message : "no error given.");
 	else {
 		GMainLoop *main_loop;
-		GError *error = NULL;
 		ThumbnailManager *manager;
 		AlbumartManager *a_manager;
 		Thumbnailer *thumbnailer;

@@ -75,11 +75,8 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 	FILE	    *png;
 	png_structp  png_ptr;
 	png_infop    info_ptr;
-	png_uint_32  width, height;
 	gint	     num_text;
 	png_textp    text_ptr;
-	gint	     bit_depth, color_type;
-	gint	     interlace_type, compression_type, filter_type;
 	gchar       *retval = NULL;
 
 #if defined(__linux__)
@@ -112,7 +109,6 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 
 		if (png_get_text (png_ptr, info_ptr, &text_ptr, &num_text) > 0) {
 			gint i;
-			gint j;
 
 			for (i = 0; i < num_text; i++) {
 				if (!text_ptr[i].key) {
@@ -148,7 +144,7 @@ cleanup (GDir *dir, const gchar *dirname, const gchar *uri_match, guint since)
 			if (orig && g_str_has_prefix (orig, uri_match)) {
 				struct stat st;
 				g_stat (fulln, &st);
-				if (st.st_mtime <= since) {
+				if (st.st_mtime <= (gint) since) {
 					g_unlink (fulln);
 				}
 				g_free (orig);
@@ -216,7 +212,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
 		struct stat st;
 		g_stat (filen, &st);
-		if (st.st_mtime != mtime)
+		if (st.st_mtime != (gint64) mtime)
 			retval = TRUE;
 	} else
 		retval = TRUE;
@@ -326,7 +322,7 @@ reload_config (const gchar *config)
 
 
 static void 
-on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+on_file_changed (GFileMonitor *monitor_, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
 		gchar *config = g_file_get_path (file);

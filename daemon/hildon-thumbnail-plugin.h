@@ -75,7 +75,7 @@ gboolean    hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType 
 						   const gchar *uri);
 gchar *     hildon_thumbnail_outplugins_get_orig  (const gchar *path);
 
-gchar *     hildon_thumbnail_outplugins_cleanup   (const gchar *uri_match, 
+void        hildon_thumbnail_outplugins_cleanup   (const gchar *uri_match, 
 						   guint since);
 
 

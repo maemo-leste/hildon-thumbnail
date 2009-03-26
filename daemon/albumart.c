@@ -32,6 +32,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <dbus/dbus-glib-bindings.h>
+#include <glib/gstdio.h>
 
 #include "albumart.h"
 #include "albumart-marshal.h"
@@ -120,7 +121,7 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 	static guint num = 0;
 
 	if (!kind || strlen (album) == 0)
-		kind = "album";
+		kind = (gchar *) "album";
 
 	if (artist_or_title && strlen (artist_or_title) <= 0)
 		artist_or_title = NULL;

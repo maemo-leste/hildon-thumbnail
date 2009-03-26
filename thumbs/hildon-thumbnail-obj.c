@@ -421,10 +421,10 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
 
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
-	r_priv->key = g_strdup (key);
+	r_priv->key = key;
 
 	if (!error) {
-		g_hash_table_replace (f_priv->tasks, key, 
+		g_hash_table_replace (f_priv->tasks, g_strdup (key), 
 			      g_object_ref (request));
 	} else {
 		if (r_priv->pcallback)
@@ -528,8 +528,7 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 				 (GDestroyNotify) g_object_unref);
 	}
 
-	if (mime_types) 
-		g_strfreev (mime_types);
+	g_strfreev (mime_types);
 
 	return request;
 }

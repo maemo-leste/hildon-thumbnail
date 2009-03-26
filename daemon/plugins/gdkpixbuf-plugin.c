@@ -415,7 +415,7 @@ reload_config (const gchar *config)
 }
 
 static void 
-on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+on_file_changed (GFileMonitor *monitor_, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
 		gchar *config = g_file_get_path (file);
@@ -430,7 +430,6 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
-	const gchar **supported;
 	const gchar *uri_schemes[8] = { "file", "http", "https", 
 					"smb", "nfs", "ftp", 
 					"ftps", NULL };
@@ -447,7 +446,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	*cropping = do_cropped;
 
 	if (func) {
-		supported = hildon_thumbnail_plugin_supported ();
+		supported = (gchar **) hildon_thumbnail_plugin_supported ();
 		if (supported) {
 			while (supported[i] != NULL) {
 				func (thumbnailer, supported[i], module, (const GStrv) uri_schemes, 0);

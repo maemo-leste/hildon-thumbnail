@@ -164,7 +164,7 @@ create_pixbuf_and_callback (ArtsItem *item, gchar *path)
 }
 
 static void
-on_task_finished (DBusGProxy *proxy,
+on_task_finished (DBusGProxy *proxy_,
 		  guint       handle,
 		  gpointer    user_data)
 {
@@ -310,7 +310,7 @@ hildon_albumart_factory_clean_cache(gint max_size, time_t min_mtime)
 static gboolean waiting_for_cb = FALSE;
 
 static void 
-on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
+on_got_handle (DBusGProxy *proxy_, guint OUT_handle, GError *error, gpointer userdata)
 {
 	ArtsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
@@ -410,7 +410,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 
 
 static void 
-on_cancelled (DBusGProxy *proxy, GError *error, gpointer userdata)
+on_cancelled (DBusGProxy *proxy_, GError *error, gpointer userdata)
 {
 	ArtsItem *item = userdata;
 	gchar *key = g_strdup_printf ("%d", item->handle_id);
@@ -449,7 +449,7 @@ void hildon_albumart_factory_wait()
 	}
 }
 
-static void file_opp_reply  (DBusGProxy *proxy, GError *error, gpointer userdata)
+static void file_opp_reply  (DBusGProxy *proxy_, GError *error, gpointer userdata)
 {
 }
 
@@ -466,6 +466,8 @@ void hildon_albumart_factory_remove(const gchar *artist_or_title, const gchar *a
 						   file_opp_reply, NULL);
 
 }
+
+void hildon_albumart_factory_set_debug(gboolean debug);
 
 void hildon_albumart_factory_set_debug(gboolean debug)
 {

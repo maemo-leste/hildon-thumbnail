@@ -63,6 +63,9 @@ enum {
 	PROP_MODULE
 };
 
+void daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, DBusGMethodInvocation *context);
+GType daemon_get_type (void);
+
 G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
 
 #define DAEMON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_DAEMON, DaemonPrivate))

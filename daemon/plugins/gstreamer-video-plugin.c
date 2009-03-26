@@ -34,6 +34,7 @@
 #include <glib.h>
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include <glib/gstdio.h>
 
 #include <hildon-thumbnail-plugin.h>
 
@@ -42,7 +43,7 @@
 #define GSTP_ERROR_DOMAIN	"HildonThumbnailerGStreamerVideoPlugin"
 #define GSTP_ERROR		g_quark_from_static_string (GSTP_ERROR_DOMAIN)
 
-static gchar *supported[] = { "video/mp4", "video/mpeg", "video/quicktime", 
+static const gchar *supported[] = { "video/mp4", "video/mpeg", "video/quicktime", 
 			      "video/x-msvideo", "audio/x-pn-realaudio",
 			      "video/3gpp", NULL };
 
@@ -88,9 +89,6 @@ typedef struct {
 } VideoThumbnailer;
 
 
-#ifndef g_sprintf
-gint g_sprintf (gchar *string, gchar const *format, ...);
-#endif
 
 static void
 create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime, gboolean alpha, GError **error)
@@ -376,7 +374,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 	gst_bin_add (GST_BIN (thumber->pipeline), thumber->bin);
 
 	gst_element_seek (thumber->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-		GST_SEEK_TYPE_SET, 30000000000 /* 30 seconds worth of nanoseconds */,
+		GST_SEEK_TYPE_SET, 30000000 /* 30 seconds worth of nanoseconds */,
 		GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
 	/* Run */
@@ -420,7 +418,7 @@ video_thumbnail_create (VideoThumbnailer *thumber, GError **error)
 			gst_object_unref (thumber->video_sink);
 	}
 
-	g_object_unref (thumber->decodebin);
+	/* g_object_unref (thumber->decodebin); */
 
 	g_mutex_unlock (thumber->pipe_lock);
 
@@ -496,7 +494,7 @@ animated_thumbnail_needs_out (guint64 mtime, const gchar *uri)
 	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
 		struct stat st;
 		g_stat (filen, &st);
-		if (st.st_mtime != mtime)
+		if (st.st_mtime != (gint64) mtime)
 			retval = TRUE;
 	} else
 		retval = TRUE;
@@ -684,7 +682,7 @@ reload_config (const gchar *config)
 }
 
 static void 
-on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+on_file_changed (GFileMonitor *monitor_, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
 		gchar *config = g_file_get_path (file);
@@ -699,8 +697,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gstreamer-video-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
-	const gchar **supported;
 	GError *nerror = NULL;
+	const gchar **sup;
 
 	/* TODO: Perhaps we can add a few remote ones here too (streaming media) */
 	const gchar *uri_schemes[2] = { "file", NULL };
@@ -731,10 +729,10 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	*cropping = do_cropped;
 
 	if (func) {
-		supported = hildon_thumbnail_plugin_supported ();
-		if (supported) {
-			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], module, (const GStrv) uri_schemes, 0);
+		sup = hildon_thumbnail_plugin_supported ();
+		if (sup) {
+			while (sup[i] != NULL) {
+				func (thumbnailer, sup[i], module, (const GStrv) uri_schemes, 0);
 				i++;
 			}
 		}

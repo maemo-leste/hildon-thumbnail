@@ -53,8 +53,8 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 {
 	gchar *ascii_digest, *filename = NULL;
 	gchar *lascii_digest = NULL;
-	gchar *thumb_filename, *uri_t = NULL;
-	gchar *cropped_filename, *ptr;
+	gchar *thumb_filename;
+	gchar *cropped_filename;
 	static gchar *large_dir = NULL;
 	static gchar *normal_dir = NULL;
 	static gchar *cropped_dir = NULL;

@@ -301,7 +301,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 }
 
 static gboolean 
-strv_contains (GStrv list, gchar *uri)
+strv_contains (const GStrv list, gchar *uri)
 {
 	guint i = 0;
 	gboolean found = FALSE;
@@ -376,7 +376,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
-	static gchar *remotefss[9] = { 
+	static const gchar *remotefss[9] = { 
 		"smb://", "file:///media", 
 		"file:///mnt", "ftp://", 
 		"ftps://", "dav://", "nfs://",
@@ -536,9 +536,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 	  while (g_hash_table_iter_next (&iter, &key, &value)) {
 		gboolean had_err = FALSE;
 		gchar *mime_type = g_strdup (key);
-		GList *urlm = value, *copy = urlm;
+		GList *urlm = value;
 		GStrv urlss;
 		DBusGProxy *proxy;
+
+		copy = urlm;
 
  		urlss = (GStrv) g_malloc0 (sizeof (gchar *) * (g_list_length (urlm) + 1));
 

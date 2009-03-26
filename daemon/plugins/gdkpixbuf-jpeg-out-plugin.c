@@ -54,8 +54,10 @@ static GFileMonitor *monitor = NULL;
 
 #ifdef HAVE_SQLITE3
 static sqlite3 *db = NULL;
-static gint callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azColName) { }
+static gint callback (void   *NotUsed, gint    argc, gchar **argv, gchar **azColName) { return 0; }
 #endif
+
+void hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since);
 
 void
 hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since)
@@ -76,7 +78,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since)
 	if (db) {
 		gchar *sql = g_strdup_printf ("select Path from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%u'",
 					      uri_match, since);
-		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
+		result = sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
 
 		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
 			const unsigned char *path;
@@ -96,7 +98,7 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since)
 			}
 
 			path = sqlite3_column_text (stmt, 0);
-			g_unlink (path);
+			g_unlink ((const gchar *) path);
 		}
 		g_free (sql);
 		sql = g_strdup_printf ("delete from jpegthumbnails where URI LIKE '%s%%' and MTime <= '%u'",
@@ -129,7 +131,7 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 		const unsigned char *tmp;
 		gchar *sql = g_strdup_printf ("select URI from jpegthumbnails where Path = '%s'",
 					      path);
-		sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
+		result = sqlite3_prepare_v2 (db, sql, -1, &stmt, NULL);
 		g_free (sql);
 
 		while (result == SQLITE_OK  || result == SQLITE_ROW || result == SQLITE_BUSY) {
@@ -150,7 +152,7 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 			tmp = sqlite3_column_text (stmt, 0);
 
 			if (tmp) {
-				retval = g_strdup (tmp);
+				retval = g_strdup ((const gchar *) tmp);
 				break;
 			}
 		}
@@ -188,7 +190,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
 		struct stat st;
 		g_stat (filen, &st);
-		if (st.st_mtime != mtime)
+		if (st.st_mtime != (gint64) mtime)
 			retval = TRUE;
 	} else
 		retval = TRUE;
@@ -242,7 +244,6 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 
 	if (!nerror) {
 #ifdef HAVE_SQLITE3
-		gchar *dbfile;
 		gboolean create = FALSE;
 
 		if (!db) {
@@ -313,7 +314,7 @@ reload_config (const gchar *config)
 
 
 static void 
-on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+on_file_changed (GFileMonitor *monitor_, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
 		gchar *config = g_file_get_path (file);

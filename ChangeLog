@@ -1,3 +1,22 @@
+2009-03-26  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* thumbs/hildon-albumart-factory.c
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/utils.c
+	* daemon/utils.h
+	* daemon/plugin-runner.c
+	* daemon/albumart.c
+	* daemon/thumbnailer.c
+	* daemon/hildon-thumbnail-plugin.c: Fixes for Bug #108103
+
 2009-03-24  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/plugins/gstreamer-video-plugin.c: Bugfix in error reporting
