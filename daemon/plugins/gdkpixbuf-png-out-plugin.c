@@ -235,9 +235,10 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 				GError **error)
 {
 	GdkPixbuf *pixbuf;
-	gchar *large, *normal, *cropped, *filen;
+	gchar *large, *normal, *cropped, *filen, *temp;
 	char mtime_str[64];
 	struct utimbuf buf;
+	GError *nerror = NULL;
 
 	const char *default_keys[] = {
 		URI_OPTION,
@@ -276,16 +277,24 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 
 	g_sprintf (mtime_str, "%Lu", mtime);
 
-	gdk_pixbuf_savev (pixbuf, filen, "png", 
+	temp = g_strdup_printf ("%s.tmp", filen);
+
+	gdk_pixbuf_savev (pixbuf, temp, "png", 
 			  (char **) default_keys, 
 			  (char **) default_values, 
-			  error);
+			  &nerror);
 
 	g_object_unref (pixbuf);
 
-	buf.actime = buf.modtime = mtime;
+	if (!nerror) {
+		g_rename (temp, filen);
+		buf.actime = buf.modtime = mtime;
+		utime (filen, &buf);
+	} else
+		g_propagate_error (error, nerror);
 
-	utime (filen, &buf);
+	g_free (temp);
+
 
 	g_free (normal);
 	g_free (large);

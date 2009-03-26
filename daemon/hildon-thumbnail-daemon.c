@@ -26,6 +26,9 @@
 #include <linux/sched.h>
 #include <sched.h>
 
+#include <osso-mem.h>
+#include <osso-log.h>
+
 #ifndef SCHED_IDLE
 #define SCHED_IDLE 5
 #endif
@@ -362,17 +365,24 @@ on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, 
 	g_free (path);
 }
 
+static void
+thumbnailer_oom_func (size_t cur, size_t max, void *data)
+{
+	exit(1);
+}
 
 int 
 main (int argc, char **argv) 
 {
 	DBusGConnection *connection;
 	GError *error = NULL;
-
+	int result;
 
 #if defined (HAVE_MALLOPT) && defined(M_MMAP_THRESHOLD)
 	mallopt (M_MMAP_THRESHOLD, 128 *1024);
 #endif
+
+	result = osso_mem_saw_enable(4 << 20, 64, thumbnailer_oom_func, NULL);
 
 	g_type_init ();
 
@@ -455,6 +465,7 @@ main (int argc, char **argv)
 		g_main_loop_unref (main_loop);
 	}
 
+	osso_mem_saw_disable();
 
 	return 0;
 }

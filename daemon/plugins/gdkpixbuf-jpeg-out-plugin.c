@@ -213,7 +213,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 				GError **error)
 {
 	GdkPixbuf *pixbuf;
-	gchar *large, *normal, *cropped, *filen;
+	gchar *large, *normal, *cropped, *filen, *temp;
 	struct utimbuf buf;
 	GError *nerror = NULL;
 
@@ -237,10 +237,17 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					   bits_per_sample, width, height, rowstride,
 					   NULL, NULL);
 
-	gdk_pixbuf_save (pixbuf, filen, "jpeg", 
+	temp = g_strdup_printf ("%s.tmp", filen);
+
+	gdk_pixbuf_save (pixbuf, temp, "jpeg", 
 			 &nerror, NULL);
 
 	g_object_unref (pixbuf);
+
+	if (!nerror)
+		g_rename (temp, filen);
+
+	g_free (temp);
 
 	if (!nerror) {
 #ifdef HAVE_SQLITE3

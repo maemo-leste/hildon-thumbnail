@@ -5,6 +5,7 @@ INCLUDES = -I. \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) $(HAL_CFLAGS) \
+	$(LIBOSSO_CFLAGS) \
 	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
 	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
@@ -66,7 +67,7 @@ hildon_thumbnailerd_SOURCES = \
 
 hildon_thumbnailerd_LDADD = \
 	$(top_builddir)/daemon/libshared.la \
-	$(DBUS_LIBS) \
+	$(DBUS_LIBS) $(LIBOSSO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \
 	$(GIO_LIBS) $(HAL_LIBS)

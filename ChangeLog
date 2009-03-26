@@ -1,5 +1,12 @@
 2009-03-26  Philip Van Hoof  <pvanhoof@codeminded.be>
 
+	* daemon/hildon-thumbnail-daemon.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/Makefile.am: Bugfix for Bug #108103
+
+2009-03-26  Philip Van Hoof  <pvanhoof@codeminded.be>
+
 	* thumbs/hildon-thumbnail-factory.c
 	* thumbs/hildon-thumbnail-obj.c
 	* thumbs/hildon-albumart-factory.c
