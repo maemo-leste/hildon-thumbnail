@@ -40,6 +40,12 @@ PKG_CHECK_MODULES(GMODULE, gmodule-2.0)
 AC_SUBST(GMODULE_CFLAGS)
 AC_SUBST(GMODULE_LIBS)
 
+PKG_CHECK_MODULES(PLAYBACK, libplayback-1, [have_playback=yes], [have_playback=no])
+AC_SUBST(PLAYBACK_CFLAGS)
+AC_SUBST(PLAYBACK_LIBS)
+
+AM_CONDITIONAL(HAVE_PLAYBACK, test "$have_playback" = "yes")
+
 PKG_CHECK_MODULES(GTK, gtk+-2.0, [have_gtk=yes], [have_gtk=no])
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
@@ -203,6 +209,10 @@ AC_SUBST(LIBOSSO_LIBS)
 AC_SUBST(LIBOSSO_CFLAGS)
 
 AM_CONDITIONAL(ENABLE_OSSO, test x$have_osso = xyes)
+
+if test "x$have_osso" != "xno" ; then
+   AC_DEFINE(HAVE_OSSO, 1, [Define if we have OSSO])
+fi
 
 
 # --- Output ---

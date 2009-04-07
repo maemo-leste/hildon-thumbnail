@@ -18,6 +18,9 @@
 /* OMXIL */
 #undef HAVE_OMXIL
 
+/* Define if we have OSSO */
+#undef HAVE_OSSO
+
 /* SQLite3 */
 #undef HAVE_SQLITE3
 

@@ -26,8 +26,10 @@
 #include <linux/sched.h>
 #include <sched.h>
 
+#ifdef HAVE_OSSO
 #include <osso-mem.h>
 #include <osso-log.h>
+#endif
 
 #ifndef SCHED_IDLE
 #define SCHED_IDLE 5
@@ -382,7 +384,9 @@ main (int argc, char **argv)
 	mallopt (M_MMAP_THRESHOLD, 128 *1024);
 #endif
 
+#ifdef HAVE_OSSO
 	result = osso_mem_saw_enable(4 << 20, 64, thumbnailer_oom_func, NULL);
+#endif
 
 	g_type_init ();
 
@@ -465,7 +469,9 @@ main (int argc, char **argv)
 		g_main_loop_unref (main_loop);
 	}
 
+#ifdef HAVE_OSSO
 	osso_mem_saw_disable();
+#endif
 
 	return 0;
 }

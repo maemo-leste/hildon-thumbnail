@@ -1,3 +1,10 @@
+2009-04-07  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* configure.ac
+	* daemon/hildon-thumbnail-daemon.c: Making it possible to compile on a
+	host that has no OSSO packages installed
+
 2009-03-26  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/hildon-thumbnail-daemon.c
