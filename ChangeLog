@@ -1,3 +1,7 @@
+2009-04-20  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.23
+
 2009-04-20  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* Disabled video plugin, it's broken in several ways

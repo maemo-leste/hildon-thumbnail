@@ -1,8 +1,10 @@
-hildon-thumbnail (3.0.23~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.23) unstable; urgency=low
 
-  * 
-
- -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 20 Mar 2009 21:29:32 +0200
+  [Philip Van Hoof]
+  * Fixes: NB#108103 - improving reliability of thumbnailer.
+  * Disabled video thumbnailer, it's too broken.
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 20 Apr 2009 17:46:17 +0300
 
 hildon-thumbnail (3.0.22) unstable; urgency=low
 
