@@ -1,3 +1,7 @@
+2009-04-20  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* Disabled video plugin, it's broken in several ways
+
 2009-04-07  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* config.h.in
