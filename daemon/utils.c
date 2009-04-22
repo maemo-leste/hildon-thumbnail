@@ -173,97 +173,130 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 }
 
 
+static gboolean
+strip_find_next_block (const gchar    *original,
+		       const gunichar  open_char,
+		       const gunichar  close_char,
+		       gint           *open_pos,
+		       gint           *close_pos)
+{
+	const gchar *p1, *p2;
 
-static gchar*
+	if (open_pos) {
+		*open_pos = -1;
+	}
+
+	if (close_pos) {
+		*close_pos = -1;
+	}
+
+	p1 = g_utf8_strchr (original, -1, open_char);
+	if (p1) {
+		if (open_pos) {
+			*open_pos = p1 - original;
+		}
+
+		p2 = g_utf8_strchr (g_utf8_next_char (p1), -1, close_char);
+		if (p2) {
+			if (close_pos) {
+				*close_pos = p2 - original;
+			}
+			
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+static gchar *
 strip_characters (const gchar *original)
 {
-	const gchar *foo = "()[]<>{}_!@#$^&*+=|\\/\"'?~";
-	guint osize = strlen (original);
-	gchar *retval = (gchar *) g_malloc0 (sizeof (gchar *) * osize + 1);
-	guint i = 0, y = 0;
+	GString         *str_no_blocks;
+	gchar          **strv;
+	gchar           *str;
+	gboolean         blocks_done = FALSE;
+	const gchar     *p;
+	const gchar     *invalid_chars = "()[]<>{}_!@#$^&*+=|\\/\"'?~";
+	const gchar     *invalid_chars_delimiter = "*";
+	const gchar     *convert_chars = "\t";
+	const gchar     *convert_chars_delimiter = " ";
+	const gunichar   blocks[5][2] = {
+		{ '(', ')' },
+		{ '{', '}' }, 
+		{ '[', ']' }, 
+		{ '<', '>' }, 
+		{  0,   0  }
+	};
 
-	while (i < osize) {
+	str_no_blocks = g_string_new ("");
 
-		/* Remove (anything) */
+	p = original;
 
-		if (original[i] == '(') {
-			gchar *loc = strchr (original+i, ')');
-			if (loc) {
-				i = loc - original + 1;
-				continue;
+	while (!blocks_done) {
+		gint pos1, pos2, i;
+
+		pos1 = -1;
+		pos2 = -1;
+	
+		for (i = 0; blocks[i][0] != 0; i++) {
+			gint start, end;
+			
+			/* Go through blocks, find the earliest block we can */
+			if (strip_find_next_block (p, blocks[i][0], blocks[i][1], &start, &end)) {
+				if (pos1 == -1 || start < pos1) {
+					pos1 = start;
+					pos2 = end;
+				}
 			}
 		}
+		
+		/* If either are -1 we didn't find any */
+		if (pos1 == -1) {
+			/* This means no blocks were found */
+			g_string_append (str_no_blocks, p);
+			blocks_done = TRUE;
+		} else {
+			/* Append the test BEFORE the block */
+                        if (pos1 > 0) {
+                                g_string_append_len (str_no_blocks, p, pos1);
+                        }
 
-		/* Remove [anything] */
+                        p = g_utf8_next_char (p + pos2);
 
-		if (original[i] == '[') {
-			gchar *loc = strchr (original+i, ']');
-			if (loc) {
-				i = loc - original + 1;
-				continue;
+			/* Do same again for position AFTER block */
+			if (*p == '\0') {
+				blocks_done = TRUE;
 			}
-		}
-
-		/* Remove {anything} */
-
-		if (original[i] == '{') {
-			gchar *loc = strchr (original+i, '}');
-			if (loc) {
-				i = loc - original + 1;
-				continue;
-			}
-		}
-
-		/* Remove <anything> */
-
-		if (original[i] == '<') {
-			gchar *loc = strchr (original+i, '>');
-			if (loc) {
-				i = loc - original + 1;
-				continue;
-			}
-		}
-
-		/* Remove double whitespaces */
-
-		if ((y > 0) &&
-		    (original[i] == ' ' || original[i] == '\t') &&
-		    (retval[y-1] == ' ' || retval[y-1] == '\t')) {
-			i++;
-			continue;
-		}
-
-		/* Remove strange characters */
-
-		if (!strchr (foo, original[i])) {
-			retval[y] = original[i]!='\t'?original[i]:' ';
-			y++;
-		}
-
-		i++;
+		}	
 	}
 
-	retval[y] = 0;
+	str = g_string_free (str_no_blocks, FALSE);
 
-	y--;
-	while (retval[y] == ' ') {
-		retval[y] = 0;
-		y--;
-	}
+	/* Now strip invalid chars */
+	g_strdelimit (str, invalid_chars, *invalid_chars_delimiter);
+	strv = g_strsplit (str, invalid_chars_delimiter, -1);
+	g_free (str);
+        str = g_strjoinv (NULL, strv);
+	g_strfreev (strv);
 
-	if (retval[0] == ' ') {
-		guint r = 0;
-		gchar *newr;
+	/* Now convert chars */
+	g_strdelimit (str, convert_chars, *convert_chars_delimiter);
+	strv = g_strsplit (str, convert_chars_delimiter, -1);
+	g_free (str);
+        str = g_strjoinv (convert_chars_delimiter, strv);
+	g_strfreev (strv);
 
-		while (retval[r] == ' ')
-			r++;
+        /* Now remove double spaces */
+	strv = g_strsplit (str, "  ", -1);
+	g_free (str);
+        str = g_strjoinv (" ", strv);
+	g_strfreev (strv);
+        
+        /* Now strip leading/trailing white space */
+        g_strstrip (str);
 
-		newr = g_strdup (retval + r);
-		g_free (retval);
-		retval = newr;
-	}
-
-	return retval;
+	return str;
 }
 
 void
