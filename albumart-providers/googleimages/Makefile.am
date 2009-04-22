@@ -7,13 +7,11 @@ INCLUDES = -I$(top_srcdir)/../thumbs -I$(top_srcdir) -I. -I.. -I$(top_srcdir)/..
 NULL = 
 
 BUILT_SOURCES = my.vala.stamp                     \
-                google-images-art-downloader.c    \
-	        google-images-art-downloader.h
+                google-images-art-downloader.c    
 
 EXTRA_DIST = my.vala.stamp                     \
              google-images-art-downloader.vala \
-             google-images-art-downloader.c    \
-	     google-images-art-downloader.h    \
+             google-images-art-downloader.c    \ 
              com.nokia.albumart.GoogleImages.service.in \
              com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
