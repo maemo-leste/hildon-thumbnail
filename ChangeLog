@@ -1,3 +1,7 @@
+2009-04-27  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/utils.c: Fixed memory leak. Fixes Bug# 113093
+
 2009-04-22  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/utils.c: Trimming of leading and trailing white spaces

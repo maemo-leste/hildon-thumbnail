@@ -69,7 +69,6 @@ hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **
 
 		local_dir = g_file_get_uri (thumb_file);
 
-		file = g_file_new_for_uri (uri);
 		info = g_file_query_info (file,
 					  G_FILE_ATTRIBUTE_STANDARD_NAME,
 					  G_FILE_QUERY_INFO_NONE,
