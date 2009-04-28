@@ -27,7 +27,8 @@ on_pre_unmount (GVolumeMonitor *volume_monitor,
 		 * before we start for real. */
 
 		filep = fopen (CHECK_FILE, "w");
-		fclose (filep);
+		if (filep)
+			fclose (filep);
 
 		exit (0);
 	}
