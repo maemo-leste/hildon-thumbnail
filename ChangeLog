@@ -1,3 +1,10 @@
+2009-04-28  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/thumb-hal.c: Bug# 99641: Putting a message for the
+	thumbnailer that next startup it should sleep for 10 seconds before
+	initiating. Keeps the thumbnailer from making a device that is being
+	unmounted busy after short-after startup
+
 2009-04-27  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/utils.c: Fixed memory leak. Fixes Bug# 113093
