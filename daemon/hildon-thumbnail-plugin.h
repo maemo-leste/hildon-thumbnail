@@ -77,6 +77,7 @@ gchar *     hildon_thumbnail_outplugins_get_orig  (const gchar *path);
 
 void        hildon_thumbnail_outplugins_cleanup   (const gchar *uri_match, 
 						   guint since);
+void        hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri);
 
 
 G_END_DECLS

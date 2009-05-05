@@ -1,3 +1,16 @@
+2009-05-05  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/gstreamer-video-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/thumbnailer.c
+	* daemon/hildon-thumbnail-plugin.c: Spec changes and writing files in fail 
+	directory
+
 2009-04-28  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/thumb-hal.c: Bug# 99641: Putting a message for the

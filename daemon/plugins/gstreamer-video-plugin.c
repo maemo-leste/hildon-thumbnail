@@ -623,7 +623,22 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		t = 0;
 
 		while (copy) {
+			GFile *file;
+			GFileInfo *info;
+
 			furis[t] = copy->data;
+
+			file = g_file_new_for_uri (furis[t]);
+			info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+						  G_FILE_QUERY_INFO_NONE,
+						  NULL, NULL);
+			if (info) {
+				guint64 mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+				hildon_thumbnail_outplugins_put_error (mtime, furis[t]);
+				g_object_unref (info);
+			}
+
+			g_object_unref (file);
 			copy = g_list_next (copy);
 			t++;
 		}

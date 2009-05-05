@@ -167,8 +167,9 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 gboolean
 hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri)
 {
-	gboolean retval;
-	gchar *large, *normal, *cropped, *filen;
+	gboolean retval, check = FALSE;
+	gchar *large, *normal, *cropped, *filen, *filenp;
+	GFile *parent, *file, *fail_file, *fail_dir;
 
 	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
 					       NULL, NULL, NULL, FALSE);
@@ -185,15 +186,51 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 		break;
 	}
 
-	retval = FALSE;
+	retval = TRUE;
 
-	if (g_file_test (filen, G_FILE_TEST_EXISTS)) {
-		struct stat st;
-		g_stat (filen, &st);
-		if (st.st_mtime != (gint64) mtime)
-			retval = TRUE;
-	} else
-		retval = TRUE;
+	file = g_file_new_for_path (filen);
+	filenp = g_file_get_basename (file);
+
+	parent = g_file_get_parent (file); /* ~/.thumbnails/large */
+	fail_dir = g_file_get_parent (parent); /* ~/.thumbnails/ */
+	g_object_unref (parent);
+
+	parent = g_file_get_child (fail_dir, "fail"); /* ~/.thumbnails/fail */
+	g_object_unref (fail_dir);
+
+	fail_dir = g_file_get_child (parent, PACKAGE_NAME "-" PACKAGE_VERSION); /* ~/.thumbnails/large/hild-thum-version/ */
+	g_object_unref (parent);
+
+	fail_file = g_file_get_child (fail_dir, filenp);
+	g_object_unref (fail_dir);
+	g_free (filenp);
+
+	if (g_file_query_exists (fail_file, NULL)) {
+		g_object_unref (file);
+		file = g_object_ref (fail_file);
+		check = TRUE;
+	} else if (g_file_query_exists (file, NULL)) {
+		check = TRUE;
+	}
+
+	if (check) {
+		GFileInfo *info;
+		info = g_file_query_info (file, 
+					   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+					   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+		if (info) {
+			guint64 fmtime;
+			fmtime = g_file_info_get_attribute_uint64 (info, 
+								   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+			if (fmtime == (gint64) mtime) {
+				retval = FALSE;
+			}
+			g_object_unref (info);
+		}
+	}
+
+	g_object_unref (fail_file);
+	g_object_unref (file);
 
 	g_free (normal);
 	g_free (large);
@@ -201,6 +238,66 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 
 	return retval;
 }
+
+
+void
+hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri)
+{
+	gchar *large, *normal, *cropped, *filenp, *dirn;
+	GFile *parent, *file, *fail_file, *fail_dir;
+	GFileOutputStream *out;
+	struct utimbuf buf;
+	GError *error = NULL;
+
+	hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
+					       NULL, NULL, NULL, FALSE);
+
+	file = g_file_new_for_path (large);
+	filenp = g_file_get_basename (file);
+
+	parent = g_file_get_parent (file); /* ~/.thumbnails/large */
+	fail_dir = g_file_get_parent (parent); /* ~/.thumbnails/ */
+	g_object_unref (parent);
+
+	parent = g_file_get_child (fail_dir, "fail"); /* ~/.thumbnails/fail */
+	g_object_unref (fail_dir);
+
+	fail_dir = g_file_get_child (parent, PACKAGE_NAME "-" PACKAGE_VERSION); /* ~/.thumbnails/large/hild-thum-version/ */
+	dirn = g_file_get_path (fail_dir);
+	g_mkdir_with_parents (dirn, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	g_free (dirn);
+	g_object_unref (parent);
+
+	fail_file = g_file_get_child (fail_dir, filenp);
+	g_object_unref (fail_dir);
+	g_free (filenp);
+
+	out = g_file_create (fail_file, 0, NULL, &error);
+
+	if (out) {
+		g_object_unref (out);
+	}
+
+	if (error) {
+		g_debug ("%s\n", error->message);
+		g_error_free (error);
+	}
+
+	filenp = g_file_get_path (fail_file);
+	buf.actime = buf.modtime = mtime;
+	utime (filenp, &buf);
+	g_free (filenp);
+
+	g_object_unref (fail_file);
+	g_object_unref (file);
+
+	g_free (normal);
+	g_free (large);
+	g_free (cropped);
+
+	return;
+}
+
 
 void
 hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap, 
@@ -246,6 +343,8 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 
 	if (!nerror)
 		g_rename (temp, filen);
+	else
+		hildon_thumbnail_outplugin_put_error (mtime, uri);
 
 	g_free (temp);
 

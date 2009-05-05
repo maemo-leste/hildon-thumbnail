@@ -301,7 +301,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 }
 
 static gboolean 
-strv_contains (const GStrv list, gchar *uri)
+strv_contains (const gchar **list, gchar *uri)
 {
 	guint i = 0;
 	gboolean found = FALSE;
@@ -353,6 +353,56 @@ subtract_strv (GStrv a, GStrv b)
 	return retval;
 }
 
+
+typedef struct {
+	GCond *condition;
+	GMutex *mutex;
+	gchar *error_msg;
+	gint error_code;
+	const gchar *uri, *mime_type;
+	gboolean had_callback, had_event;
+} SpecializedInfo;
+
+static void
+specialized_error (DBusGProxy   *proxy,
+		   gchar *uri,
+		   gint error_code,
+		   gchar *error_msg,
+		   gpointer user_data)
+{
+	SpecializedInfo *info = user_data;
+
+	if (g_strcmp0 (info->uri, uri) == 0) {
+		info->error_msg = g_strdup (error_msg);
+		info->error_code = error_code;
+
+		g_mutex_lock (info->mutex);
+		g_cond_broadcast (info->condition);
+		info->had_callback = TRUE;
+		g_mutex_unlock (info->mutex);
+	}
+}
+
+static void
+specialized_ready (DBusGProxy   *proxy,
+		   gchar *uri,
+		   gpointer user_data)
+{
+	SpecializedInfo *info = user_data;
+
+	if (g_strcmp0 (info->uri, uri) == 0) {
+		info->error_msg = NULL;
+
+		g_mutex_lock (info->mutex);
+		g_cond_broadcast (info->condition);
+		info->had_callback = TRUE;
+		g_mutex_unlock (info->mutex);
+	}
+}
+
+#define DAEMON_ERROR_DOMAIN	"HildonThumbnailerSpecialized"
+#define DAEMON_ERROR		g_quark_from_static_string (DAEMON_ERROR_DOMAIN)
+
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
  * happens in a thread, we must care about proper locking, too.
@@ -361,7 +411,6 @@ subtract_strv (GStrv a, GStrv b)
  * new requests get a certain priority over older requests. Note that we are not
  * canceling currently running requests. Also note that the thread count of the 
  * pool is set to one. We could increase this number to add some parallelism */
-
 
 static void 
 do_the_work (WorkTask *task, gpointer user_data)
@@ -566,43 +615,112 @@ do_the_work (WorkTask *task, gpointer user_data)
 		proxy = thumbnail_manager_get_handler (priv->manager, uri_scheme, mime_type);
 
 		if (proxy) {
-			GError *error = NULL;
-			GStrv failed_urls = NULL;
+			guint o;
 
-			keep_alive ();
+			for (o = 0; urlss[o]; o++) {
+				GError *error = NULL;
+				GStrv failed_urls = NULL;
+				SpecializedInfo info;
+				GTimeVal timev;
 
-			dbus_g_proxy_call (proxy, "Create", &error, 
-					   G_TYPE_STRV, urlss,
-					   G_TYPE_STRING, mime_type,
-					   G_TYPE_INVALID, 
-					   G_TYPE_STRV, &failed_urls,
-					   G_TYPE_INVALID);
+				keep_alive ();
 
-			keep_alive ();
+				info.condition = g_cond_new ();
+				info.had_callback = FALSE;
+				info.mutex = g_mutex_new ();
+				info.uri = urlss[o];
+				info.mime_type = mime_type;
 
-			g_object_unref (proxy);
+				/* Register signals to know about tracker-indexer presence */
+				dbus_g_proxy_add_signal (proxy, "Ready", 
+							 G_TYPE_STRING,
+							 G_TYPE_INVALID);
 
-			if (error) {
-				GStrv newlist = subtract_strv (urlss, failed_urls);
+				dbus_g_proxy_add_signal (proxy, "Error", 
+							 G_TYPE_STRING, 
+							 G_TYPE_INT,
+							 G_TYPE_STRING,
+							 G_TYPE_INVALID);
 
-				if (newlist) {
-					g_signal_emit (task->object, signals[READY_SIGNAL], 
-						       0, newlist);
-					g_strfreev (newlist);
+				dbus_g_proxy_connect_signal (proxy, "Ready",
+							     G_CALLBACK (specialized_ready),
+							     &info, 
+							     NULL);
+
+				dbus_g_proxy_connect_signal (proxy, "Error",
+							     G_CALLBACK (specialized_error),
+							     &info, 
+							     NULL);
+
+				dbus_g_proxy_call (proxy, "Create", &error, 
+						   G_TYPE_STRING, info.uri,
+						   G_TYPE_STRING, info.mime_type,
+						   G_TYPE_INVALID, 
+						   G_TYPE_INVALID);
+
+
+				g_get_current_time (&timev);
+				g_time_val_add  (&timev, 100000000); /* 100 seconds worth of timeout */
+
+				g_mutex_lock (info.mutex);
+				if (!info.had_callback)
+					g_cond_timed_wait (info.condition, info.mutex, &timev);
+				g_mutex_unlock (info.mutex);
+
+				if (!info.had_callback) {
+					g_set_error (&error, DAEMON_ERROR, 0,
+						     "Timeout");
 				}
 
-				g_signal_emit (task->object, signals[ERROR_SIGNAL],
-					       0, task->num, failed_urls, 1, 
-					       error->message);
-				g_clear_error (&error);
+				if (info.error_msg) {
+					g_set_error (&error, DAEMON_ERROR, 
+						     info.error_code,
+						     "%s", info.error_msg);
+					g_free (info.error_msg);
+				}
 
-				had_err = TRUE;
-			} else 
-				g_signal_emit (task->object, signals[READY_SIGNAL], 
-					       0, urlss);
+				dbus_g_proxy_disconnect_signal (proxy, "Error",
+								G_CALLBACK (specialized_error),
+								&info);
 
-			if (failed_urls)
-				g_strfreev (failed_urls);
+				dbus_g_proxy_disconnect_signal (proxy, "Ready",
+								G_CALLBACK (specialized_ready),
+								&info);
+
+				g_cond_free (info.condition);
+				g_mutex_free (info.mutex);
+
+				keep_alive ();
+
+				g_object_unref (proxy);
+
+				if (error) {
+					GStrv failed_urls = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+
+					failed_urls[0] = g_strdup (info.uri);
+					failed_urls[1] = NULL;
+
+					g_signal_emit (task->object, signals[ERROR_SIGNAL],
+						       0, task->num, failed_urls, 1, 
+						       error->message);
+
+					g_error_free (error);
+
+					g_strfreev (failed_urls);
+
+					had_err = TRUE;
+				} else {
+					GStrv succeeded_urls = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+
+					succeeded_urls[0] = g_strdup (info.uri);
+					succeeded_urls[1] = NULL;
+
+					g_signal_emit (task->object, signals[READY_SIGNAL], 
+						       0, succeeded_urls);
+
+					g_strfreev (succeeded_urls);
+				}
+			}
 
 		/* If not if we have a plugin that can handle it, we let the 
 		 * plugin have a go at it */
