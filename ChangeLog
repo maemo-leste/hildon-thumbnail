@@ -1,5 +1,11 @@
 2009-05-05  Philip Van Hoof  <pvanhoof@codeminded.be>
 
+	* daemon/hildon-thumbnail-daemon.c: Disabled IDLE priority, thumbnails
+	must always be made as soon as possible (it's the apps that need to
+	not ask thumbnails when the device has more urgent matters to do)
+
+2009-05-05  Philip Van Hoof  <pvanhoof@codeminded.be>
+
 	* daemon/hildon-thumbnail-plugin.h
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/exec-plugin.c

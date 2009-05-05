@@ -125,6 +125,7 @@ ioprio_set (int which, int who, int ioprio_val)
 void
 initialize_priority (void)
 {
+#if 0
 	struct sched_param sp;
 	int ioprio, ioclass;
 
@@ -143,6 +144,7 @@ initialize_priority (void)
 			/* Didn't work, but we ignore */
 		}
 	 }
+#endif
 #endif
 }
 
