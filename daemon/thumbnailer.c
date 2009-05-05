@@ -194,9 +194,8 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 	g_mutex_unlock (priv->mutex);
 }
 
-
 static void
-get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, GError **error)
+get_some_file_infos (const gchar *uri, gchar **mime_type, guint64 *mtime, gchar *mime_hint, GError **error)
 {
 	const gchar *content_type;
 	GFileInfo *info;
@@ -206,11 +205,14 @@ get_some_file_infos (const gchar *uri, gchar **mime_type, gchar *mime_hint, GErr
 
 	file = g_file_new_for_uri (uri);
 	info = g_file_query_info (file,
-				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+				  G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE ","
+				  G_FILE_ATTRIBUTE_TIME_MODIFIED,
 				  G_FILE_QUERY_INFO_NONE,
 				  NULL, error);
 
 	if (info) {
+		if (mtime) 
+			*mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 		content_type = g_file_info_get_content_type (info);
 		if (content_type)
 			*mime_type = g_strdup (content_type);
@@ -403,6 +405,32 @@ specialized_ready (DBusGProxy   *proxy,
 #define DAEMON_ERROR_DOMAIN	"HildonThumbnailerSpecialized"
 #define DAEMON_ERROR		g_quark_from_static_string (DAEMON_ERROR_DOMAIN)
 
+static gboolean
+thumb_check (const gchar *filename, guint64 mtime)
+{
+	gboolean retval = FALSE;
+
+	if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
+		GFileInfo *info;
+		GFile *file = g_file_new_for_path (filename);
+		info = g_file_query_info (file, 
+					   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+					   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+		if (info) {
+			guint64 fmtime;
+			fmtime = g_file_info_get_attribute_uint64 (info, 
+							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+			if (fmtime == (guint64) mtime) {
+				retval = TRUE;
+			}
+			g_object_unref (info);
+		}
+		g_object_unref (file);
+	}
+
+	return retval;
+}
+
 /* This is the threadpool's function. This means that everything we do is 
  * asynchronous wrt to the mainloop (we aren't blocking it). Because it all 
  * happens in a thread, we must care about proper locking, too.
@@ -457,25 +485,26 @@ do_the_work (WorkTask *task, gpointer user_data)
 		gboolean has_thumb = FALSE;
 		GError *error = NULL;
 		gchar *normal = NULL, *large = NULL, *cropped = NULL;
+		guint64 mtime_x = 0;
 
 		hildon_thumbnail_util_get_thumb_paths (urls[i], &large, &normal, &cropped, 
 						       NULL, NULL, NULL, FALSE);
 
-		get_some_file_infos (urls[i], &mime_type, 
+		get_some_file_infos (urls[i], &mime_type, &mtime_x,
 				     mime_types?mime_types[i]:NULL, 
 				     &error);
 
-		has_thumb = (g_file_test (large, G_FILE_TEST_EXISTS) && 
-			     g_file_test (normal, G_FILE_TEST_EXISTS) && 
-			     g_file_test (cropped, G_FILE_TEST_EXISTS));
+		has_thumb = (thumb_check (large, mtime_x) && 
+			     thumb_check (normal, mtime_x) && 
+			     thumb_check (cropped, mtime_x));
 
 		if (!has_thumb) {
 			gchar *pnormal = NULL, *plarge = NULL, *pcropped = NULL;
 			hildon_thumbnail_util_get_thumb_paths (urls[i], &plarge, &pnormal, &pcropped, 
 						       NULL, NULL, NULL, FALSE);
-			has_thumb = (g_file_test (plarge, G_FILE_TEST_EXISTS) && 
-				     g_file_test (pnormal, G_FILE_TEST_EXISTS) && 
-				     g_file_test (pcropped, G_FILE_TEST_EXISTS));
+			has_thumb = (thumb_check (plarge, mtime_x) && 
+				     thumb_check (pnormal, mtime_x) && 
+				     thumb_check (pcropped, mtime_x));
 
 			if (has_thumb) {
 				g_free (normal);

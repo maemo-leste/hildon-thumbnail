@@ -244,7 +244,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 			guint64 fmtime;
 			fmtime = g_file_info_get_attribute_uint64 (info, 
 								   G_FILE_ATTRIBUTE_TIME_MODIFIED);
-			if (fmtime == (gint64) mtime) {
+			if (fmtime == (guint64) mtime) {
 				retval = FALSE;
 			}
 			g_object_unref (info);
