@@ -617,9 +617,18 @@ do_the_work (WorkTask *task, gpointer user_data)
 		if (proxy) {
 			guint o;
 
+			dbus_g_proxy_add_signal (proxy, "Ready", 
+						 G_TYPE_STRING,
+						 G_TYPE_INVALID);
+
+			dbus_g_proxy_add_signal (proxy, "Error", 
+						 G_TYPE_STRING, 
+						 G_TYPE_INT,
+						 G_TYPE_STRING,
+						 G_TYPE_INVALID);
+
 			for (o = 0; urlss[o]; o++) {
 				GError *error = NULL;
-				GStrv failed_urls = NULL;
 				SpecializedInfo info;
 				GTimeVal timev;
 
@@ -631,17 +640,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 				info.uri = urlss[o];
 				info.mime_type = mime_type;
 
-				/* Register signals to know about tracker-indexer presence */
-				dbus_g_proxy_add_signal (proxy, "Ready", 
-							 G_TYPE_STRING,
-							 G_TYPE_INVALID);
-
-				dbus_g_proxy_add_signal (proxy, "Error", 
-							 G_TYPE_STRING, 
-							 G_TYPE_INT,
-							 G_TYPE_STRING,
-							 G_TYPE_INVALID);
-
 				dbus_g_proxy_connect_signal (proxy, "Ready",
 							     G_CALLBACK (specialized_ready),
 							     &info, 
@@ -652,12 +650,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 							     &info, 
 							     NULL);
 
-				dbus_g_proxy_call (proxy, "Create", &error, 
-						   G_TYPE_STRING, info.uri,
-						   G_TYPE_STRING, info.mime_type,
-						   G_TYPE_INVALID, 
-						   G_TYPE_INVALID);
-
+				dbus_g_proxy_call_no_reply (proxy, "Create", 
+							    G_TYPE_STRING, info.uri,
+							    G_TYPE_STRING, info.mime_type,
+							    G_TYPE_INVALID, 
+							    G_TYPE_INVALID);
 
 				g_get_current_time (&timev);
 				g_time_val_add  (&timev, 100000000); /* 100 seconds worth of timeout */
