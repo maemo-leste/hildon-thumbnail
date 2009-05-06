@@ -1,3 +1,8 @@
+2009-05-06  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/epeg-plugin.c: Memleak fix
+
 2009-05-05  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/hildon-thumbnail-daemon.c: Disabled IDLE priority, thumbnails

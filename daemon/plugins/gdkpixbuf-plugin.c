@@ -170,7 +170,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		GError *nerror = NULL;
 		GFileInfo *info;
 		GFile *file;
-		GFileInputStream *stream;
+		GFileInputStream *stream=NULL;
 		gchar *uri = uris[i];
 		GdkPixbuf *pixbuf_large;
 		GdkPixbuf *pixbuf_normal;
@@ -203,16 +203,19 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri)) {
 
-			pixbuf_large = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf_large1 = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
 									    256, 256,
 									    TRUE,
 									    NULL,
 									    &nerror);
 
-			if (nerror)
+			if (nerror) {
+				if (pixbuf_large1)
+					g_object_unref (pixbuf_large1);
 				goto nerror_handler;
+			}
 
-			pixbuf_large = gdk_pixbuf_apply_embedded_orientation (pixbuf_large);
+			pixbuf_large = gdk_pixbuf_apply_embedded_orientation (pixbuf_large1);
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
 			width = gdk_pixbuf_get_width (pixbuf_large);
@@ -231,7 +234,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    &nerror);
 
 			g_object_unref (pixbuf_large);
-			g_object_unref (pixbuf_large);
+			g_object_unref (pixbuf_large1);
 
 			if (nerror)
 				goto nerror_handler;
@@ -246,16 +249,19 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri)) {
 
-			pixbuf_normal = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf_normal1 = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
 									     128, 128,
 									     TRUE,
 									     NULL,
 									     &nerror);
 
-			if (nerror)
+			if (nerror) {
+				if (pixbuf_normal1)
+					g_object_unref (pixbuf_normal1);
 				goto nerror_handler;
+			}
 
-			pixbuf_normal = gdk_pixbuf_apply_embedded_orientation (pixbuf_normal);
+			pixbuf_normal = gdk_pixbuf_apply_embedded_orientation (pixbuf_normal1);
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_normal);
 			width = gdk_pixbuf_get_width (pixbuf_normal);
@@ -274,7 +280,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 							    &nerror);
 
 			g_object_unref (pixbuf_normal);
-			g_object_unref (pixbuf_normal);
+			g_object_unref (pixbuf_normal1);
 
 			if (nerror)
 				goto nerror_handler;
@@ -288,19 +294,22 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri)) {
 
-			pixbuf = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf1 = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
 							     NULL,
 							     &nerror);
 
-			if (nerror)
+			if (nerror) {
+				if (pixbuf1)
+					g_object_unref (pixbuf1);
 				goto nerror_handler;
+			}
 
-			pixbuf = gdk_pixbuf_apply_embedded_orientation (pixbuf);
+			pixbuf = gdk_pixbuf_apply_embedded_orientation (pixbuf1);
 
 			pixbuf_cropped = crop_resize (pixbuf, 124, 124);
 
 			g_object_unref (pixbuf);
-			g_object_unref (pixbuf);
+			g_object_unref (pixbuf1);
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);
 			width = gdk_pixbuf_get_width (pixbuf_cropped);

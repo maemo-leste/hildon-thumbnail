@@ -209,11 +209,24 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 
 		} else {
+			//gchar *large=NULL, *normal=NULL, *cropped=NULL;
 
 			epeg_decode_colorspace_set (im, EPEG_RGB8);
 			epeg_decode_size_set (im, 256, 256);
-			epeg_quality_set (im, 80);
+			epeg_quality_set (im, 75);
 			epeg_thumbnail_comments_enable (im, 0);
+
+			//hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
+			//				       NULL, NULL, NULL, FALSE);
+
+			//epeg_file_output_set (im, large);
+			//epeg_encode (im);
+			//epeg_close (im);
+
+			//pixbuf_large = gdk_pixbuf_new_from_file (large, &nerror);
+
+			//if (nerror)
+			//	goto nerror_handler;
 
 			data = (guchar *) epeg_pixels_get (im, 0, 0, 256, 256);
 
@@ -221,6 +234,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 									  GDK_COLORSPACE_RGB, FALSE, 
 									  8, 256, 256, 256*3,
 									  destroy_pixbuf, im);
+
+			
 		}
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri)) {
