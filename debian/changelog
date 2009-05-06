@@ -5,7 +5,7 @@ hildon-thumbnail (3.0.24) unstable; urgency=low
   * Fixes: NB#99641 - Thumbnailer does not release memcards on unmount
   * Do not run with SCHED_IDLE priority, thumbnails are too important
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 20 Apr 2009 18:00:50 +0300
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 06 May 2009 20:16:14 +0300
 
 hildon-thumbnail (3.0.23) unstable; urgency=low
 
