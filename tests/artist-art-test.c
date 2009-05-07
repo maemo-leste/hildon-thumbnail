@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <hildon-albumart-factory.h>
+#include <hildon-thumbnail-factory.h>
 
 
 GtkWindow *window;
@@ -33,9 +34,22 @@ on_art_back (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *error, gp
 }
 #endif
 
+static void 
+_thumbnail_created_cb (HildonThumbnailFactory *self,
+            GdkPixbuf *thumbnail, GError *error, gpointer user_data) {                             
+    printf("thumbnail_created_cb\n");                                                                  
+    if(error)
+        printf("Error: %s\n",error->message);                                                          
+    if(thumbnail)                                                                                      
+    {                                                                                                  
+    }
+    else printf("thumbnail: NULL\n");                                                                  
+} 
+
 static void
 on_button_clicked (GtkButton *button, gpointer user_data)
 {
+/*
 	gchar *album, *artist;
 
 	album = gtk_entry_get_text (btext);
@@ -69,14 +83,27 @@ printf ("LOC: %s\n",hildon_thumbnail_get_uri("file:///home/user/.cache/media-art
                  on_art_back, imaget, NULL);
 
 
-	g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
-                 "2008 Grammy Nominees", "album"));
 
+g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
+                 "2008 Grammy Nominees", "album"));
+*/
+
+ hildon_thumbnail_factory_request_pixbuf (hildon_thumbnail_factory_get_instance (),
+            "file:///home/pvanhoof/.cache/media-art/album-7215ee9c7d9dc229d2921a40e899ec5f-3e2d42595d728926108329d9771c92d7.jpeg",
+            128, 128,
+            FALSE,
+            NULL,
+            _thumbnail_created_cb,
+            NULL/*item*/,
+            NULL);
+
+
+/*
 	g_object_unref (f);
 	g_object_unref (r1);
 	g_object_unref (r2);
 #endif
-
+*/
 }
 
 int

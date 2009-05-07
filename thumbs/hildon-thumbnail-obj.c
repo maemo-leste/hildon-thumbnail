@@ -422,17 +422,8 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 
 	gchar *key = g_strdup_printf ("%d", OUT_handle);
 	r_priv->key = key;
-
-	if (!error) {
-		g_hash_table_replace (f_priv->tasks, g_strdup (key), 
+	g_hash_table_replace (f_priv->tasks, g_strdup (key), 
 			      g_object_ref (request));
-	} else {
-		if (r_priv->pcallback)
-			r_priv->pcallback (r_priv->factory, NULL, error, r_priv->user_data);
-		if (r_priv->ucallback)
-			r_priv->ucallback (r_priv->factory, NULL, error, r_priv->user_data);
-	}
-
 	waiting_for_cb = FALSE;
 
 	g_object_unref (request);

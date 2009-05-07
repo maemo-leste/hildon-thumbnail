@@ -1,3 +1,10 @@
+2009-05-07  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* tests/artist-art-test.c
+	* tests/Makefile.am
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/thumbnailer.c: Bugfixes for a use-case provided by Email
+
 2009-05-06  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.24

@@ -273,9 +273,6 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 
 	dbus_async_return_if_fail (urls != NULL, context);
 
-	if (mime_hints)
-		dbus_async_return_if_fail (g_strv_length (urls) == g_strv_length (mime_hints), context);
-
 	task = g_slice_new (WorkTask);
 
 	keep_alive ();
@@ -486,13 +483,16 @@ do_the_work (WorkTask *task, gpointer user_data)
 		GError *error = NULL;
 		gchar *normal = NULL, *large = NULL, *cropped = NULL;
 		guint64 mtime_x = 0;
+		gchar *mhint = NULL;
 
 		hildon_thumbnail_util_get_thumb_paths (urls[i], &large, &normal, &cropped, 
 						       NULL, NULL, NULL, FALSE);
 
+		if (mime_types && g_strv_length (mime_types) >= i)
+			mhint = mime_types[i];
+
 		get_some_file_infos (urls[i], &mime_type, &mtime_x,
-				     mime_types?mime_types[i]:NULL, 
-				     &error);
+				     mhint, &error);
 
 		has_thumb = (thumb_check (large, mtime_x) && 
 			     thumb_check (normal, mtime_x) && 

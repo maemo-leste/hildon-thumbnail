@@ -1,6 +1,6 @@
 INCLUDES = -I$(srcdir)/../thumbs -I$(srcdir)/.. $(PKG_CFLAGS) \
 	$(DBUS_CFLAGS) $(GLIB_CFLAGS) $(GMODULE_CFLAGS) $(GIO_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) $(GTK_CFLAGS)
+	$(GDK_PIXBUF_CFLAGS) $(GTK_CFLAGS) -ggdb -O0
 
 BUILT_SOURCES = daemon-glue.h
 
