@@ -270,7 +270,6 @@ strip_characters (const gchar *original)
 		}	
 	}
 
-	str = g_string_free (str_no_blocks, FALSE);
 	/* Now convert chars to lower case */
 	str = g_utf8_strdown (str_no_blocks->str, -1);
 	g_string_free (str_no_blocks, TRUE);
