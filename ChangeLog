@@ -1,3 +1,9 @@
+2009-05-11  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* daemon/Makefile.am (install-data-local): Create
+	/usr/share/thumbnailers and /usr/share/albumart-providers so that
+	inotify has something to watch (N114780).
+
 2009-05-11  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* Bugfix for Bug #114780 (creating dummy files)

@@ -11,6 +11,13 @@ INCLUDES = -I. \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
 	-DOUTPUTPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/output-plugins"\" 
 
+# Make some directories so that we have something to watch.  Without
+# these directories existing, GIO file watching will poll instead of using
+# inotify.
+#
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)/usr/share/thumbnailers
+	$(mkinstalldirs) $(DESTDIR)/usr/share/albumart-providers
 
 noinst_LTLIBRARIES = libshared.la
 
