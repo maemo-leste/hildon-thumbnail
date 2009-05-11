@@ -1,6 +1,7 @@
 hildon-thumbnail (3.0.25~unreleased) unstable; urgency=low
 
-  * 
+  * Fixes: NB#114780 - hildon-thumbnailerd wakes up too often.
+  * Include albumart provider in hildon-thumbnail package.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 06 May 2009 20:18:44 +0300
 
