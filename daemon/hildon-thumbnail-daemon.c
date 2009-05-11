@@ -375,6 +375,21 @@ thumbnailer_oom_func (size_t cur, size_t max, void *data)
 	exit(1);
 }
 
+static void
+create_dummy_files (void)
+{
+	gchar *dir;
+
+	dir = g_build_filename (g_get_home_dir (), ".config", "hildon-thumbnailer", NULL);
+	g_mkdir_with_parents (dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	g_free (dir);
+
+	dir = g_build_filename (g_get_home_dir (), ".local", "share", "thumbnailers", NULL);
+	g_mkdir_with_parents (dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	g_free (dir);
+
+}
+
 int 
 main (int argc, char **argv) 
 {
@@ -394,6 +409,8 @@ main (int argc, char **argv)
 
 	if (!g_thread_supported ())
 		g_thread_init (NULL);
+
+	create_dummy_files ();
 
 	connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
 
