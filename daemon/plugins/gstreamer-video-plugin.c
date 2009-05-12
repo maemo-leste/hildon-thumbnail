@@ -93,7 +93,9 @@ typedef struct {
 static void
 create_output (HildonThumbnailPluginOutType target, unsigned char *data, guint width, guint height, guint bpp, const gchar *uri, guint mtime, gboolean alpha, GError **error)
 {
-	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri)) {
+	gboolean err_file;
+
+	if (hildon_thumbnail_outplugins_needs_out (target, mtime, uri, &err_file)) {
 
 		hildon_thumbnail_outplugins_do_out (data, width, height,
 						    width*3, bpp/3, alpha,
@@ -517,6 +519,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		GFile *file = NULL;
 		GFileInfo *finfo = NULL;
 		guint64 mtime;
+		gboolean err_file = FALSE;
 
 		file = g_file_new_for_uri (uris[i]);
 
@@ -529,9 +532,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i]) &&
-		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i]) &&
-		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i]))
+		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i], &err_file) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i], &err_file) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i], &err_file))
 			goto nerror_handler;
 
 		/* Create the thumbnailer struct */
@@ -546,7 +549,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		thumber->uri          = uris[i];
 		
 
-		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i])) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uris[i], &err_file)) {
 			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL;
 			thumber->size         = 128;
 
@@ -556,7 +559,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 		}
 
-		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i])) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uris[i], &err_file)) {
 
 			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE;
 			thumber->size         = 256;
@@ -567,7 +570,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 		}
 
-		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i])) {
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uris[i], &err_file)) {
 			thumber->target       = HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED;
 			thumber->size         = 124;
 
@@ -602,13 +605,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (file)
 			g_object_unref (file);
 
-		if (nerror) {
+		if (nerror || err_file) {
 			if (!errors)
 				errors = g_string_new ("");
 			g_string_append_printf (errors, "[`%s': %s] ", 
-						uris[i], nerror->message);
-			g_error_free (nerror);
-			failed = g_list_prepend (failed, g_strdup (uris[i]));
+						thumber->uri, nerror ? nerror->message:"Had error before");
+			failed = g_list_prepend (failed, g_strdup (thumber->uri));
+			if (nerror)
+				g_error_free (nerror);
 			nerror = NULL;
 		}
 

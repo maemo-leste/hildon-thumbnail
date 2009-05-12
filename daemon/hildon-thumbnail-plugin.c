@@ -174,12 +174,12 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 
 typedef gboolean (*NeedsOutFunc) (HildonThumbnailPluginOutType type,
-				  guint64 mtime, const gchar *uri);
+				  guint64 mtime, const gchar *uri, gboolean *err_file);
 
 
 gboolean
 hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
-				       guint64 mtime, const gchar *uri)
+				       guint64 mtime, const gchar *uri, gboolean *err_file)
 {
 	GList *copy;
 	gboolean retval = FALSE;
@@ -195,7 +195,7 @@ hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 			IsActiveFunc isac_func;
 			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
 				if (isac_func ()) {
-					retval = needs_out_func (type, mtime, uri);
+					retval = needs_out_func (type, mtime, uri, err_file);
 				} 
 			} 
 		}

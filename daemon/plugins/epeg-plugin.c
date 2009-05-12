@@ -163,6 +163,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		const guchar *rgb8_pixels;
 		guint width; guint height;
 		guint rowstride; 
+		gboolean err_file = FALSE;
 
 		file = g_file_new_for_uri (uri);
 		path = g_file_get_path (file);
@@ -181,9 +182,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri) &&
-		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri) &&
-		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri))
+		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file) &&
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file))
 			goto nerror_handler;
 
 		im = epeg_file_open (path);
@@ -238,7 +239,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			
 		}
 
-		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri)) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file)) {
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
 			width = gdk_pixbuf_get_width (pixbuf_large);
@@ -260,7 +261,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		}
 
-		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri)) {
+		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
 
 			pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
 
@@ -286,7 +287,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		}
 
 
-		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri)) {
+		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file)) {
 
 			pixbuf_normal = gdk_pixbuf_scale_simple (pixbuf_large,
 								 128, 128,
@@ -316,13 +317,15 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		nerror_handler:
 
-		if (had_err || nerror) {
+		if (had_err || nerror || err_file) {
 			gchar *msg;
 			if (nerror) {
 				msg = g_strdup (nerror->message);
 				g_error_free (nerror);
 				nerror = NULL;
-			} else
+			} else if (err_file)
+				msg = g_strdup ("Failed before");
+			else
 				msg = g_strdup_printf ("Can't open %s", uri);
 			if (!errors)
 				errors = g_string_new ("");

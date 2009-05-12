@@ -1,3 +1,14 @@
+2009-05-12  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.h:
+	* daemon/plugins/gdkpixbuf-plugin.c:
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c:
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c:
+	* daemon/plugins/gstreamer-video-plugin.c:
+	* daemon/plugins/epeg-plugin.c:
+	* daemon/hildon-thumbnail-plugin.c: Bugfix for bug# 116002. Throw an
+          error instead of Ready in case the fail-file is seen
+
 2009-05-11  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	* daemon/Makefile.am (install-data-local): Create

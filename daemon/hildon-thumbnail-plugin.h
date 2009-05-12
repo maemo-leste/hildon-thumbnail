@@ -72,7 +72,7 @@ void        hildon_thumbnail_outplugins_do_out    (const guchar *rgb8_pixmap,
 						   GError **error);
 gboolean    hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 						   guint64 mtime, 
-						   const gchar *uri);
+						   const gchar *uri, gboolean *err_file);
 gchar *     hildon_thumbnail_outplugins_get_orig  (const gchar *path);
 
 void        hildon_thumbnail_outplugins_cleanup   (const gchar *uri_match, 
