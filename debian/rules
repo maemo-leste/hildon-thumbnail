@@ -53,6 +53,7 @@ binary-arch: build install
 	dh_installchangelogs 
 	dh_installdocs
 	dh_install --sourcedir=debian/build -v
+	dh_installdirs
 	dh_installman
 	dh_link
 	dh_strip --dbg-package="libhildon-thumbnail0-dbg"

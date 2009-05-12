@@ -5,17 +5,13 @@ usr/bin/osso-thumb-gdk-pixbuf
 usr/bin/osso-thumber-register
 usr/libexec/hildon-thumbnailer-plugin-runner
 usr/libexec/hildon-thumbnailerd
-usr/libexec/hildon-google-images-art-downloaderd
 usr/libexec/gst-video-thumbnailerd
 usr/share/hildon-thumbnail/manager.xml
 usr/share/hildon-thumbnail/thumbnailer.xml
 usr/share/hildon-thumbnail/albumart.xml
 usr/share/dbus-1/services/org.freedesktop.thumbnailer.service
 usr/share/dbus-1/services/com.nokia.albumart.service
-usr/share/dbus-1/services/com.nokia.albumart.GoogleImages.service
 usr/share/dbus-1/services/com.nokia.thumbnailer.Gstreamer.service
-usr/share/albumart-providers
-usr/share/thumbnailers
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-exec.so
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-gdkpixbuf.so
 usr/lib/hildon-thumbnailer/plugins/libhildon-thumbnailer-epeg.so

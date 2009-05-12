@@ -1,0 +1,3 @@
+usr/share/albumart-providers/com.nokia.albumart.AlbumartProvider.GoogleImages.service
+usr/share/dbus-1/services/com.nokia.albumart.GoogleImages.service
+usr/libexec/hildon-google-images-art-downloaderd

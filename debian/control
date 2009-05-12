@@ -43,3 +43,11 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
 Description: libhildon-thumbnail0 development files.
  Contains libhildon-thumbnail0 development files.
+
+Package: google-images-albumart-provider
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Search Google for albumart.
+ This is a albumart provider that tries to find albumart via Google
+ image searches.
