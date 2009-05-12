@@ -1137,7 +1137,7 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 		g_signal_new ("started",
 			      G_OBJECT_CLASS_TYPE (object_class),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (ThumbnailerClass, ready),
+			      G_STRUCT_OFFSET (ThumbnailerClass, started),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE,
