@@ -56,7 +56,7 @@ libhildon_thumbnailer_exec_la_LIBADD = \
         $(GMODULE_LIBS) \
         $(GLIB_LIBS)
 
-libhildon_thumbnailer_epeg_la_SOURCES = epeg-plugin.c epeg-plugin.h
+libhildon_thumbnailer_epeg_la_SOURCES = epeg-plugin.c epeg-plugin.h epeg_private.h
 libhildon_thumbnailer_epeg_la_LDFLAGS = $(plugin_flags)
 libhildon_thumbnailer_epeg_la_CFLAGS = \
 	-I. -I$(top_srcdir)/daemon \

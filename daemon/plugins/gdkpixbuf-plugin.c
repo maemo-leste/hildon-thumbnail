@@ -192,8 +192,13 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file) &&
+		if (
+#ifdef LARGE_THUMBNAILS
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file) &&
+#endif
+#ifdef NORMAL_THUMBNAILS
 		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file) &&
+#endif
 		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file))
 			goto nerror_handler;
 
@@ -202,6 +207,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		if (nerror)
 			goto nerror_handler;
 
+#ifdef LARGE_THUMBNAILS
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file)) {
 
 			GdkPixbuf *pixbuf_large1 = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
@@ -247,6 +253,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		}
 
+#endif
+
+#ifdef NORMAL_THUMBNAILS
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file)) {
 
@@ -292,6 +301,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 
 		}
+
+#endif
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
 

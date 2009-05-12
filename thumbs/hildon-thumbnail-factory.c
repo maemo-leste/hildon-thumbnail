@@ -102,6 +102,16 @@ typedef struct {
 #define TRACKER_METADATA_PATH		 "/org/freedesktop/Tracker/Metadata"
 #define TRACKER_METADATA_INTERFACE	 "org.freedesktop.Tracker.Metadata"
 
+#ifdef LARGE_THUMBNAILS
+	#define CHECKER 0
+#else
+	#ifdef NORMAL_THUMBNAILS
+		#define CHECKER 1
+	#else
+		#define CHECKER 2
+	#endif
+#endif
+
 static DBusGProxy*
 get_tracker_proxy (void)
 {
@@ -312,9 +322,12 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 
 		if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = g_strdup (cropped);
-		} else if (item->width > 128 || item->height > 128) {
+		}
+		else if (item->width > 128 || item->height > 128) {
 			path = g_strdup (large);
-		} else {
+			path = g_strdup (normal);
+		} 
+		else {
 			path = g_strdup (normal);
 		}
 
@@ -414,9 +427,11 @@ on_task_finished (DBusGProxy *proxy_,
 
 			if (item->flags & HILDON_THUMBNAIL_FLAG_CROP) {
 				path = cropped;
-			} else if (item->width > 128 || item->height > 128) {
+			} 
+			else if (item->width > 128 || item->height > 128) {
 				path = large;
-			} else {
+			} 
+			else {
 				path = normal;
 			}
 
@@ -624,6 +639,7 @@ have_all_cb (gpointer user_data)
 
 	g_object_unref (local);
 
+
 	local = g_file_new_for_uri (info->local_normal);
 
 	if (g_file_query_exists (local, NULL)) {
@@ -663,6 +679,20 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	GStrv mimes;
 	gboolean have_all = FALSE;
 	guint y = 0;
+	gboolean do_cropped = TRUE;
+
+#ifdef LARGE_THUMBNAILS
+	do_cropped = (flags & HILDON_THUMBNAIL_FLAG_CROP);
+#endif
+
+#ifdef NORMAL_THUMBNAILS
+	do_cropped = (flags & HILDON_THUMBNAIL_FLAG_CROP);
+#endif
+
+	if (do_cropped)
+		flags |= HILDON_THUMBNAIL_FLAG_CROP;
+	else
+		flags &= ~HILDON_THUMBNAIL_FLAG_CROP;
 
 	g_return_val_if_fail(uri != NULL && mime_type != NULL && callback != NULL,
 			     NULL);
@@ -687,13 +717,16 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
 				break;
-		} else if (width > 128 || height > 128) {
+		} 
+		else if (width > 128 || height > 128) {
 			if (g_file_test (large, G_FILE_TEST_EXISTS))
 				break;
-		} else {
+		} 
+		else {
 			if (g_file_test (normal, G_FILE_TEST_EXISTS))
 				break;
 		}
+
 	}
 
 	if (flags & HILDON_THUMBNAIL_FLAG_RECREATE) {
@@ -707,10 +740,12 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
 			path = cropped;
 			luri = local_cropped;
-		} else if (width > 128) {
+		} 
+		else if (width > 128) {
 			path = large;
 			luri = local_large;
-		} else {
+		} 
+		else {
 			path = normal;
 			luri = local_normal;
 		}
@@ -1046,7 +1081,9 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 			path = g_filename_to_uri(cropped, NULL, NULL);
 		g_object_unref (fcropped);
 
-	} else if (width <= 128 || height <= 128) {
+	} 
+#ifdef LARGE_THUMBNAILS
+	else if (width <= 128 || height <= 128) {
 
 		GFile *fnormal = g_file_new_for_uri (local_normal);
 		if (g_file_query_exists (fnormal, NULL))
@@ -1054,7 +1091,9 @@ hildon_thumbnail_get_uri (const gchar *uri, guint width, guint height, gboolean 
 		else 
 			path = g_filename_to_uri (normal, NULL, NULL);
 		g_object_unref (fnormal);
-	} else {
+	} 
+#endif
+	else {
 		GFile *flarge = g_file_new_for_uri (local_large);
 		if (g_file_query_exists (flarge, NULL))
 			path = g_strdup (local_large);

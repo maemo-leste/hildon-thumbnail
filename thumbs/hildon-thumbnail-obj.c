@@ -79,6 +79,17 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
 #define FACTORY_ERROR g_quark_from_static_string (HILDON_THUMBNAIL_APPLICATION)
 
+
+#ifdef LARGE_THUMBNAILS
+	#define CHECKER 0
+#else
+	#ifdef NORMAL_THUMBNAILS
+		#define CHECKER 1
+	#else
+		#define CHECKER 2
+	#endif
+#endif
+
 static void
 create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 {
@@ -113,13 +124,16 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 						       &lpaths[2], 
 						       (y==0));
 
-		for (i = 0; i < 3 && have; i++) {
+
+		for (i = CHECKER; i < 3 && have; i++) {
 			gchar *localp = g_filename_from_uri (lpaths[i], NULL, NULL);
 			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
 				g_file_test (localp, G_FILE_TEST_EXISTS));
 			g_free (localp);
 		}
 	}
+
+	// Cropped is always true in Maemo's case
 
 	if (r_priv->cropped) {
 		local = g_file_new_for_uri (lpaths[2]);
@@ -462,7 +476,7 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 						       &lpaths[2], 
 						       (y==0));
 
-		for (i = 0; i < 3 && have; i++) {
+		for (i = CHECKER; i < 3  && have; i++) {
 			gchar *localp = g_filename_from_uri (lpaths[i], NULL, NULL);
 			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
 				g_file_test (localp, G_FILE_TEST_EXISTS));
@@ -484,7 +498,19 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	r_priv->pcallback = pcallback;
 	r_priv->ucallback = ucallback;
 	r_priv->destroy = destroy;
+
+	/* This only matters if we have either large or normal thumbs enabled, 
+	 * else we always want the cropped ones */
+
+	r_priv->cropped = TRUE;
+
+#ifdef LARGE_THUMBNAILS
 	r_priv->cropped = cropped;
+#endif
+
+#ifdef NORMAL_THUMBNAILS
+	r_priv->cropped = cropped;
+#endif
 
 	mime_types = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
 

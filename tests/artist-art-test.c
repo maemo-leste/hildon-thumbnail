@@ -34,6 +34,16 @@ on_art_back (HildonAlbumartFactory *self, GdkPixbuf *albumart, GError *error, gp
 }
 #endif
 
+void _thumbnail_created_cb2 (HildonThumbnailFactoryHandle handle,
+    gpointer user_data, GdkPixbuf *thumbnail, GError *error)
+{
+    if(thumbnail)                                                                                      
+    {                                         
+	gtk_image_set_from_pixbuf (user_data, thumbnail) ;  
+    }
+
+}
+
 static void 
 _thumbnail_created_cb (HildonThumbnailFactory *self,
             GdkPixbuf *thumbnail, GError *error, gpointer user_data) {                             
@@ -41,7 +51,8 @@ _thumbnail_created_cb (HildonThumbnailFactory *self,
     if(error)
         printf("Error: %s\n",error->message);                                                          
     if(thumbnail)                                                                                      
-    {                                                                                                  
+    {                                         
+	gtk_image_set_from_pixbuf (user_data, thumbnail) ;  
     }
     else printf("thumbnail: NULL\n");                                                                  
 } 
@@ -88,16 +99,21 @@ g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
                  "2008 Grammy Nominees", "album"));
 */
 
+
  hildon_thumbnail_factory_request_pixbuf (hildon_thumbnail_factory_get_instance (),
             "file:///home/pvanhoof/.cache/media-art/album-7215ee9c7d9dc229d2921a40e899ec5f-3e2d42595d728926108329d9771c92d7.jpeg",
-            128, 128,
+            256, 256,
             FALSE,
             NULL,
             _thumbnail_created_cb,
-            NULL/*item*/,
+            user_data,
             NULL);
 
-
+/*
+hildon_thumbnail_factory_load(
+            "file:///home/pvanhoof/.cache/media-art/album-7215ee9c7d9dc229d2921a40e899ec5f-3e2d42595d728926108329d9771c92d7.jpeg", "image/jpeg",
+            256, 256, _thumbnail_created_cb2, user_data);
+*/
 /*
 	g_object_unref (f);
 	g_object_unref (r1);
@@ -134,7 +150,7 @@ main(int argc, char **argv)
 	gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET (button), FALSE, TRUE, 0);
 
 	g_signal_connect (G_OBJECT (button), "clicked", 
-					  G_CALLBACK (on_button_clicked), NULL);
+					  G_CALLBACK (on_button_clicked), imaget);
 
 	gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (box));
 	gtk_widget_show_all (GTK_WIDGET (window));

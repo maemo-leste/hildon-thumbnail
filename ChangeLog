@@ -1,3 +1,14 @@
+2009-05-12  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* tests/artist-art-test.c
+	* thumbs/hildon-thumbnail-factory.c
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/Makefile.am
+	* daemon/plugins/epeg-plugin.c
+	* configure.ac: Restoring the orientation for JPeg images. This fixes Bug #91658
+
 2009-05-12  Ottela Mikael  <mikael.ottela@ixonos.com>
 
 	* debian/hildon-thumbnail.install

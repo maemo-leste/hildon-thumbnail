@@ -3,6 +3,8 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE()
 
+LIBEXIF_REQUIRED=0.6
+
 AM_CONFIG_HEADER(config.h)
 
 AC_CHECK_HEADERS(malloc.h)
@@ -217,6 +219,40 @@ AM_CONDITIONAL(ENABLE_OSSO, test x$have_osso = xyes)
 if test "x$have_osso" != "xno" ; then
    AC_DEFINE(HAVE_OSSO, 1, [Define if we have OSSO])
 fi
+
+
+##################################################################
+# Check for libexif
+##################################################################
+
+AC_ARG_ENABLE(libexif, 
+              AS_HELP_STRING([--enable-libexif],
+		             [enable extractor for exif data [[default=auto]]]),,
+	      [enable_libexif=auto])
+
+if test "x$enable_libexif" != "xno" ; then
+   PKG_CHECK_MODULES(LIBEXIF, 
+	             [libexif >= $LIBEXIF_REQUIRED],
+		     [have_libexif=yes],
+		     [have_libexif=no])
+
+   AC_SUBST(LIBEXIF_CFLAGS)
+   AC_SUBST(LIBEXIF_LIBS)
+
+   if test "x$have_libexif" = "xyes"; then
+      AC_DEFINE(HAVE_LIBEXIF, [], [Define if we have libexif])
+   fi
+else
+   have_libexif="no  (disabled)"
+fi
+
+if test "x$enable_libexif" = "xyes"; then
+   if test "x$have_libexif" != "xyes"; then
+      AC_MSG_ERROR([Couldn't find libexif >= $LIBEXIF_REQUIRED.])
+   fi
+fi
+
+AM_CONDITIONAL(HAVE_EXIF, test "x$have_libexif" = "xyes")
 
 
 # --- Output ---

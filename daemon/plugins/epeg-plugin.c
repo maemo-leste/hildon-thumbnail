@@ -22,6 +22,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
  *
+ *
+ * Orientation code got copied in part from LGPL Gtk+'s gdk-pixbuf/io-jpeg.c,
+ * original author of Gtk+'s io-jpeg.c is is Michael Zucchi
  */
 
 
@@ -37,6 +40,16 @@
 
 #include <Epeg.h>
 
+#ifdef HAVE_LIBEXIF
+#include <setjmp.h>
+#include <jpeglib.h>
+#include <jerror.h>
+#include <libexif/exif-data.h>
+#include "epeg_private.h"
+#define EXIF_JPEG_MARKER   JPEG_APP0+1
+#define EXIF_IDENT_STRING  "Exif\000\000"
+#endif /* HAVE_LIBEXIF */
+
 #define EPEG_ERROR_DOMAIN	"HildonThumbnailerEpeg"
 #define EPEG_ERROR		g_quark_from_static_string (EPEG_ERROR_DOMAIN)
 
@@ -45,10 +58,249 @@
 
 #include <hildon-thumbnail-plugin.h>
 
+#ifdef LARGE_THUMBNAILS
+	#define LARGE	LARGE
+#else
+	#ifdef NORMAL_THUMBNAILS
+		#define LARGE	128
+	#else
+		#define LARGE	124
+	#endif
+#endif
+
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
 static GFileMonitor *monitor = NULL;
+
+#ifdef HAVE_LIBEXIF
+/* All this orientation stuff is copied from Gtk+'s gdk-pixbuf/io-jpeg.c */
+
+const char leth[]  = {0x49, 0x49, 0x2a, 0x00};	// Little endian TIFF header
+const char beth[]  = {0x4d, 0x4d, 0x00, 0x2a};	// Big endian TIFF header
+const char types[] = {0x00, 0x01, 0x01, 0x02, 0x04, 0x08, 0x00, 
+		      0x08, 0x00, 0x04, 0x08}; 	// size in bytes for EXIF types
+ 
+#define DE_ENDIAN16(val) endian == G_BIG_ENDIAN ? GUINT16_FROM_BE(val) : GUINT16_FROM_LE(val)
+#define DE_ENDIAN32(val) endian == G_BIG_ENDIAN ? GUINT32_FROM_BE(val) : GUINT32_FROM_LE(val)
+ 
+#define ENDIAN16_IT(val) endian == G_BIG_ENDIAN ? GUINT16_TO_BE(val) : GUINT16_TO_LE(val)
+#define ENDIAN32_IT(val) endian == G_BIG_ENDIAN ? GUINT32_TO_BE(val) : GUINT32_TO_LE(val)
+ 
+#define EXIF_JPEG_MARKER   JPEG_APP0+1
+#define EXIF_IDENT_STRING  "Exif\000\000"
+
+static unsigned short de_get16(void *ptr, guint endian)
+{
+       unsigned short val;
+
+       memcpy(&val, ptr, sizeof(val));
+       val = DE_ENDIAN16(val);
+
+       return val;
+}
+
+static unsigned int de_get32(void *ptr, guint endian)
+{
+       unsigned int val;
+
+       memcpy(&val, ptr, sizeof(val));
+       val = DE_ENDIAN32(val);
+
+       return val;
+}
+
+
+static gint 
+get_orientation (j_decompress_ptr cinfo)
+{
+	/* This function looks through the meta data in the libjpeg decompress structure to
+	   determine if an EXIF Orientation tag is present and if so return its value (1-8). 
+	   If no EXIF Orientation tag is found 0 (zero) is returned. */
+
+ 	guint   i;              /* index into working buffer */
+ 	guint   orient_tag_id;  /* endianed version of orientation tag ID */
+	guint   ret;            /* Return value */
+ 	guint   offset;        	/* de-endianed offset in various situations */
+ 	guint   tags;           /* number of tags in current ifd */
+ 	guint   type;           /* de-endianed type of tag used as index into types[] */
+ 	guint   count;          /* de-endianed count of elements in a tag */
+        guint   tiff = 0;   	/* offset to active tiff header */
+        guint   endian = 0;   	/* detected endian of data */
+
+	jpeg_saved_marker_ptr exif_marker;  /* Location of the Exif APP1 marker */
+	jpeg_saved_marker_ptr cmarker;	    /* Location to check for Exif APP1 marker */
+
+	/* check for Exif marker (also called the APP1 marker) */
+	exif_marker = NULL;
+	cmarker = cinfo->marker_list;
+	while (cmarker) {
+		if (cmarker->marker == EXIF_JPEG_MARKER) {
+			/* The Exif APP1 marker should contain a unique
+			   identification string ("Exif\0\0"). Check for it. */
+			if (!memcmp (cmarker->data, EXIF_IDENT_STRING, 6)) {
+				exif_marker = cmarker;
+				}
+			}
+		cmarker = cmarker->next;
+	}
+	  
+	/* Did we find the Exif APP1 marker? */
+	if (exif_marker == NULL)
+		return 0;
+
+	/* Do we have enough data? */
+	if (exif_marker->data_length < 32)
+		return 0;
+
+        /* Check for TIFF header and catch endianess */
+ 	i = 0;
+
+	/* Just skip data until TIFF header - it should be within 16 bytes from marker start.
+	   Normal structure relative to APP1 marker -
+		0x0000: APP1 marker entry = 2 bytes
+	   	0x0002: APP1 length entry = 2 bytes
+		0x0004: Exif Identifier entry = 6 bytes
+		0x000A: Start of TIFF header (Byte order entry) - 4 bytes  
+		    	- This is what we look for, to determine endianess.
+		0x000E: 0th IFD offset pointer - 4 bytes
+
+		exif_marker->data points to the first data after the APP1 marker
+		and length entries, which is the exif identification string.
+		The TIFF header should thus normally be found at i=6, below,
+		and the pointer to IFD0 will be at 6+4 = 10.
+ 	*/
+		    
+ 	while (i < 16) {
+ 
+ 		/* Little endian TIFF header */
+ 		if (memcmp (&exif_marker->data[i], leth, 4) == 0){ 
+ 			endian = G_LITTLE_ENDIAN;
+                }
+ 
+ 		/* Big endian TIFF header */
+ 		else if (memcmp (&exif_marker->data[i], beth, 4) == 0){ 
+ 			endian = G_BIG_ENDIAN;
+                }
+ 
+ 		/* Keep looking through buffer */
+ 		else {
+ 			i++;
+ 			continue;
+ 		}
+ 		/* We have found either big or little endian TIFF header */
+ 		tiff = i;
+ 		break;
+        }
+
+ 	/* So did we find a TIFF header or did we just hit end of buffer? */
+ 	if (tiff == 0) 
+		return 0;
+ 
+        /* Endian the orientation tag ID, to locate it more easily */
+        orient_tag_id = ENDIAN16_IT(0x112);
+ 
+        /* Read out the offset pointer to IFD0 */
+        offset  = de_get32(&exif_marker->data[i] + 4, endian);
+ 	i       = i + offset;
+
+	/* Check that we still are within the buffer and can read the tag count */
+	if ((i + 2) > exif_marker->data_length)
+		return 0;
+
+	/* Find out how many tags we have in IFD0. As per the TIFF spec, the first
+	   two bytes of the IFD contain a count of the number of tags. */
+	tags    = de_get16(&exif_marker->data[i], endian);
+	i       = i + 2;
+
+	/* Check that we still have enough data for all tags to check. The tags
+	   are listed in consecutive 12-byte blocks. The tag ID, type, size, and
+	   a pointer to the actual value, are packed into these 12 byte entries. */
+	if ((i + tags * 12) > exif_marker->data_length)
+		return 0;
+
+	/* Check through IFD0 for tags of interest */
+	while (tags--){
+		type   = de_get16(&exif_marker->data[i + 2], endian);
+		count  = de_get32(&exif_marker->data[i + 4], endian);
+
+		/* Is this the orientation tag? */
+		if (memcmp (&exif_marker->data[i], (char *) &orient_tag_id, 2) == 0){ 
+ 
+			/* Check that type and count fields are OK. The orientation field 
+			   will consist of a single (count=1) 2-byte integer (type=3). */
+			if (type != 3 || count != 1) return 0;
+
+			/* Return the orientation value. Within the 12-byte block, the
+			   pointer to the actual data is at offset 8. */
+			ret =  de_get16(&exif_marker->data[i + 8], endian);
+			return ret <= 8 ? ret : 0;
+		}
+		/* move the pointer to the next 12-byte tag field. */
+		i = i + 12;
+	}
+
+	return 0; /* No EXIF Orientation tag found */
+}
+
+struct tej_error_mgr {
+	struct jpeg_error_mgr jpeg;
+	jmp_buf setjmp_buffer;
+};
+
+
+static void 
+on_jpeg_error_exit (j_common_ptr cinfo)
+{
+	struct tej_error_mgr *h = (struct tej_error_mgr *) cinfo->err;
+	/* (*cinfo->err->output_message)(cinfo); */
+	longjmp (h->setjmp_buffer, 1);
+}
+
+#endif
+
+
+static void
+restore_orientation (const gchar *path, GdkPixbuf *pixbuf)
+{
+#ifdef HAVE_LIBEXIF
+	FILE *f = fopen (path, "r");
+	if (f) {
+		int is_otag;
+		char otag_str[5];
+		struct jpeg_decompress_struct  cinfo;
+		struct tej_error_mgr	       tejerr;
+		struct jpeg_marker_struct     *marker;
+		
+		cinfo.err = jpeg_std_error (&tejerr.jpeg);
+		tejerr.jpeg.error_exit = on_jpeg_error_exit;
+
+		if (setjmp (tejerr.setjmp_buffer)) {
+			goto fail;
+		}
+
+		jpeg_create_decompress (&cinfo);
+		jpeg_stdio_src (&cinfo, f);
+
+		jpeg_save_markers (&cinfo, EXIF_JPEG_MARKER, 0xffff);
+		jpeg_read_header (&cinfo, TRUE);
+
+		is_otag = get_orientation (&cinfo);
+
+		if (is_otag) {
+			g_snprintf (otag_str, sizeof (otag_str), "%d", is_otag);
+			gdk_pixbuf_set_option (pixbuf, "orientation", otag_str);
+		}
+
+		jpeg_finish_decompress (&cinfo);
+
+		fail:
+		jpeg_destroy_decompress (&cinfo);
+		fclose (f);
+	}
+
+#endif
+}
 
 const gchar** 
 hildon_thumbnail_plugin_supported (void)
@@ -133,6 +385,60 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 
 
 static void
+wanted_size (int a, int b, int width, int height, int *w, int *h) {
+	int x = width, y = height;
+	int nx, ny;
+	double na, nb;
+	double offx = 0, offy = 0;
+	double scax, scay;
+
+	na = a;
+	nb = b;
+
+	if(a < x && b < y) {
+		nx = a;
+		ny = b;
+	} else {
+		int u, v;
+
+		nx = u = x;
+		ny = v = y;
+
+		if(a < x) {
+			nx = a;
+			u = a;
+		}
+
+		if(b < y) {
+			ny = b;
+		 	v = b;
+		}
+
+		if(a * y < b * x) {
+			nb = (double)a * v / u;
+			// Center
+			offy = (double)(b - nb) / 2;
+		} else {
+			na = (double)b * u / v;
+			// Center
+			offx = (double)(a - na) / 2;
+		}
+	}
+
+	scax = scay = (double)nx / na;
+
+	offx = -offx * scax;
+	offy = -offy * scay;
+
+	*w = nx;
+	*h = ny;
+
+	return;
+}
+
+
+
+static void
 destroy_pixbuf (guchar *pixels, gpointer data)
 {
 	epeg_pixels_free ((Epeg_Image *) data, pixels);
@@ -154,7 +460,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		gboolean had_err = FALSE;
 		guchar *data;
 		GdkPixbuf *pixbuf_large = NULL, 
-			  *pixbuf_normal, 
+			  *pixbuf_normal, *pixbuf_large1 = NULL,
 			  *pixbuf_cropped;
 		guint64 mtime;
 		GFileInfo *finfo = NULL;
@@ -164,6 +470,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		guint width; guint height;
 		guint rowstride; 
 		gboolean err_file = FALSE;
+		int ww, wh;
 
 		file = g_file_new_for_uri (uri);
 		path = g_file_get_path (file);
@@ -182,8 +489,14 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		mtime = g_file_info_get_attribute_uint64 (finfo, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 
-		if (!hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file) &&
+
+		if (
+#ifdef LARGE_THUMBNAILS
+		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file) &&
+#endif
+#ifdef NORMAL_THUMBNAILS
 		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file) &&
+#endif
 		    !hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file))
 			goto nerror_handler;
 
@@ -196,24 +509,27 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		epeg_size_get (im, &ow, &oh);
 
-		if (ow < 256 || oh < 256) {
+		wanted_size (ow, oh, LARGE, LARGE, &ww, &wh);
 
+		if (ow < LARGE || oh < LARGE) {
 			/* Epeg doesn't behave as expected when the destination is larger
 			 * than the source */
 
-			pixbuf_large = gdk_pixbuf_new_from_file_at_size (path, 
-									 256, 256, 
+			pixbuf_large1 = gdk_pixbuf_new_from_file_at_size (path, 
+									 ww, wh, 
 									 &nerror);
 			epeg_close (im);
 
-			if (nerror)
+			if (nerror) {
+				pixbuf_large = pixbuf_large1;
 				goto nerror_handler;
+			}
 
 		} else {
 			//gchar *large=NULL, *normal=NULL, *cropped=NULL;
 
 			epeg_decode_colorspace_set (im, EPEG_RGB8);
-			epeg_decode_size_set (im, 256, 256);
+			epeg_decode_size_set (im, ww, wh);
 			epeg_quality_set (im, 75);
 			epeg_thumbnail_comments_enable (im, 0);
 
@@ -226,19 +542,27 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			//pixbuf_large = gdk_pixbuf_new_from_file (large, &nerror);
 
-			//if (nerror)
+			//if (nerror) {
+			//	pixbuf_large = pixbuf_large1;
 			//	goto nerror_handler;
+			// }
 
-			data = (guchar *) epeg_pixels_get (im, 0, 0, 256, 256);
+			data = (guchar *) epeg_pixels_get (im, 0, 0, LARGE, LARGE);
 
-			pixbuf_large = gdk_pixbuf_new_from_data ((const guchar*) data, 
+			pixbuf_large1 = gdk_pixbuf_new_from_data ((const guchar*) data, 
 									  GDK_COLORSPACE_RGB, FALSE, 
-									  8, 256, 256, 256*3,
+									  8, LARGE, LARGE, LARGE*3,
 									  destroy_pixbuf, im);
 
-			
+			restore_orientation (path, pixbuf_large1);
+
 		}
 
+		pixbuf_large = gdk_pixbuf_apply_embedded_orientation (pixbuf_large1);
+
+		g_object_unref (pixbuf_large1);
+
+#ifdef LARGE_THUMBNAILS
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file)) {
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_large);
@@ -260,6 +584,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 
 		}
+#endif
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
 
@@ -286,7 +611,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 		}
 
-
+#ifdef NORMAL_THUMBNAILS
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file)) {
 
 			pixbuf_normal = gdk_pixbuf_scale_simple (pixbuf_large,
@@ -314,6 +639,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				goto nerror_handler;
 
 		}
+#endif
 
 		nerror_handler:
 
