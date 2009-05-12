@@ -491,7 +491,7 @@ main (int argc, char **argv)
 
 #ifdef HAVE_OSSO
 		lowmemlim = osso_mem_get_lowmem_limit ();
-		if (lowmemlim > 0 && lowmemlim < 512) {
+		if (lowmemlim > 0 && lowmemlim < 512 * 1024 * 1024) {
 			if (0 == osso_mem_saw_enable(lowmemlim >> 3, 1024, thumbnailer_oom_func, NULL) ) {
 				g_main_loop_run (main_loop);
 				osso_mem_saw_disable();
