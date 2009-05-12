@@ -122,50 +122,39 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 	}
 
 	if (r_priv->cropped) {
-		GFile *temp = g_file_new_for_uri (lpaths[2]);
-		if (!g_file_query_exists (temp, NULL)) {
-			filei = g_file_new_for_path (paths[2]);
-			g_object_unref (temp);
-		} else
-			filei = temp;
-	} else if (r_priv->width > 128 || r_priv->height > 128) {
-		GFile *temp = g_file_new_for_uri (lpaths[0]);
-		if (!g_file_query_exists (temp, NULL)) {
-			filei = g_file_new_for_path (paths[0]);
-			g_object_unref (temp);
-		} else
-			filei = temp;
-	} else {
-		GFile *temp = g_file_new_for_uri (lpaths[1]);
-		if (!g_file_query_exists (temp, NULL)) {
-			filei = g_file_new_for_path (paths[1]);
-			g_object_unref (temp);
-		} else
-			filei = temp;
-	}
-
-	if (r_priv->cropped) {
 		local = g_file_new_for_uri (lpaths[2]);
 		if (!g_file_query_exists (local, NULL)) {
+			if (filei)
+				g_object_unref (filei);
 			filei = g_file_new_for_path (paths[2]);
 			g_object_unref (local);
 		} else {
+			if (filei)
+				g_object_unref (filei);
 			filei = local;
 		}
 	} else if (r_priv->width > 128 || r_priv->height > 128) {
 		local = g_file_new_for_uri (lpaths[1]);
 		if (!g_file_query_exists (local, NULL)) {
+			if (filei)
+				g_object_unref (filei);
 			filei = g_file_new_for_path (paths[1]);
 			g_object_unref (local);
 		} else {
+			if (filei)
+				g_object_unref (filei);
 			filei = local;
 		}
 	} else {
 		local = g_file_new_for_uri (lpaths[0]);
 		if (!g_file_query_exists (local, NULL)) {
+			if (filei)
+				g_object_unref (filei);
 			filei = g_file_new_for_path (paths[0]);
 			g_object_unref (local);
 		} else {
+			if (filei)
+				g_object_unref (filei);
 			filei = local;
 		}
 	}

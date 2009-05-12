@@ -1,5 +1,9 @@
 2009-05-12  Philip Van Hoof  <pvanhoof@codeminded.be>
 
+	* thumbs/hildon-thumbnail-obj.c: Memleak fix, Bugfix for Bug #116170
+
+2009-05-12  Philip Van Hoof  <pvanhoof@codeminded.be>
+
 	* daemon/hildon-thumbnail-plugin.h:
 	* daemon/plugins/gdkpixbuf-plugin.c:
 	* daemon/plugins/gdkpixbuf-png-out-plugin.c:
