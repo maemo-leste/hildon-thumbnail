@@ -43,7 +43,7 @@ thumb_hal_init (void)
 	filep = fopen (CHECK_FILE, "r");
 	if (filep) {
 		/* See above */
-		sleep (5);
+		sleep (15);
 		fclose (filep);
 		g_unlink (CHECK_FILE);
 	}
