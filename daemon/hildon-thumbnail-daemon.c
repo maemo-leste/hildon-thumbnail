@@ -454,6 +454,7 @@ main (int argc, char **argv)
 		DBusGProxy *manager_proxy;
 		GFile *file, *fileo;
 		GFileMonitor *monitor, *monitoro;
+		gint lowmemlim;
 
 		thumbnail_manager_do_init (connection, &manager, &error);
 		thumbnailer_do_init (connection, manager, &thumbnailer, &error);
@@ -489,13 +490,17 @@ main (int argc, char **argv)
 				       main_loop);
 
 #ifdef HAVE_OSSO
-		if (0 == osso_mem_saw_enable(osso_mem_get_lowmem_limit() >> 3, 1024, thumbnailer_oom_func, NULL) ) {
+		lowmemlim = osso_mem_get_lowmem_limit ();
+		if (lowmemlim > 0 && lowmemlim < 512) {
+			if (0 == osso_mem_saw_enable(lowmemlim >> 3, 1024, thumbnailer_oom_func, NULL) ) {
+				g_main_loop_run (main_loop);
+				osso_mem_saw_disable();
+			}
+			else {
+				thumbnailer_oom();
+			}
+		} else
 			g_main_loop_run (main_loop);
-			osso_mem_saw_disable();
-		}
-		else {
-			thumbnailer_oom();
-		}
 #else
 		g_main_loop_run (main_loop);
 #endif
