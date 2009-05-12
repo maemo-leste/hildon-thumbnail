@@ -1,7 +1,7 @@
 AC_INIT([hildon-thumbnail], [3.0.25])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(tar-ustar)
+AM_INIT_AUTOMAKE()
 
 AM_CONFIG_HEADER(config.h)
 
@@ -45,6 +45,10 @@ AC_SUBST(PLAYBACK_CFLAGS)
 AC_SUBST(PLAYBACK_LIBS)
 
 AM_CONDITIONAL(HAVE_PLAYBACK, test "$have_playback" = "yes")
+
+if test "$have_playback" = "yes"; then
+  AC_DEFINE(HAVE_PLAYBACK, [], [Playback])
+fi
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0, [have_gtk=yes], [have_gtk=no])
 AC_SUBST(GTK_CFLAGS)
@@ -225,4 +229,6 @@ AC_OUTPUT(Makefile tests/Makefile \
 	  thumbs/Makefile \
           albumart-providers/Makefile \
           albumart-providers/googleimages/Makefile \
+	  thumbnailers/Makefile \
+	  thumbnailers/gst-video-thumbnailer/Makefile \
           hildon-thumbnail.pc)

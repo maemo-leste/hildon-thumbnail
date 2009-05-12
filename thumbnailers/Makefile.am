@@ -1,0 +1,2 @@
+SUBDIRS = gst-video-thumbnailer
+

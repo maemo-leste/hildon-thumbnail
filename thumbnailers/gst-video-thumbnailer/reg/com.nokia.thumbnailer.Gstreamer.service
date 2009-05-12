@@ -1,0 +1,5 @@
+[D-BUS Thumbnailer]
+Name=com.nokia.thumbnailer.Gstreamer
+MimeTypes=video/avi;video/mpeg;video/x-msvideo
+Comment=The gstreamer based video thumbnailer
+UriSchemes=file

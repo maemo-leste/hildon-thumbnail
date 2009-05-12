@@ -21,6 +21,9 @@
 /* Define if we have OSSO */
 #undef HAVE_OSSO
 
+/* Playback */
+#undef HAVE_PLAYBACK
+
 /* SQLite3 */
 #undef HAVE_SQLITE3
 

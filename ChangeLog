@@ -1,3 +1,27 @@
+2009-05-12  Ottela Mikael  <mikael.ottela@ixonos.com>
+
+	* debian/hildon-thumbnail.install
+	* config.h.in
+	* configure.ac
+	* daemon/plugins/Makefile.am
+	* Makefile.am
+	* thumbnailers
+	* thumbnailers/gst-video-thumbnailer
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-thumber.c
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-main.h
+	* thumbnailers/gst-video-thumbnailer/com.nokia.thumbnailer.Gstreamer.service.in
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-thumber.h
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c
+	* thumbnailers/gst-video-thumbnailer/gst-video-thumbnailer-marshal.list
+	* thumbnailers/gst-video-thumbnailer/gst-video-thumbnailer.xml
+	* thumbnailers/gst-video-thumbnailer/Makefile.am
+	* thumbnailers/gst-video-thumbnailer/gst-video-thumbnailer-glue.h
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.h
+	* thumbnailers/gst-video-thumbnailer/reg
+	* thumbnailers/gst-video-thumbnailer/reg/com.nokia.thumbnailer.Gstreamer.service
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-main.c
+	* thumbnailers/Makefile.am: Initial commit with new video thumbnailer
+
 2009-05-12  Leonid Moiseichuk  <leonid.moiseichuk@nokia.com>
 	
 	* daemon/hildon-thumbnail-daemon.c: 

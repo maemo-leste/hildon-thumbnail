@@ -1,13 +1,10 @@
-#ifndef __GDKPIXBUF_PLUGIN_H__
-#define __GDKPIXBUF_PLUGIN_H__
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 
 /*
  * This file is part of hildon-thumbnail package
  *
- * Copyright (C) 2005 Nokia Corporation.  All Rights reserved.
+ * Copyright (C) 2009 Nokia Corporation.  All Rights reserved.
  *
- * Contact: Marius Vollmer <marius.vollmer@nokia.com>
- * Author: Philip Van Hoof <philip@codeminded.be>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -24,5 +21,10 @@
  * 02110-1301 USA
  *
  */
+
+#ifndef __GST_THUMB_MAIN_H__
+#define __GST_THUMB_MAIN_H__
+
+void                gst_thumb_main_quit (void);
 
 #endif
