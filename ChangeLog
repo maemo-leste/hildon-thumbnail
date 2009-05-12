@@ -1,3 +1,19 @@
+2009-05-12  Leonid Moiseichuk  <leonid.moiseichuk@nokia.com>
+	
+	* daemon/hildon-thumbnail-daemon.c: 
+	
+	1. config.h and HAVE_OSSO was not known = memory checks was never used
+	2. oom functions has sense to have conditionally compiled
+	3. thumbnailer_oom is just for debugging purposes when users complains
+	4. memory tracking are expensive functions, so they shall be enabled
+	as late as possible. But before initialization has sense to check memory
+	conditions and exit if they are bad
+	5. oom_adj nice to have set to 16 to notify kernel that this process
+	can be killed if used memory grows too much
+	6. limit will be counted as 1/8 of current memory, 64 bytes is too
+	stong for check, I suggest to use 1024 and reduce if we will get problems. 64
+	was set due to broken .gif files
+
 2009-05-12  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c: Memleak fix, Bugfix for Bug #116170

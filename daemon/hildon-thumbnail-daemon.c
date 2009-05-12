@@ -23,6 +23,7 @@
  *
  */
 
+#include "config.h"
 #include <linux/sched.h>
 #include <sched.h>
 
@@ -39,6 +40,10 @@
 #include <malloc.h>
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <glib.h>
@@ -369,11 +374,32 @@ on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, 
 	g_free (path);
 }
 
+#ifdef HAVE_OSSO
 static void
 thumbnailer_oom_func (size_t cur, size_t max, void *data)
 {
 	exit(1);
 }
+
+
+static void
+thumbnailer_oom(void)
+{
+	osso_mem_usage_t usage;
+
+	osso_mem_get_usage(&usage);
+	g_critical ("system has not enough memory to handle thumbnails: %u KBytes available", usage.free >> 10);
+	thumbnailer_oom_func(0, 0, NULL);
+}
+
+static void set_oom_adj(void)
+{
+	int fd = open("/proc/self/oom_adj", O_WRONLY);
+	write(fd, "16", 2);
+	close(fd);
+}
+
+#endif
 
 static void
 create_dummy_files (void)
@@ -395,14 +421,16 @@ main (int argc, char **argv)
 {
 	DBusGConnection *connection;
 	GError *error = NULL;
-	int result;
 
 #if defined (HAVE_MALLOPT) && defined(M_MMAP_THRESHOLD)
 	mallopt (M_MMAP_THRESHOLD, 128 *1024);
 #endif
 
 #ifdef HAVE_OSSO
-	result = osso_mem_saw_enable(4 << 20, 64, thumbnailer_oom_func, NULL);
+	if ( osso_mem_in_lowmem_state() ) {
+		thumbnailer_oom();
+	}
+	set_oom_adj();
 #endif
 
 	g_type_init ();
@@ -460,7 +488,17 @@ main (int argc, char **argv)
 				       shut_down_after_timeout,
 				       main_loop);
 
+#ifdef HAVE_OSSO
+		if (0 == osso_mem_saw_enable(osso_mem_get_lowmem_limit() >> 3, 1024, thumbnailer_oom_func, NULL) ) {
+			g_main_loop_run (main_loop);
+			osso_mem_saw_disable();
+		}
+		else {
+			thumbnailer_oom();
+		}
+#else
 		g_main_loop_run (main_loop);
+#endif
 
 		thumb_hal_shutdown ();
 
@@ -487,10 +525,6 @@ main (int argc, char **argv)
 
 		g_main_loop_unref (main_loop);
 	}
-
-#ifdef HAVE_OSSO
-	osso_mem_saw_disable();
-#endif
 
 	return 0;
 }
