@@ -1,5 +1,11 @@
 2009-05-13  Philip Van Hoof  <pvanhoof@codeminded.be>
 
+	* thumbs/hildon-thumbnail-obj.c: Bugfix for problem spotted by Jukka
+	Alasalmi, the new OO API didn't care about the passed width and hight
+	when doing its final rescale
+
+2009-05-13  Philip Van Hoof  <pvanhoof@codeminded.be>
+
 	* daemon/thumbnailer.c: Made the large queue one for items > 50
 	instead of > 10, fixes Bug# 116353.
 

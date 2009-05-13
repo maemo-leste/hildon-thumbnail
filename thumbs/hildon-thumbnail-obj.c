@@ -498,6 +498,8 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 	r_priv->pcallback = pcallback;
 	r_priv->ucallback = ucallback;
 	r_priv->destroy = destroy;
+	r_priv->width = width;
+	r_priv->height = height;
 
 	/* This only matters if we have either large or normal thumbs enabled, 
 	 * else we always want the cropped ones */
