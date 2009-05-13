@@ -1,5 +1,14 @@
-hildon-thumbnail (3.0.25~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.25) unstable; urgency=low
 
+  [Mikael Ottela]
+  * New video thumbnailer.
+  
+  [Philip Van Hoof]
+  * Fixes: NB116353 - hildon-thumbnailer: last-in requests (Queue) are not
+    serviced first.
+  * Other fixes.
+
+  [Marius Vollmer]
   * Fixes: NB#114780 - hildon-thumbnailerd wakes up too often.
   * Remove albumart provider from hildon-thumbnail package and put it into
     the new google-images-albumart-provider package.
