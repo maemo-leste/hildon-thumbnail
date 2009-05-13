@@ -1,3 +1,8 @@
+2009-05-13  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+        * daemon/albumart.c: Making thumbnails for downloaded albumart.
+	Possibly fixes Bug# 114559 (needs verification)
+
 2009-05-13  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Relased 3.0.25

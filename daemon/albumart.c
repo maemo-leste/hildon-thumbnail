@@ -39,6 +39,7 @@
 #include "albumart-glue.h"
 #include "dbus-utils.h"
 #include "utils.h"
+#include "thumbnailer.h"
 
 #define ALBUMART_ERROR_DOMAIN	"HildonAlbumart"
 #define ALBUMART_ERROR		g_quark_from_static_string (ALBUMART_ERROR_DOMAIN)
@@ -81,6 +82,32 @@ typedef struct {
 	guint num;
 	gboolean unqueued;
 } WorkTask;
+
+
+
+static DBusGProxy*
+get_thumber (void)
+{
+	static DBusGProxy *proxy = NULL;
+
+	if (!proxy) {
+		GError          *error = NULL;
+		DBusGConnection *connection;
+
+		connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+
+		if (!error) {
+			proxy = dbus_g_proxy_new_for_name (connection,
+								  THUMBNAILER_SERVICE,
+								  THUMBNAILER_PATH,
+								  THUMBNAILER_INTERFACE);
+		} else {
+			g_error_free (error);
+		}
+	}
+
+	return proxy;
+}
 
 
 static gint 
@@ -214,8 +241,24 @@ do_the_work (WorkTask *task, gpointer user_data)
 					       0, task->num, 1, error->message);
 				g_clear_error (&error);
 			} else {
-					g_signal_emit (task->object, signals[READY_SIGNAL], 
-					       0, artist, album, kind, path);
+				gchar **uris = (gchar **) g_malloc0 (sizeof (gchar*) * 2);
+				const gchar *mimes[2] = { "image/jpeg", NULL };
+
+				uris[0] = g_filename_to_uri (path, NULL, NULL);
+				uris[1] = NULL;
+				
+				dbus_g_proxy_call_no_reply (get_thumber (),
+							    "Queue",
+							    G_TYPE_STRV, uris,
+							    G_TYPE_STRV, mimes,
+							    G_TYPE_UINT, 0,
+							    G_TYPE_INVALID,
+							    G_TYPE_INVALID);
+
+				g_signal_emit (task->object, signals[READY_SIGNAL], 
+				       0, artist, album, kind, path);
+
+				g_strfreev (uris);
 				handled = TRUE;
 			}
 
