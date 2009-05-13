@@ -290,7 +290,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 	g_mutex_lock (priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
 	priv->tasks = g_list_prepend (priv->tasks, task);
-	if (g_strv_length (urls) > 10)
+	if (g_strv_length (urls) > 50)
 		g_thread_pool_push (priv->large_pool, task, NULL);
 	else
 		g_thread_pool_push (priv->normal_pool, task, NULL);
