@@ -1,3 +1,11 @@
+2009-05-14  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer-marshal.list
+	* daemon/thumbnail-manager.c: Fixes for specialized thumbnailers, making
+	  the video thumbnailer work
+
 2009-05-13  Philip Van Hoof  <pvanhoof@codeminded.be>
 
         * daemon/albumart.c: Making thumbnails for downloaded albumart.

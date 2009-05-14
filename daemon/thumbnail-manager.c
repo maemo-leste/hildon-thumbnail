@@ -33,6 +33,7 @@
 #include "manager-glue.h"
 #include "dbus-utils.h"
 #include "thumbnailer.h"
+#include "thumbnailer-marshal.h"
 
 static GFile *homedir, *thumbdir;
 static GFileMonitor *homemon, *thumbmon;
@@ -68,8 +69,9 @@ thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *uri_scheme
 
 	g_mutex_lock (priv->mutex);
 	proxy = g_hash_table_lookup (priv->handlers, query);
-	if (proxy)
+	if (proxy) {
 		g_object_ref (proxy);
+	}
 	g_mutex_unlock (priv->mutex);
 
 	g_free (query);
@@ -96,6 +98,16 @@ thumbnail_manager_add (ThumbnailManager *object, gchar *mime_type, gchar *name)
 	mime_proxy = dbus_g_proxy_new_for_name (priv->connection, name, 
 						path,
 						SPECIALIZED_INTERFACE);
+
+	dbus_g_proxy_add_signal (mime_proxy, "Ready", 
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
+
+	dbus_g_proxy_add_signal (mime_proxy, "Error", 
+				 G_TYPE_STRING, 
+				 G_TYPE_INT,
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
 
 	g_free (path);
 
@@ -610,6 +622,13 @@ static void
 thumbnail_manager_class_init (ThumbnailManagerClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	dbus_g_object_register_marshaller (thumbnailer_marshal_VOID__STRING_INT_STRING,
+					   G_TYPE_NONE,
+					   G_TYPE_STRING,
+					   G_TYPE_INT,
+					   G_TYPE_STRING,
+					   G_TYPE_INVALID);
 
 	object_class->finalize = thumbnail_manager_finalize;
 	object_class->set_property = thumbnail_manager_set_property;

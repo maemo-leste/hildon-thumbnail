@@ -646,15 +646,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 		if (proxy) {
 			guint o;
 
-			dbus_g_proxy_add_signal (proxy, "Ready", 
-						 G_TYPE_STRING,
-						 G_TYPE_INVALID);
-
-			dbus_g_proxy_add_signal (proxy, "Error", 
-						 G_TYPE_STRING, 
-						 G_TYPE_INT,
-						 G_TYPE_STRING,
-						 G_TYPE_INVALID);
 
 			for (o = 0; urlss[o]; o++) {
 				GError *error = NULL;
@@ -689,13 +680,15 @@ do_the_work (WorkTask *task, gpointer user_data)
 				g_time_val_add  (&timev, 100000000); /* 100 seconds worth of timeout */
 
 				g_mutex_lock (info.mutex);
+				/* We are a thread, so the mainloop will still be
+				 * be running to receive the error and ready signals */
 				if (!info.had_callback)
 					g_cond_timed_wait (info.condition, info.mutex, &timev);
 				g_mutex_unlock (info.mutex);
 
 				if (!info.had_callback) {
 					g_set_error (&error, DAEMON_ERROR, 0,
-						     "Timeout");
+						     "Timeout for %s", info.uri);
 				}
 
 				if (info.error_msg) {
@@ -730,7 +723,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 						       0, task->num, failed_urls, 1, 
 						       error->message);
 
-					g_error_free (error);
+					g_clear_error (&error);
 
 					g_strfreev (failed_urls);
 
