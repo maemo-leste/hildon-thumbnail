@@ -1,3 +1,11 @@
+2009-05-16  Ottela Mikael  <mikael.ottela@ixonos.com>
+
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-thumber.c
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-main.c: Fixes the
+	gst_dbus_poll->gst_bus_timed_pop, adds error handling (and
+	propagation) and defaults to only creating cropped thumbs.
+
 2009-05-14  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* config.h.in

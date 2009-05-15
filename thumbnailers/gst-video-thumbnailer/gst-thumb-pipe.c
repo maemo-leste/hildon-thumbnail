@@ -42,11 +42,15 @@ static gboolean       _thumber_pipe_thumbnail_callback (GstElement       *image_
 							ThumberPipe      *pipe);
 
 static gboolean       _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
-							   GstState state);
+							   GstState     state,
+							   GError     **error);
 
 
 static gboolean       create_thumbnails                (const gchar *uri,
-							guchar      *buffer);
+							guchar      *buffer,
+							gboolean     standard,
+							gboolean     cropped,
+							GError     **error);
 
 static gboolean       thumber_pipe_initialize          (ThumberPipe *pipe,
 							const gchar *mime,
@@ -69,11 +73,16 @@ typedef struct {
 
 	gchar          *uri;
 	gboolean        success;
+	GError         *error;
 
+	gboolean        standard;
+	gboolean        cropped;
 } ThumberPipePrivate;
 
 enum {
 	PROP_0,
+	PROP_STANDARD,
+	PROP_CROPPED
 };
 
 #define THUMBER_PIPE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBER_PIPE, ThumberPipePrivate))
@@ -97,6 +106,41 @@ thumber_pipe_new ()
 	return g_object_new (TYPE_THUMBER_PIPE, NULL);
 }
 
+thumber_pipe_get_standard (ThumberPipe *pipe)
+{
+	ThumberPipePrivate *priv;
+
+	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+	return priv->standard;
+}
+
+static void
+thumber_pipe_set_standard (ThumberPipe *pipe, gboolean standard)
+{
+	ThumberPipePrivate *priv;
+
+	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+	priv->standard = standard;
+}
+
+static gboolean
+thumber_pipe_get_cropped (ThumberPipe *pipe)
+{
+	ThumberPipePrivate *priv;
+
+	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+	return priv->cropped;
+}
+
+static void
+thumber_pipe_set_cropped (ThumberPipe *pipe, gboolean cropped)
+{
+	ThumberPipePrivate *priv;
+
+	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+	priv->cropped = cropped;
+}
+
 static void
 thumber_pipe_set_property (GObject      *object,
 			   guint         prop_id,
@@ -104,6 +148,12 @@ thumber_pipe_set_property (GObject      *object,
 			   GParamSpec   *pspec)
 {
 	switch (prop_id) {
+	case PROP_STANDARD:
+		thumber_pipe_set_standard (THUMBER_PIPE (object), g_value_get_boolean (value));
+		break;
+	case PROP_CROPPED:
+		thumber_pipe_set_cropped (THUMBER_PIPE (object), g_value_get_boolean (value));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
@@ -112,15 +162,23 @@ thumber_pipe_set_property (GObject      *object,
 
 static void
 thumber_pipe_get_property (GObject    *object,
-		      guint       prop_id,
-		      GValue     *value,
-		      GParamSpec *pspec)
+			   guint       prop_id,
+			   GValue     *value,
+			   GParamSpec *pspec)
 {
 	ThumberPipePrivate *priv;
-
+	
 	priv = THUMBER_PIPE_GET_PRIVATE (object);
 
 	switch (prop_id) {
+	case PROP_STANDARD:
+		g_value_set_boolean (value,
+				     thumber_pipe_get_standard (THUMBER_PIPE (object)));
+		break;
+	case PROP_CROPPED:
+		g_value_set_boolean (value,
+				     thumber_pipe_get_cropped (THUMBER_PIPE (object)));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
@@ -143,6 +201,22 @@ thumber_pipe_class_init (ThumberPipeClass *klass)
 	object_class->set_property = thumber_pipe_set_property;
 	object_class->get_property = thumber_pipe_get_property;
 
+	g_object_class_install_property (object_class,
+					 PROP_STANDARD,
+					 g_param_spec_boolean ("standard",
+							       "Standard",
+							       "Whether we create the standard normal/large thumbnails",
+							       FALSE,
+							       G_PARAM_READWRITE));
+	
+	g_object_class_install_property (object_class,
+					 PROP_CROPPED,
+					 g_param_spec_boolean ("cropped",
+							       "Cropped",
+							       "Whether we create the cropped thumbnail",
+							       FALSE,
+							       G_PARAM_READWRITE));
+	
 	g_type_class_add_private (object_class, sizeof (ThumberPipePrivate));
 }
 
@@ -172,18 +246,18 @@ thumber_pipe_run (ThumberPipe *pipe,
 				      "dummy",
 				      256,
 				      &lerror)) {
-		g_set_error (error,
-			     thumber_pipe_error_quark (),
-			     INITIALIZATION_ERROR,
-			     "Failed to initialize pipeline: %s",
-			     lerror->message);
-		g_error_free (lerror);
+		g_propagate_error (error, lerror);
 		g_free (priv->uri);
 		return FALSE;
 	}
 
 	gst_element_set_state (priv->pipeline, GST_STATE_READY);
-	_thumber_pipe_poll_for_state_change (pipe, GST_STATE_READY);
+
+	if (!_thumber_pipe_poll_for_state_change (pipe, GST_STATE_READY, &lerror)) {
+		g_propagate_error (error, lerror);
+		g_free (priv->uri);
+		return FALSE;
+	}
 
 	filename = g_filename_from_uri (uri, NULL, NULL);
 
@@ -198,9 +272,26 @@ thumber_pipe_run (ThumberPipe *pipe,
 			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
 	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
-	_thumber_pipe_poll_for_state_change (pipe, GST_STATE_PAUSED);
+	if (!_thumber_pipe_poll_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
+		g_propagate_error (error, lerror);
+		g_free (priv->uri);
+		return FALSE;
+	}
 
 	success = priv->success;
+
+	if (!success) {
+		if (priv->error != NULL) {
+			g_propagate_error (error, priv->error);
+		} else {
+			g_set_error (error,
+				     thumber_pipe_error_quark (),
+				     THUMBNAIL_ERROR,
+				     "Thumbnail creation failed.");
+		}
+		g_free (priv->uri);
+		return FALSE;
+	}
 
 	thumber_pipe_deinitialize (pipe);
 
@@ -410,7 +501,11 @@ _thumber_pipe_thumbnail_callback (GstElement       *image_sink,
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
-	if (!create_thumbnails (priv->uri, GST_BUFFER_DATA (buffer))) {
+	if (!create_thumbnails (priv->uri,
+				GST_BUFFER_DATA (buffer),
+				priv->standard,
+				priv->cropped,
+				&(priv->error))) {
 		priv->success = FALSE;
 	} else {
 		priv->success = TRUE;
@@ -421,17 +516,14 @@ _thumber_pipe_thumbnail_callback (GstElement       *image_sink,
 
 static gboolean
 _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
-				     GstState state)
+				     GstState     state,
+				     GError     **error)
 {
 	ThumberPipePrivate *priv;
 	GstBus             *bus;
 	gchar              *error_message;
-	GstMessageType      events;
 	gint64              timeout = 5 * GST_SECOND;
-	GError             *error = NULL;
 	
-	events = GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS;
-
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 	
 	bus = gst_element_get_bus (priv->pipeline);
@@ -440,10 +532,14 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 		GstMessage *message;
 		GstElement *src;
 		
-		message = gst_bus_poll (bus, events, timeout);
+		message = gst_bus_timed_pop (bus, timeout);
 		
 		if (!message) {
-			goto timed_out;
+			g_set_error (error,
+				     thumber_pipe_error_quark (),
+				     RUNNING_ERROR,
+				     "Pipeline timed out");
+			return FALSE;
 		}
 		
 		src = (GstElement*)GST_MESSAGE_SRC (message);
@@ -456,28 +552,41 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 				gst_message_parse_state_changed (message, &old, &new, &pending);
 				if (new == state) {
 					gst_message_unref (message);
-					goto success;
+					return TRUE;
 				}
 			}
 			break;
 		}
 		case GST_MESSAGE_ERROR: {
-
-			gst_message_parse_error (message, &error, &error_message);
+			GError *lerror = NULL;
+			gst_message_parse_error (message, &lerror, &error_message);
 			gst_message_unref (message);
-			g_error_free (error);
-			goto error;
+			g_free (error_message);
+
+			if (lerror != NULL) {
+				g_propagate_error (error, lerror);
+			} else {
+				g_set_error (error,
+					     thumber_pipe_error_quark (),
+					     RUNNING_ERROR,
+					     "Undefined error running the pipeline");
+			}
+
+			return FALSE;
 			break;
 		}
 		case GST_MESSAGE_EOS: {
-			GError *e = NULL;
-			error_message = g_strdup ("EOF");
 			gst_message_unref (message);
-			goto error;
+
+			g_set_error (error,
+				     thumber_pipe_error_quark (),
+				     RUNNING_ERROR,
+				     "Reached end-of-file without proper content");
+			return FALSE;
 			break;
 		}
 		default:
-			g_assert_not_reached ();
+			/* Nothing to do here */
 			break;
 		}
 		
@@ -486,17 +595,6 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 	
 	g_assert_not_reached ();
 	
- success:
-	/* state change succeeded */
-	return TRUE;
-	
- timed_out:
-	g_warning ("Thumbnailing pipeline timed out");
-	return FALSE;
-	
- error:
-	g_warning ("An error in thumbnailing pipeline: %s", error_message); 
-	g_free (error_message);
 	return FALSE;
 }
 
@@ -590,15 +688,15 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 }
 
 static gboolean
-create_thumbnails (const gchar *uri, guchar *buffer)
+create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean cropped, GError **error)
 {
 	GdkPixbuf *pixbuf;
 	GdkPixbuf *pic;
 	gchar *png_name;
 	gchar *jpg_name;
 	gchar *filename;
-	GError *error = NULL;
 	gchar *checksum;
+	GError *lerror = NULL;
 
 	pixbuf = gdk_pixbuf_new_from_data ((gchar *)buffer,
 					   GDK_COLORSPACE_RGB,
@@ -607,7 +705,10 @@ create_thumbnails (const gchar *uri, guchar *buffer)
 					   NULL, NULL);
 
 	if(!pixbuf) {
-		/* FIXME Proper handling */
+		g_set_error (error,
+			     thumber_pipe_error_quark (),
+			     THUMBNAIL_ERROR,
+			     "Failed to create thumbnail from buffer");
 		return FALSE;
 	}
 
@@ -617,46 +718,70 @@ create_thumbnails (const gchar *uri, guchar *buffer)
 
 	g_free (checksum);
 
-	filename = g_build_filename (g_get_home_dir (), ".thumbnails", "large", png_name, NULL);
-	if (!gdk_pixbuf_save (pixbuf,
-			      filename,
-			      "jpeg",
-			      &error,
-			      NULL)) {
-		/* FIXME Proper handling */
-	}	
-	g_free (filename);
+	if (standard) {
+		filename = g_build_filename (g_get_home_dir (), ".thumbnails", "large", png_name, NULL);
+		if (!gdk_pixbuf_save (pixbuf,
+				      filename,
+				      "jpeg",
+				      &lerror,
+				      NULL)) {
+			g_propagate_error (error, lerror);
+			g_object_unref (pixbuf);
+			
+			g_free (png_name);
+			g_free (jpg_name);
+			return FALSE;
+		}	
+		g_free (filename);
 
-	pic = gdk_pixbuf_scale_simple (pixbuf,
-				       128,
-				       128,
-				       GDK_INTERP_BILINEAR);
-	
-	filename = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", png_name, NULL);
-	if (!gdk_pixbuf_save (pic,
-			      filename,
-			      "jpeg",
-			      &error,
-			      NULL)) {
-		/* FIXME Proper handling */
-		return FALSE;
+		pic = gdk_pixbuf_scale_simple (pixbuf,
+					       128,
+					       128,
+					       GDK_INTERP_BILINEAR);
+		
+		filename = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", png_name, NULL);
+		if (!gdk_pixbuf_save (pic,
+				      filename,
+				      "jpeg",
+				      &lerror,
+				      NULL)) {
+			g_propagate_error (error, lerror);
+			g_object_unref (pixbuf);
+			
+			g_free (png_name);
+			g_free (jpg_name);
+
+			g_object_unref (pic);
+
+			return FALSE;
+		}
+		g_object_unref (pic);
 	}
-	g_object_unref (pic);
 
-	pic = crop_resize (pixbuf, 124, 124);
-	
-	filename = g_build_filename (g_get_home_dir (), ".thumbnails", "cropped", jpg_name, NULL);
-	if (!gdk_pixbuf_save (pic,
-			      filename,
-			      "jpeg",
-			      &error,
-			      NULL)) {
-		/* FIXME Proper handling */
-		return FALSE;
+	if (cropped) {
+		pic = crop_resize (pixbuf, 124, 124);
+		
+		filename = g_build_filename (g_get_home_dir (), ".thumbnails", "cropped", jpg_name, NULL);
+		if (!gdk_pixbuf_save (pic,
+				      filename,
+				      "jpeg",
+				      &lerror,
+				      NULL)) {
+			g_propagate_error (error, lerror);
+			g_object_unref (pixbuf);
+			
+			g_free (png_name);
+			g_free (jpg_name);
+
+			g_object_unref (pic);
+
+			return FALSE;
+		}
+		g_object_unref (pic);
+		
+		g_free (filename);
 	}
-	g_object_unref (pic);
 
-	g_free (filename);
 	g_object_unref (pixbuf);
 	
 	g_free (png_name);

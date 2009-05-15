@@ -75,7 +75,8 @@ typedef struct TaskInfo TaskInfo;
 
 typedef struct {
 	/* Properties */
-	gboolean         cropping;
+	gboolean         standard;
+	gboolean         cropped;
 
 	guint            idle_id;
 	guint            quit_timeout_id;
@@ -187,7 +188,8 @@ task_info_free (TaskInfo *info, gboolean free_content)
 
 enum {
 	PROP_0,
-	PROP_CROPPING,
+	PROP_STANDARD,
+	PROP_CROPPED,
 	PROP_TIMEOUT
 };
 
@@ -200,21 +202,39 @@ thumber_new ()
 }
 
 static gboolean
-thumber_get_cropping (Thumber *thumber)
+thumber_get_standard (Thumber *thumber)
 {
 	ThumberPrivate *priv;
 
 	priv = THUMBER_GET_PRIVATE (thumber);
-	return priv->cropping;
+	return priv->standard;
 }
 
 static void
-thumber_set_cropping (Thumber *thumber, gboolean cropping)
+thumber_set_standard (Thumber *thumber, gboolean standard)
 {
 	ThumberPrivate *priv;
 
 	priv = THUMBER_GET_PRIVATE (thumber);
-	priv->cropping = cropping;
+	priv->standard = standard;
+}
+
+static gboolean
+thumber_get_cropped (Thumber *thumber)
+{
+	ThumberPrivate *priv;
+
+	priv = THUMBER_GET_PRIVATE (thumber);
+	return priv->cropped;
+}
+
+static void
+thumber_set_cropped (Thumber *thumber, gboolean cropped)
+{
+	ThumberPrivate *priv;
+
+	priv = THUMBER_GET_PRIVATE (thumber);
+	priv->cropped = cropped;
 }
 
 static gint
@@ -242,8 +262,11 @@ thumber_set_property (GObject      *object,
 		      GParamSpec   *pspec)
 {
 	switch (prop_id) {
-	case PROP_CROPPING:
-		thumber_set_cropping (THUMBER (object), g_value_get_boolean (value));
+	case PROP_STANDARD:
+		thumber_set_standard (THUMBER (object), g_value_get_boolean (value));
+		break;
+	case PROP_CROPPED:
+		thumber_set_cropped (THUMBER (object), g_value_get_boolean (value));
 		break;
 	case PROP_TIMEOUT:
 		thumber_set_timeout (THUMBER (object), g_value_get_int (value));
@@ -265,9 +288,13 @@ thumber_get_property (GObject    *object,
 	priv = THUMBER_GET_PRIVATE (object);
 
 	switch (prop_id) {
-	case PROP_CROPPING:
+	case PROP_STANDARD:
 		g_value_set_boolean (value,
-				     thumber_get_cropping (THUMBER (object)));
+				     thumber_get_standard (THUMBER (object)));
+		break;
+	case PROP_CROPPED:
+		g_value_set_boolean (value,
+				     thumber_get_cropped (THUMBER (object)));
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int (value,
@@ -317,8 +344,16 @@ thumber_class_init (ThumberClass *klass)
 	object_class->set_property = thumber_set_property;
 	object_class->get_property = thumber_get_property;
 
+      g_object_class_install_property (object_class,
+					PROP_STANDARD,
+					g_param_spec_boolean ("standard",
+							      "Standard",
+							      "Whether we create the standard normal/large thumbnails",
+							      FALSE,
+							      G_PARAM_READWRITE));
+
        g_object_class_install_property (object_class,
-					PROP_CROPPING,
+					PROP_CROPPED,
 					g_param_spec_boolean ("cropped",
 							      "Cropped",
 							      "Whether we create the cropped thumbnail",
@@ -807,14 +842,26 @@ thumber_process_func (gpointer data)
 		}
 
 		if ((task = g_queue_pop_head (priv->task_queue)) != NULL) {
+			GValue val = {0, };
+
 
 			if (priv->pipe) {
 				g_object_unref (priv->pipe);
 				priv->pipe = NULL;
 			}
 			
-			priv->pipe = thumber_pipe_new ();		       
+			priv->pipe = thumber_pipe_new ();		       			
+
+			g_value_init (&val, G_TYPE_BOOLEAN);
+			g_value_set_boolean (&val, priv->standard);
+			g_object_set_property (G_OBJECT(priv->pipe), "standard", &val);
+			g_value_unset (&val);
 			
+			g_value_init (&val, G_TYPE_BOOLEAN);
+			g_value_set_boolean (&val, priv->cropped);
+			g_object_set_property (G_OBJECT(priv->pipe), "cropped", &val);
+			g_value_unset (&val);
+
 			thumber_populate_file_queue (thumber, task);
 			
 			priv->current_task = task;

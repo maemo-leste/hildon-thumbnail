@@ -37,12 +37,14 @@ static GMainLoop       *main_loop  = NULL;
 static gboolean dynamic_register = FALSE;
 static gchar   *bus_name;
 static gchar   *bus_path;
+static gboolean standard;
+static gboolean cropped;
 static gint     timeout = 600;
 
 static GOptionEntry  config_entries[] = {
 	{ "timeout", 't', 0, 
 	  G_OPTION_ARG_INT, &timeout, 
-	  "Timeout before the thumbnailer dies. ", 
+	  "Timeout before the thumbnailer shuts down. ", 
 	  NULL },
 	{ "bus-name", 'b', 0, 
 	  G_OPTION_ARG_STRING, &bus_name, 
@@ -51,6 +53,14 @@ static GOptionEntry  config_entries[] = {
 	{ "bus-path", 'p', 0, 
 	  G_OPTION_ARG_STRING, &bus_path, 
 	  "Buspath to use (eg. /com/company/Thumbnailer) ", 
+	  NULL },
+	{ "cropped", 'c', 0, 
+	  G_OPTION_ARG_NONE, &cropped, 
+	  "Disable cropped thumbnails ", 
+	  NULL },
+	{ "standard", 's', 0, 
+	  G_OPTION_ARG_NONE, &standard, 
+	  "Enable standard (normal/large) thumbnails ", 
 	  NULL },
 	{ "dynamic-register", 'd', 0, 
 	  G_OPTION_ARG_NONE, &dynamic_register, 
@@ -112,14 +122,23 @@ main (gint argc, gchar *argv[])
 
 	thumber = thumber_new ();
 
+	thumber_dbus_register (thumber, bus_name, bus_path, &error);
+
 	g_value_init (&val, G_TYPE_INT);
 	g_value_set_int (&val, timeout);
-
-	thumber_dbus_register (thumber, bus_name, bus_path, &error);
 	g_object_set_property (G_OBJECT(thumber), "timeout", &val);
-
 	g_value_unset (&val);
 
+	g_value_init (&val, G_TYPE_BOOLEAN);
+	g_value_set_boolean (&val, standard);
+	g_object_set_property (G_OBJECT(thumber), "standard", &val);
+	g_value_unset (&val);
+	
+	g_value_init (&val, G_TYPE_BOOLEAN);
+	g_value_set_boolean (&val, !cropped);
+	g_object_set_property (G_OBJECT(thumber), "cropped", &val);
+	g_value_unset (&val);
+	
 	g_message ("Starting...");
 	thumber_start (thumber);
 
