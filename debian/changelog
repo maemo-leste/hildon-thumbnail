@@ -1,8 +1,12 @@
-hildon-thumbnail (3.0.26~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.26) unstable; urgency=low
 
-  * 
+  [Mikael Ottela]
+  * Fixes to the video thumbnailer.
+  
+  [Philip Van Hoof]
+  * Fixes: NB#114559 - Tracker does not do thumbnails to extracted album arts.
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 13 May 2009 16:08:14 +0300
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 15 May 2009 18:08:15 +0300
 
 hildon-thumbnail (3.0.25) unstable; urgency=low
 
