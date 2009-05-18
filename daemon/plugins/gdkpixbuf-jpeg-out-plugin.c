@@ -167,7 +167,7 @@ hildon_thumbnail_outplugin_get_orig (const gchar *path)
 gboolean
 hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64 mtime, const gchar *uri, gboolean *err_file)
 {
-	gboolean retval, check = FALSE;
+	gboolean retval, check = FALSE, f = FALSE;
 	gchar *large, *normal, *cropped, *filen, *filenp;
 	GFile *parent, *file, *fail_file, *fail_dir;
 
@@ -209,6 +209,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 		g_object_unref (file);
 		file = g_object_ref (fail_file);
 		check = TRUE;
+		f = TRUE;
 	} else if (g_file_query_exists (file, NULL)) {
 		check = TRUE;
 	}
@@ -223,7 +224,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 			fmtime = g_file_info_get_attribute_uint64 (info, 
 								   G_FILE_ATTRIBUTE_TIME_MODIFIED);
 			if (fmtime == (guint64) mtime) {
-				if (err_file)
+				if (err_file && f)
 					*err_file = TRUE;
 				retval = FALSE;
 			}

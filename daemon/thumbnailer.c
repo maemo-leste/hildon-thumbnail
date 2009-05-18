@@ -494,17 +494,38 @@ do_the_work (WorkTask *task, gpointer user_data)
 		get_some_file_infos (urls[i], &mime_type, &mtime_x,
 				     mhint, &error);
 
+
+#ifdef LARGE_THUMBNAILS
 		has_thumb = (thumb_check (large, mtime_x) && 
 			     thumb_check (normal, mtime_x) && 
 			     thumb_check (cropped, mtime_x));
+#else
+	#ifdef NORMAL_THUMBNAILS
+		has_thumb = (thumb_check (normal, mtime_x) && 
+			     thumb_check (cropped, mtime_x));
+	#else
+		has_thumb =  thumb_check (cropped, mtime_x);
+	#endif
+#endif
+
 
 		if (!has_thumb) {
 			gchar *pnormal = NULL, *plarge = NULL, *pcropped = NULL;
 			hildon_thumbnail_util_get_thumb_paths (urls[i], &plarge, &pnormal, &pcropped, 
 						       NULL, NULL, NULL, FALSE);
+
+#ifdef LARGE_THUMBNAILS
 			has_thumb = (thumb_check (plarge, mtime_x) && 
 				     thumb_check (pnormal, mtime_x) && 
 				     thumb_check (pcropped, mtime_x));
+#else
+	#ifdef NORMAL_THUMBNAILS
+			has_thumb = (thumb_check (pnormal, mtime_x) && 
+				     thumb_check (pcropped, mtime_x));
+	#else
+			has_thumb =  thumb_check (pcropped, mtime_x);
+	#endif
+#endif
 
 			if (has_thumb) {
 				g_free (normal);

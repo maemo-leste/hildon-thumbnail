@@ -1,3 +1,9 @@
+2009-05-18  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/thumbnailer.c: Bugfix for Bug# 117288
+
 2009-05-15  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.26
