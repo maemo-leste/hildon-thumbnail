@@ -22,4 +22,5 @@ export IMAGE_TO_THUMB=file:///home/pvanhoof/Desktop/Screenshot.png
 dbus-send --print-reply --dest=org.freedesktop.thumbnailer \
 	--type=method_call /org/freedesktop/thumbnailer/Generic \
 	org.freedesktop.thumbnailer.Generic.Queue \
-	array:string:"$IMAGE_TO_THUMB" uint32:0
+	array:string:"file:///tmp/Image001.jpg","file:///tmp/Image002.jpg" array:string:"image/jpeg","image/jpeg" uint32:0
+

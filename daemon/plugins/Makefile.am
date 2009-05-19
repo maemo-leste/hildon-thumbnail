@@ -1,3 +1,5 @@
+INCLUDES = $(GDK_PIXBUF_CFLAGS)
+
 plugin_flags = -module -avoid-version -no-undefined
 pluginsdir = $(libdir)/hildon-thumbnailer/plugins
 

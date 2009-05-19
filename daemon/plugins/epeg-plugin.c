@@ -316,122 +316,32 @@ hildon_thumbnail_plugin_supported (void)
 
 static GdkPixbuf*
 crop_resize (GdkPixbuf *src, int width, int height) {
-	int x = width, y = height;
-	int a = gdk_pixbuf_get_width(src);
-	int b = gdk_pixbuf_get_height(src);
 
-	GdkPixbuf *dest;
-
-	// This is the automagic cropper algorithm 
-	// It is an optimized version of a system of equations
-	// Basically it maximizes the final size while minimizing the scale
-
-	int nx, ny;
-	double na, nb;
-	double offx = 0, offy = 0;
-	double scax, scay;
-
-	na = a;
-	nb = b;
-
-	if(a < x && b < y) {
-		//nx = a;
-		//ny = b;
-		g_object_ref(src);
-		return src;
-	} else {
-		int u, v;
-
-		nx = u = x;
-		ny = v = y;
-
-		if(a < x) {
-			nx = a;
-			u = a;
-		}
-
-		if(b < y) {
-			ny = b;
-		 	v = b;
-		}
-
-		if(a * y < b * x) {
-			nb = (double)a * v / u;
-			// Center
-			offy = (double)(b - nb) / 2;
-		} else {
-			na = (double)b * u / v;
-			// Center
-			offx = (double)(a - na) / 2;
-		}
-	}
-
-	// gdk_pixbuf_scale has crappy inputs
-	scax = scay = (double)nx / na;
-
-	offx = -offx * scax;
-	offy = -offy * scay;
-
-	dest = gdk_pixbuf_new (gdk_pixbuf_get_colorspace(src),
-			       gdk_pixbuf_get_has_alpha(src), 
-			       gdk_pixbuf_get_bits_per_sample(src), 
-			       nx, ny);
-
-	gdk_pixbuf_scale (src, dest, 0, 0, nx, ny, offx, offy, scax, scay,
-			  GDK_INTERP_BILINEAR);
-
-	return dest;
+	return hildon_thumbnail_crop_resize (src, width, height);
 }
+
+
 
 
 static void
 wanted_size (int a, int b, int width, int height, int *w, int *h) {
-	int x = width, y = height;
-	int nx, ny;
-	double na, nb;
-	double offx = 0, offy = 0;
-	double scax, scay;
 
-	na = a;
-	nb = b;
-
-	if(a < x && b < y) {
-		nx = a;
-		ny = b;
+	if(a < width && b < height) {
+		*w = width;
+		*h = height;
 	} else {
-		int u, v;
+		int rw, rh;
 
-		nx = u = x;
-		ny = v = y;
-
-		if(a < x) {
-			nx = a;
-			u = a;
-		}
-
-		if(b < y) {
-			ny = b;
-		 	v = b;
-		}
-
-		if(a * y < b * x) {
-			nb = (double)a * v / u;
-			// Center
-			offy = (double)(b - nb) / 2;
+		rw = a / width;
+		rh = b / height;
+		if (rw > rh) {
+		    *h = b / rw;
+		    *w = width;
 		} else {
-			na = (double)b * u / v;
-			// Center
-			offx = (double)(a - na) / 2;
+		    *w =  a / rh;
+		    *h = height;
 		}
 	}
-
-	scax = scay = (double)nx / na;
-
-	offx = -offx * scax;
-	offy = -offy * scay;
-
-	*w = nx;
-	*h = ny;
 
 	return;
 }
@@ -509,7 +419,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		epeg_size_get (im, &ow, &oh);
 
-		wanted_size (ow, oh, LARGE, LARGE, &ww, &wh);
+		wanted_size (ow, oh, LARGE , LARGE, &ww, &wh);
+
+		// printf ("%dx%d -> %dx%d\n", ow, oh, ww, wh);
 
 		if (ow < LARGE || oh < LARGE) {
 			/* Epeg doesn't behave as expected when the destination is larger
@@ -551,7 +463,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			pixbuf_large1 = gdk_pixbuf_new_from_data ((const guchar*) data, 
 									  GDK_COLORSPACE_RGB, FALSE, 
-									  8, LARGE, LARGE, LARGE*3,
+									  8, ww, wh, ww*3,
 									  destroy_pixbuf, im);
 
 			restore_orientation (path, pixbuf_large1);
@@ -730,8 +642,6 @@ static void
 reload_config (const gchar *config) 
 {
 	GKeyFile *keyfile;
-	GStrv mimetypes;
-	guint i = 0, length;
 	GError *error = NULL;
 
 	keyfile = g_key_file_new ();
@@ -753,7 +663,7 @@ reload_config (const gchar *config)
 }
 
 static void 
-on_file_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+on_file_changed (GFileMonitor *monitor_, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT || event_type == G_FILE_MONITOR_EVENT_CREATED) {
 		gchar *config = g_file_get_path (file);
@@ -768,7 +678,7 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "epeg-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
-	const gchar **supported;
+	const gchar **supported_;
 	const gchar *uri_schemes[2] = { "file", NULL };
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
@@ -783,10 +693,10 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	*cropping = do_cropped;
 
 	if (func) {
-		supported = hildon_thumbnail_plugin_supported ();
-		if (supported) {
-			while (supported[i] != NULL) {
-				func (thumbnailer, supported[i], module, (const GStrv) uri_schemes, 1);
+		supported_ = hildon_thumbnail_plugin_supported ();
+		if (supported_) {
+			while (supported_[i] != NULL) {
+				func (thumbnailer, supported_[i], module, (const GStrv) uri_schemes, 1);
 				i++;
 			}
 		}

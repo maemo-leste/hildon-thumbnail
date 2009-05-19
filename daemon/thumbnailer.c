@@ -230,7 +230,7 @@ typedef struct {
 	Thumbnailer *object;
 	GStrv urls, mime_types;
 	guint num;
-	gboolean unqueued;
+	gboolean unqueued, dead;
 } WorkTask;
 
 
@@ -264,6 +264,25 @@ thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *c
 	g_mutex_unlock (priv->mutex);
 }
 
+static void 
+crash_queued (WorkTask *task, guint handle)
+{
+	task->unqueued = TRUE;
+	task->dead = TRUE;
+	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+			       task->num);
+}
+
+void
+thumbnailer_crash_out (Thumbnailer *object)
+{
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
+	g_mutex_lock (priv->mutex);
+	g_list_foreach (priv->tasks, (GFunc) crash_queued, NULL);
+	g_mutex_unlock (priv->mutex);
+}
+
 void
 thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint handle_to_unqueue, DBusGMethodInvocation *context)
 {
@@ -281,6 +300,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 	task->num = ++num;
 	task->object = g_object_ref (object);
 	task->urls = g_strdupv (urls);
+	task->dead = FALSE;
 
 	if (mime_hints)
 		task->mime_types = g_strdupv (mime_hints);
@@ -874,8 +894,10 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 unqueued:
 
-	g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
-			       task->num);
+	if (!task->dead) {
+		g_signal_emit (task->object, signals[FINISHED_SIGNAL], 0,
+				       task->num);
+	}
 
 	g_object_unref (task->object);
 	g_strfreev (task->urls);

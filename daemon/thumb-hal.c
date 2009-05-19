@@ -8,6 +8,7 @@
 #define CHECK_FILE "/tmp/thumbnailer_please_wait"
 
 static GVolumeMonitor *monitor;
+static Thumbnailer *thumbnailer;
 
 static void
 on_pre_unmount (GVolumeMonitor *volume_monitor,
@@ -17,6 +18,8 @@ on_pre_unmount (GVolumeMonitor *volume_monitor,
 	GDrive *drive = g_mount_get_drive (mount);
 	if (g_drive_is_media_removable (drive)) {
 		FILE *filep;
+
+		thumbnailer_crash_out (thumbnailer);
 
 		g_object_unref (drive);
 
@@ -36,7 +39,7 @@ on_pre_unmount (GVolumeMonitor *volume_monitor,
 }
 
 void
-thumb_hal_init (void)
+thumb_hal_init (Thumbnailer *thumbnailer_)
 {
 	FILE *filep;
 
@@ -50,6 +53,8 @@ thumb_hal_init (void)
 
 	monitor = g_volume_monitor_get ();
 
+	thumbnailer = g_object_ref (thumbnailer_);
+
 	g_signal_connect (G_OBJECT (monitor), "mount-pre-unmount", 
 					  G_CALLBACK (on_pre_unmount), NULL);
 }
@@ -58,4 +63,5 @@ void
 thumb_hal_shutdown (void)
 {
 	g_object_unref (monitor);
+	g_object_unref (thumbnailer);
 }

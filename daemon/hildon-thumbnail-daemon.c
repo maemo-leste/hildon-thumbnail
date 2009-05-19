@@ -481,7 +481,7 @@ main (int argc, char **argv)
 				  G_CALLBACK (on_outputplugin_changed), thumbnailer);
 
 
-		thumb_hal_init ();
+		thumb_hal_init (thumbnailer);
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 

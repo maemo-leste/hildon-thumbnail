@@ -2,7 +2,7 @@ SUBDIRS = . plugins
 
 INCLUDES = -I. \
 	$(DBUS_CFLAGS) \
-	$(GLIB_CFLAGS) \
+	$(GLIB_CFLAGS) $(GDK_PIXBUF_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) $(HAL_CFLAGS) \
 	$(LIBOSSO_CFLAGS) \
@@ -76,7 +76,7 @@ hildon_thumbnailerd_LDADD = \
 	$(top_builddir)/daemon/libshared.la \
 	$(DBUS_LIBS) $(LIBOSSO_LIBS) \
 	$(GLIB_LIBS) \
-	$(GMODULE_LIBS) \
+	$(GMODULE_LIBS) $(GDK_PIXBUF_LIBS) \
 	$(GIO_LIBS) $(HAL_LIBS)
 
 # Services

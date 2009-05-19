@@ -47,6 +47,75 @@ my_compute_checksum_for_data (GChecksumType  checksum_type,
   return retval;
 }
 
+GdkPixbuf*
+hildon_thumbnail_crop_resize (GdkPixbuf *src, int width, int height) {
+
+	int x = width, y = height;
+	int a = gdk_pixbuf_get_width(src);
+	int b = gdk_pixbuf_get_height(src);
+
+	GdkPixbuf *dest;
+
+	// This is the automagic cropper algorithm 
+	// It is an optimized version of a system of equations
+	// Basically it maximizes the final size while minimizing the scale
+
+	int nx, ny;
+	double na, nb;
+	double offx = 0, offy = 0;
+	double scax, scay;
+
+	na = a;
+	nb = b;
+
+	if(a < x && b < y) {
+		//nx = a;
+		//ny = b;
+		g_object_ref(src);
+		return src;
+	} else {
+		int u, v;
+
+		nx = u = x;
+		ny = v = y;
+
+		if(a < x) {
+			nx = a;
+			u = a;
+		}
+
+		if(b < y) {
+			ny = b;
+		 	v = b;
+		}
+
+		if(a * y < b * x) {
+			nb = (double)a * v / u;
+			// Center
+			offy = (double)(b - nb) / 2;
+		} else {
+			na = (double)b * u / v;
+			// Center
+			offx = (double)(a - na) / 2;
+		}
+	}
+
+	// gdk_pixbuf_scale has crappy inputs
+	scax = scay = (double) nx / na;
+
+	offx = -offx * scax;
+	offy = -offy * scay;
+
+	dest = gdk_pixbuf_new (gdk_pixbuf_get_colorspace(src),
+			       gdk_pixbuf_get_has_alpha(src), 
+			       gdk_pixbuf_get_bits_per_sample(src), 
+			       nx, ny);
+
+	gdk_pixbuf_scale (src, dest, 0, 0, nx, ny, offx, offy, scax, scay,
+			  GDK_INTERP_BILINEAR);
+
+	return dest;
+}
 
 void
 hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, gchar **local_large, gchar **local_normal, gchar **local_cropped, gboolean as_png)

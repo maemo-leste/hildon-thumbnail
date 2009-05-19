@@ -29,9 +29,11 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk-pixbuf/gdk-pixbuf-io.h>
 
 void hildon_thumbnail_util_get_thumb_paths (const gchar *uri, gchar **large, gchar **normal, gchar **cropped, gchar **local_large, gchar **local_normal, gchar **local_cropped, gboolean as_png);
 void hildon_thumbnail_util_get_albumart_path (const gchar *a, const gchar *b, const gchar *prefix, gchar **path);
-
+GdkPixbuf* hildon_thumbnail_crop_resize (GdkPixbuf *src, int width, int height);
 
 #endif

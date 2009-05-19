@@ -67,6 +67,8 @@ void thumbnailer_cleanup (Thumbnailer *object, gchar *uri_prefix, guint mtime, D
 void thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModule *plugin, const GStrv uri_schemes, gint priority);
 void thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin);
 
+void thumbnailer_crash_out (Thumbnailer *object);
+
 void thumbnailer_do_stop (void);
 void thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thumbnailer **thumbnailer, GError **error);
 
