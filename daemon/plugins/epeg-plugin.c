@@ -316,8 +316,8 @@ hildon_thumbnail_plugin_supported (void)
 
 static GdkPixbuf*
 crop_resize (GdkPixbuf *src, int width, int height) {
-
-	return hildon_thumbnail_crop_resize (src, width, height);
+	return g_object_ref (src);
+	//return hildon_thumbnail_crop_resize (src, width, height);
 }
 
 
