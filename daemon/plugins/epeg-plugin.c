@@ -442,7 +442,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			epeg_decode_colorspace_set (im, EPEG_RGB8);
 			epeg_decode_size_set (im, ww, wh);
-			epeg_quality_set (im, 75);
+			// epeg_quality_set (im, 75);
 			epeg_thumbnail_comments_enable (im, 0);
 
 			//hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
@@ -459,7 +459,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			//	goto nerror_handler;
 			// }
 
-			data = (guchar *) epeg_pixels_get (im, 0, 0, LARGE, LARGE);
+			data = (guchar *) epeg_pixels_get (im, 0, 0, ww, wh);
 
 			pixbuf_large1 = gdk_pixbuf_new_from_data ((const guchar*) data, 
 									  GDK_COLORSPACE_RGB, FALSE, 
