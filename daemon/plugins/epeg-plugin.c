@@ -316,8 +316,7 @@ hildon_thumbnail_plugin_supported (void)
 
 static GdkPixbuf*
 crop_resize (GdkPixbuf *src, int width, int height) {
-	return g_object_ref (src);
-	//return hildon_thumbnail_crop_resize (src, width, height);
+	return hildon_thumbnail_crop_resize (src, width, height);
 }
 
 
@@ -419,7 +418,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		epeg_size_get (im, &ow, &oh);
 
-		wanted_size (ow, oh, LARGE , LARGE, &ww, &wh);
+		wanted_size (ow, oh, 256 , 256, &ww, &wh);
 
 		// printf ("%dx%d -> %dx%d\n", ow, oh, ww, wh);
 
