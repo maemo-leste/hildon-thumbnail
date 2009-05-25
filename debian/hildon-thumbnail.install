@@ -9,6 +9,7 @@ usr/libexec/gst-video-thumbnailerd
 usr/share/hildon-thumbnail/manager.xml
 usr/share/hildon-thumbnail/thumbnailer.xml
 usr/share/hildon-thumbnail/albumart.xml
+usr/share/thumbnailers/com.nokia.thumbnailer.Gstreamer.service
 usr/share/dbus-1/services/org.freedesktop.thumbnailer.service
 usr/share/dbus-1/services/com.nokia.albumart.service
 usr/share/dbus-1/services/com.nokia.thumbnailer.Gstreamer.service
