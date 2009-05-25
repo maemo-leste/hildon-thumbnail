@@ -346,7 +346,6 @@ wanted_size (int a, int b, int width, int height, int *w, int *h) {
 }
 
 
-
 static void
 destroy_pixbuf (guchar *pixels, gpointer data)
 {
