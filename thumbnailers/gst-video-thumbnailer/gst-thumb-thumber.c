@@ -31,6 +31,7 @@
 #include "gst-thumb-thumber.h"
 
 #include <glib.h>
+#include <gio/gio.h>
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -799,7 +800,7 @@ thumber_process_func (gpointer data)
 	thumber = THUMBER (data);
 	priv = THUMBER_GET_PRIVATE (thumber);
 
-	if ((file = g_queue_pop_head (priv->file_queue)) != NULL) {
+	if ((file = g_queue_peek_head (priv->file_queue)) != NULL) {
 		
 		if (!thumber_pipe_run (priv->pipe,
 				       file->uri,
@@ -828,6 +829,7 @@ thumber_process_func (gpointer data)
 				       file->uri);
 		}
 
+		file = g_queue_pop_head (priv->file_queue);
 		file_info_free (file);
 			
 	} else {

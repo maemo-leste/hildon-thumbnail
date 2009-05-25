@@ -1,3 +1,11 @@
+2009-05-25  Mikael Ottela  <mikael.ottela@ixonos.com>
+
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-thumber.c
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-thumber.h
+	* thumbnailers/gst-video-thumbnailer/Makefile.am
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-main.c: Fixed the
+	thumbnail extension and added unmount handling.
+
 2009-05-25  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* config.h.in

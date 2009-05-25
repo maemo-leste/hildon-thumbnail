@@ -23,6 +23,9 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <gio/gio.h>
+
 #include "gst-thumb-thumber.h"
 
 #define DEFAULT_BUS_NAME       "com.nokia.thumbnailer.Gstreamer"
@@ -69,6 +72,22 @@ static GOptionEntry  config_entries[] = {
   { NULL }
 };
 
+static void
+mount_pre_unmount_cb (GVolumeMonitor *volume_monitor,
+		      GMount         *mount,
+		      Thumber        *thumber)
+{
+	/* FIXME We should instead cancel offending tasks and handle gracefully */
+
+	GDrive *drive = g_mount_get_drive (mount);
+	if (g_drive_is_media_removable (drive)) {
+		g_object_unref (drive);
+
+		exit (0);
+	}
+	g_object_unref (drive);
+}
+
 gboolean
 gst_thumb_main_quit (void)
 {
@@ -79,11 +98,12 @@ gst_thumb_main_quit (void)
 gint
 main (gint argc, gchar *argv[])
 {
-	GError          *error      = NULL;
-	GValue           val        = {0, };
-	GOptionContext  *context    = NULL;
-	GOptionGroup    *group      = NULL;
-	Thumber         *thumber    = NULL;
+	GError          *error          = NULL;
+	GValue           val            = {0, };
+	GOptionContext  *context        = NULL;
+	GOptionGroup    *group          = NULL;
+	Thumber         *thumber        = NULL;
+	GVolumeMonitor  *volume_monitor = NULL;
 
 	g_type_init ();
 
@@ -138,6 +158,11 @@ main (gint argc, gchar *argv[])
 	g_value_set_boolean (&val, !cropped);
 	g_object_set_property (G_OBJECT(thumber), "cropped", &val);
 	g_value_unset (&val);
+
+	/* Create volume monitor */
+	volume_monitor = g_volume_monitor_get ();
+	g_signal_connect (volume_monitor, "mount-pre-unmount",
+			  G_CALLBACK (mount_pre_unmount_cb), thumber);
 	
 	g_message ("Starting...");
 	thumber_start (thumber);
@@ -147,8 +172,15 @@ main (gint argc, gchar *argv[])
 
 	g_message ("Shutting down...");
 
-	g_main_loop_unref (main_loop);
+	/* Shut down volume monitor */
+	g_signal_handlers_disconnect_by_func (volume_monitor,
+					      mount_pre_unmount_cb,
+					      thumber);
+	g_object_unref (volume_monitor);
+
 	g_object_unref (thumber);
+
+	g_main_loop_unref (main_loop);
 
 	g_message ("\nDone\n\n");
 

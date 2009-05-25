@@ -28,7 +28,9 @@ EXTRA_DIST = \
 
 CLEANFILES = $(com.nokia.Thumbnailer_service_DATA) 
 
+if HAVE_GSTREAMER
 libexec_PROGRAMS = gst-video-thumbnailerd
+endif
 
 # Marshall
 gst-video-thumbnailer-marshal.h: gst-video-thumbnailer-marshal.list

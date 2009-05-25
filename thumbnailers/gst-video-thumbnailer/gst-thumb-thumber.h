@@ -27,6 +27,7 @@
 
 #include <glib-object.h>
 #include <glib.h>
+#include <gio/gio.h>
 
 #define TYPE_THUMBER         (thumber_get_type())
 #define THUMBER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_THUMBER, Thumber))
