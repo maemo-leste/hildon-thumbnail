@@ -338,7 +338,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 						  NULL, NULL);
 			if (info) {
 				guint64 mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
-				hildon_thumbnail_outplugins_put_error (mtime, furis[t]);
+				hildon_thumbnail_outplugins_put_error (mtime, furis[t], NULL);
 				g_object_unref (info);
 			}
 

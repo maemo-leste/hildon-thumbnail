@@ -568,6 +568,21 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				errors = g_string_new ("");
 			g_string_append_printf (errors, "[`%s': %s] ", 
 								    uri, msg);
+			if (!err_file) {
+				GFile *file;
+				GFileInfo *info;
+				file = g_file_new_for_uri (uri);
+				info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+							  G_FILE_QUERY_INFO_NONE,
+							  NULL, NULL);
+				if (info) {
+					guint64 mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+					hildon_thumbnail_outplugins_put_error (mtime, uri, nerror);
+					g_object_unref (info);
+				}
+
+				g_object_unref (file);
+			}
 			failed = g_list_prepend (failed, g_strdup (uri));
 			g_free (msg);
 		}
@@ -592,25 +607,11 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		t = 0;
 
 		while (copy) {
-			GFile *file;
-			GFileInfo *info;
-
 			furis[t] = copy->data;
-
-			file = g_file_new_for_uri (furis[t]);
-			info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
-						  G_FILE_QUERY_INFO_NONE,
-						  NULL, NULL);
-			if (info) {
-				guint64 mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
-				hildon_thumbnail_outplugins_put_error (mtime, furis[t]);
-				g_object_unref (info);
-			}
-
-			g_object_unref (file);
 			copy = g_list_next (copy);
 			t++;
 		}
+
 		furis[t] = NULL;
 
 		*failed_uris = furis;

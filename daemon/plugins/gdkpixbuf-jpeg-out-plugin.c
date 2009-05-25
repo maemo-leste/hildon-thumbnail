@@ -244,11 +244,11 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 
 
 void
-hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri)
+hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri, GError *error_)
 {
 	gchar *large, *normal, *cropped, *filenp, *dirn;
 	GFile *parent, *file, *fail_file, *fail_dir;
-	GFileOutputStream *out;
+	GOutputStream *out;
 	struct utimbuf buf;
 	GError *error = NULL;
 
@@ -277,9 +277,16 @@ hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri)
 
 	if (g_file_query_exists (fail_file, NULL))
 		g_file_delete (fail_file, NULL, NULL);
-	out = g_file_create (fail_file, 0, NULL, &error);
+	out = (GOutputStream*) g_file_create (fail_file, 0, NULL, &error);
 
 	if (out) {
+		gsize count;
+
+		if (error_)
+			g_output_stream_write_all (out, error_->message,
+						   strlen (error_->message),
+						   &count, NULL, NULL);
+
 		g_object_unref (out);
 	}
 
@@ -349,7 +356,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 	if (!nerror)
 		g_rename (temp, filen);
 	else
-		hildon_thumbnail_outplugin_put_error (mtime, uri);
+		hildon_thumbnail_outplugin_put_error (mtime, uri, nerror);
 
 	g_free (temp);
 

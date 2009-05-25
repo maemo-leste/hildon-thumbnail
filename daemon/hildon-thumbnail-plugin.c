@@ -33,10 +33,10 @@ typedef gboolean (*IsActiveFunc) (void);
 typedef gboolean (*StopFunc) (void);
 typedef gchar * (*GetOrigFunc) (const gchar *path);
 typedef void (*CleanupFunc) (const gchar *uri_match, guint64 max_mtime);
-typedef void (*PutFunc) (guint64 mtime, const gchar *uri);
+typedef void (*PutFunc) (guint64 mtime, const gchar *uri, GError *error);
 
 void
-hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri)
+hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri, GError *error)
 {
 	GList *copy;
 
@@ -51,7 +51,7 @@ hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri)
 			IsActiveFunc isac_func;
 			if (g_module_symbol (module, "hildon_thumbnail_outplugin_is_active", (gpointer *) &isac_func)) {
 				if (isac_func ()) {
-					put_func (mtime, uri);
+					put_func (mtime, uri, error);
 				} 
 			} 
 		}

@@ -1,3 +1,14 @@
+2009-05-25  Philip Van Hoof  <pvanhoof@codeminded.be>
+
+	* config.h.in
+	* daemon/hildon-thumbnail-plugin.h
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/exec-plugin.c
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c
+	* daemon/plugins/epeg-plugin.c
+	* daemon/hildon-thumbnail-plugin.c: Recording the error message
+
 2009-05-19  Philip Van Hoof  <pvanhoof@codeminded.be>
 
 	* daemon/hildon-thumbnail-daemon.c
