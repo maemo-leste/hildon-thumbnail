@@ -1,7 +1,14 @@
 hildon-thumbnail (3.0.27~unreleased) unstable; urgency=low
 
-  * 
-
+  [Philip Van Hoof]
+  * Fixes: NB#117799 - Cropped Thumbnails are squeezed.
+  * Fixes: NB#117288 - hildon-thumbnailer emits Error signal on
+                       repeated Queue request for not-broken image
+  
+  [Marius Vollmer]
+  * Build-Depend on libplayback-1-dev.
+  * Include service file for video thumbnailer in /usr/share/thumbnailers.
+  
  -- Marius Vollmer <marius.vollmer@nokia.com>  Fri, 15 May 2009 18:17:08 +0300
 
 hildon-thumbnail (3.0.26) unstable; urgency=low
