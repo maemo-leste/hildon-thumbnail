@@ -246,7 +246,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 void
 hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri, GError *error_)
 {
-#if 0
+//#if 0
 	gchar *large, *normal, *cropped, *filenp, *dirn;
 	GFile *parent, *file, *fail_file, *fail_dir;
 	GOutputStream *out;
@@ -310,7 +310,7 @@ hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri, GError *e
 	g_free (cropped);
 
 	return;
-#endif
+//#endif
 }
 
 
