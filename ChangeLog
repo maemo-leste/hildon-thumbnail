@@ -1,3 +1,10 @@
+2009-05-26  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	* configure.ac, thumbnailers/gst-video-thumbnailer/Makefile.am:
+	Don't distribute the service file, it should be generated during
+	configure.  Create service file in configure, not in Makefile, for
+	extra robustness.
+
 2009-05-25  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.27

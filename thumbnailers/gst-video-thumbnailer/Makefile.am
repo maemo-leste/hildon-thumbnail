@@ -22,9 +22,7 @@ BUILT_SOURCES = \
 EXTRA_DIST = \
 	gst-thumb-main.c \
 	gst-thumb-thumber.c \
-	gst-thumb-pipe.c \
-	com.nokia.thumbnailer.Gstreamer.service.in \
-	com.nokia.thumbnailer.Gstreamer.service
+	gst-thumb-pipe.c 
 
 CLEANFILES = $(com.nokia.Thumbnailer_service_DATA) 
 

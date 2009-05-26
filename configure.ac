@@ -267,4 +267,5 @@ AC_OUTPUT(Makefile tests/Makefile \
           albumart-providers/googleimages/Makefile \
 	  thumbnailers/Makefile \
 	  thumbnailers/gst-video-thumbnailer/Makefile \
+          thumbnailers/gst-video-thumbnailer/com.nokia.thumbnailer.Gstreamer.service \
           hildon-thumbnail.pc)
