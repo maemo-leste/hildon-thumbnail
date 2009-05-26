@@ -1,6 +1,7 @@
-hildon-thumbnail (3.0.28~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.28) unstable; urgency=low
 
-  * 
+  * Don't include generated service files in distribution to make sure
+    that they are actually generated during build.
 
  -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 25 May 2009 19:00:33 +0300
 
