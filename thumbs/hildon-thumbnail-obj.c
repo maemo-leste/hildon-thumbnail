@@ -43,7 +43,7 @@ typedef struct {
 	GStrv uris;
 	gchar *key;
 	guint width, height;
-	gboolean cropped;
+	gboolean cropped, unqueued;
 	HildonThumbnailRequestPixbufCallback pcallback;
 	HildonThumbnailRequestUriCallback ucallback;
 	GDestroyNotify destroy;
@@ -365,6 +365,7 @@ hildon_thumbnail_request_init (HildonThumbnailRequest *self)
 	r_priv->uris = NULL;
 	r_priv->key = NULL;
 	r_priv->cropped = FALSE;
+	r_priv->unqueued = FALSE;
 	r_priv->factory = NULL;
 	r_priv->pcallback = NULL;
 	r_priv->ucallback = NULL;
@@ -606,11 +607,16 @@ hildon_thumbnail_request_unqueue (HildonThumbnailRequest *self)
 {
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (self);
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
-	guint handle = atoi (r_priv->key);
+	guint handle;
 
-	org_freedesktop_thumbnailer_Generic_unqueue_async (f_priv->proxy, handle,
-							   on_unqueued, 
-							   g_object_ref (self));
+	if (r_priv && r_priv->key) {
+		handle = atoi (r_priv->key);
+		org_freedesktop_thumbnailer_Generic_unqueue_async (f_priv->proxy, handle,
+								   on_unqueued, 
+								   g_object_ref (self));
+	}
+
+	r_priv->unqueued = TRUE;
 }
 
 void 

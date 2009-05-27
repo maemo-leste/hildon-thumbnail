@@ -1,3 +1,7 @@
+2009-05-25  Philip Van Hoof  <philip@codeminded.be>
+
+	* Bugfix for a crash reported by mail
+
 2009-05-26  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.28
