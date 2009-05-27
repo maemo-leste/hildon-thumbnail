@@ -425,8 +425,9 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			/* Epeg doesn't behave as expected when the destination is larger
 			 * than the source */
 
-			pixbuf_large1 = gdk_pixbuf_new_from_file_at_size (path, 
-									 ww, wh, 
+			pixbuf_large1 = gdk_pixbuf_new_from_file_at_scale (path, 
+									 LARGE, LARGE, 
+									  TRUE,
 									 &nerror);
 			epeg_close (im);
 

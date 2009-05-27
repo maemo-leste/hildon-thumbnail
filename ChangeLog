@@ -1,6 +1,7 @@
-2009-05-25  Philip Van Hoof  <philip@codeminded.be>
+2009-05-27  Philip Van Hoof  <philip@codeminded.be>
 
 	* Bugfix for a crash reported by mail
+	* Bugfix for NB#118963, cropped scaling for small images
 
 2009-05-26  Marius Vollmer  <marius.vollmer@nokia.com>
 
