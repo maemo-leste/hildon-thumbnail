@@ -1,3 +1,9 @@
+2009-05-27  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.29
+
+	* configure.ac: Removed checks for libomxil, nobody uses it.
+
 2009-05-27  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c

@@ -1,8 +1,16 @@
-hildon-thumbnail (3.0.29~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.29) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Fixes: NB#118963 - Size of cropped thumbnail is larger than 124x124.
+  * Fixes: NB#116170 - Another memory leak in libhildon-thumbnail0.
+  
+  [Mikael Ottela]
+  * Fixes: NB#117460 - hildon-thumbnailer: Missing .service file, [...]
 
- -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 26 May 2009 17:53:12 +0300
+  [Marius Vollmer]
+  * Build-Depend on libexif-dev.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 27 May 2009 17:16:47 +0300
 
 hildon-thumbnail (3.0.28) unstable; urgency=low
 
