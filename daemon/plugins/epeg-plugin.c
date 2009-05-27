@@ -426,7 +426,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			 * than the source */
 
 			pixbuf_large1 = gdk_pixbuf_new_from_file_at_scale (path, 
-									 LARGE, LARGE, 
+									 256, 256, 
 									  TRUE,
 									 &nerror);
 			epeg_close (im);
