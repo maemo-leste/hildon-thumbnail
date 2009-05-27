@@ -23,7 +23,7 @@ EXTRA_DIST = \
 	gst-thumb-main.c \
 	gst-thumb-thumber.c \
 	gst-thumb-pipe.c \
-	$(com.nokia.thumbnailer.Gstreamer_service_DATA)
+	com.nokia.thumbnailer.Gstreamer.service.in
 
 if HAVE_GSTREAMER
 libexec_PROGRAMS = gst-video-thumbnailerd
