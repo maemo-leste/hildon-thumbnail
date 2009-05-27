@@ -101,7 +101,7 @@ g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
 
 
  hildon_thumbnail_factory_request_pixbuf (hildon_thumbnail_factory_get_instance (),
-            "file:///home/pvanhoof/.cache/media-art/album-7215ee9c7d9dc229d2921a40e899ec5f-3e2d42595d728926108329d9771c92d7.jpeg",
+            "file:///Does'nexist",
             256, 256,
             FALSE,
             NULL,

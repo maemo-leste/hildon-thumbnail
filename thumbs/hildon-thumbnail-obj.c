@@ -127,8 +127,8 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 
 		for (i = CHECKER; i < 3 && have; i++) {
 			gchar *localp = g_filename_from_uri (lpaths[i], NULL, NULL);
-			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
-				g_file_test (localp, G_FILE_TEST_EXISTS));
+			have = (paths[i] && g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
+				localp && g_file_test (localp, G_FILE_TEST_EXISTS));
 			g_free (localp);
 		}
 	}
@@ -479,8 +479,8 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 
 		for (i = CHECKER; i < 3  && have; i++) {
 			gchar *localp = g_filename_from_uri (lpaths[i], NULL, NULL);
-			have = (g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
-				g_file_test (localp, G_FILE_TEST_EXISTS));
+			have = (paths[i] && g_file_test (paths[i], G_FILE_TEST_EXISTS) || 
+				localp && g_file_test (localp, G_FILE_TEST_EXISTS));
 			g_free (localp);
 		}
 	}

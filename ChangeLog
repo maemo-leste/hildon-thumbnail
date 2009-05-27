@@ -1,3 +1,8 @@
+2009-05-27  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c
+	* tests/artist-art-test.c: NB#116170 
+
 2009-05-27  Mikael Ottela <mikael.ottela@ixonos.com>
 
 	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c: A postfix fix
