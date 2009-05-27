@@ -700,6 +700,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 				info.mutex = g_mutex_new ();
 				info.uri = urlss[o];
 				info.mime_type = mime_type;
+				info.error_msg = NULL;
 
 				dbus_g_proxy_connect_signal (proxy, "Ready",
 							     G_CALLBACK (specialized_ready),

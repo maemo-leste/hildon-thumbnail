@@ -53,53 +53,7 @@ G_BEGIN_DECLS
 #endif /* !G_ENABLE_DEBUG */
 
 
-/* NONE:BOXED,STRING,POINTER (/tmp/dbus-binding-tool-c-marshallers.7AOTTU:1) */
-extern void dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER (GClosure     *closure,
-                                                                                GValue       *return_value,
-                                                                                guint         n_param_values,
-                                                                                const GValue *param_values,
-                                                                                gpointer      invocation_hint,
-                                                                                gpointer      marshal_data);
-void
-dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER (GClosure     *closure,
-                                                                    GValue       *return_value G_GNUC_UNUSED,
-                                                                    guint         n_param_values,
-                                                                    const GValue *param_values,
-                                                                    gpointer      invocation_hint G_GNUC_UNUSED,
-                                                                    gpointer      marshal_data)
-{
-  typedef void (*GMarshalFunc_VOID__BOXED_STRING_POINTER) (gpointer     data1,
-                                                           gpointer     arg_1,
-                                                           gpointer     arg_2,
-                                                           gpointer     arg_3,
-                                                           gpointer     data2);
-  register GMarshalFunc_VOID__BOXED_STRING_POINTER callback;
-  register GCClosure *cc = (GCClosure*) closure;
-  register gpointer data1, data2;
-
-  g_return_if_fail (n_param_values == 4);
-
-  if (G_CCLOSURE_SWAP_DATA (closure))
-    {
-      data1 = closure->data;
-      data2 = g_value_peek_pointer (param_values + 0);
-    }
-  else
-    {
-      data1 = g_value_peek_pointer (param_values + 0);
-      data2 = closure->data;
-    }
-  callback = (GMarshalFunc_VOID__BOXED_STRING_POINTER) (marshal_data ? marshal_data : cc->callback);
-
-  callback (data1,
-            g_marshal_value_peek_boxed (param_values + 1),
-            g_marshal_value_peek_string (param_values + 2),
-            g_marshal_value_peek_pointer (param_values + 3),
-            data2);
-}
-#define dbus_glib_marshal_gst_video_thumbnailer_NONE__BOXED_STRING_POINTER	dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER
-
-/* NONE:STRING,STRING,POINTER (/tmp/dbus-binding-tool-c-marshallers.7AOTTU:2) */
+/* NONE:STRING,STRING,POINTER (/tmp/dbus-binding-tool-c-marshallers.NLS3TU:1) */
 extern void dbus_glib_marshal_gst_video_thumbnailer_VOID__STRING_STRING_POINTER (GClosure     *closure,
                                                                                  GValue       *return_value,
                                                                                  guint         n_param_values,
@@ -144,6 +98,52 @@ dbus_glib_marshal_gst_video_thumbnailer_VOID__STRING_STRING_POINTER (GClosure   
             data2);
 }
 #define dbus_glib_marshal_gst_video_thumbnailer_NONE__STRING_STRING_POINTER	dbus_glib_marshal_gst_video_thumbnailer_VOID__STRING_STRING_POINTER
+
+/* NONE:BOXED,STRING,POINTER (/tmp/dbus-binding-tool-c-marshallers.NLS3TU:2) */
+extern void dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER (GClosure     *closure,
+                                                                                GValue       *return_value,
+                                                                                guint         n_param_values,
+                                                                                const GValue *param_values,
+                                                                                gpointer      invocation_hint,
+                                                                                gpointer      marshal_data);
+void
+dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER (GClosure     *closure,
+                                                                    GValue       *return_value G_GNUC_UNUSED,
+                                                                    guint         n_param_values,
+                                                                    const GValue *param_values,
+                                                                    gpointer      invocation_hint G_GNUC_UNUSED,
+                                                                    gpointer      marshal_data)
+{
+  typedef void (*GMarshalFunc_VOID__BOXED_STRING_POINTER) (gpointer     data1,
+                                                           gpointer     arg_1,
+                                                           gpointer     arg_2,
+                                                           gpointer     arg_3,
+                                                           gpointer     data2);
+  register GMarshalFunc_VOID__BOXED_STRING_POINTER callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 4);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_VOID__BOXED_STRING_POINTER) (marshal_data ? marshal_data : cc->callback);
+
+  callback (data1,
+            g_marshal_value_peek_boxed (param_values + 1),
+            g_marshal_value_peek_string (param_values + 2),
+            g_marshal_value_peek_pointer (param_values + 3),
+            data2);
+}
+#define dbus_glib_marshal_gst_video_thumbnailer_NONE__BOXED_STRING_POINTER	dbus_glib_marshal_gst_video_thumbnailer_VOID__BOXED_STRING_POINTER
 
 G_END_DECLS
 

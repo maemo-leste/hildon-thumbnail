@@ -1,3 +1,11 @@
+2009-05-27  Mikael Ottela <mikael.ottela@ixonos.com>
+
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c: A postfix fix
+	* thumbnailers/gst-video-thumbnailer/Makefile.am
+	* configure.ac: Fix the path that gets substituted into the
+	service file.
+	* daemon/thumbnailer.c: Crash fix to specialized thumbnailers timeout.
+
 2009-05-27  Philip Van Hoof  <philip@codeminded.be>
 
 	* Bugfix for a crash reported by mail

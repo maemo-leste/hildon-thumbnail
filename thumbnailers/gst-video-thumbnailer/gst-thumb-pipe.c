@@ -714,7 +714,7 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 
 	checksum = compute_checksum (G_CHECKSUM_MD5, (const guchar *)uri, strlen (uri));
 	png_name = g_strdup_printf ("%s.png", checksum);
-	jpg_name = g_strdup_printf ("%s.jpg", checksum);
+	jpg_name = g_strdup_printf ("%s.jpeg", checksum);
 
 	g_free (checksum);
 

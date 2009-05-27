@@ -22,9 +22,8 @@ BUILT_SOURCES = \
 EXTRA_DIST = \
 	gst-thumb-main.c \
 	gst-thumb-thumber.c \
-	gst-thumb-pipe.c 
-
-CLEANFILES = $(com.nokia.Thumbnailer_service_DATA) 
+	gst-thumb-pipe.c \
+	$(com.nokia.thumbnailer.Gstreamer_service_DATA)
 
 if HAVE_GSTREAMER
 libexec_PROGRAMS = gst-video-thumbnailerd
@@ -69,3 +68,5 @@ gst_video_thumbnailerd_LDADD = \
 	$(GDK_PIXBUF_LIBS) \
 	$(PLAYBACK_LIBS)
 
+CLEANFILES = $(BUILT_SOURCES)				\
+	$(com.nokia.thumbnailer.Gstreamer_service_DATA)
