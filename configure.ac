@@ -109,19 +109,6 @@ fi
 
 AM_CONDITIONAL(HAVE_GSTREAMER, test "$have_gstreamer" = "yes")
 
-AC_CHECK_LIB(omxil, OMX_Init, 
-	[have_omxil=yes], [have_omxil=no])
-
-if test $have_omxil = "no"; then
- AC_CHECK_LIB(omxil-bellagio, OMX_Init,
-        [have_omxil=yes], [have_omxil=no])
-fi
-
-if test "$have_omxil" = "yes"; then
-  AC_DEFINE(HAVE_OMXIL, [], [OMXIL])
-fi
-
-
 PKG_CHECK_MODULES(PNG,[libpng >= 1.2],
 		      [have_png=yes],
 		      [have_png=no])
