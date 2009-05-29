@@ -421,7 +421,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		// printf ("%dx%d -> %dx%d\n", ow, oh, ww, wh);
 
-		if (ow < LARGE || oh < LARGE) {
+		if (ow < 256 || oh < 256) {
 			/* Epeg doesn't behave as expected when the destination is larger
 			 * than the source */
 
