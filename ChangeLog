@@ -1,3 +1,10 @@
+2009-05-29  Mikael Ottela <mikael.ottela@ixonos.com>
+
+	* thumbnailers/gst-video-thumbnailer/reg/com.nokia.thumbnailer.Gstreamer.service
+	* thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c:
+
+	Fixed an issue about seeking to the right frame before making a thumb
+
 2009-05-29  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/epeg-plugin.c: Bugfix for cropped images

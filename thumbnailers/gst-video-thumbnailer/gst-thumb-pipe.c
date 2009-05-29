@@ -267,16 +267,22 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	g_free (filename);
 
-	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-			  GST_SEEK_TYPE_SET, 3 * GST_SECOND,
-			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
-
 	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
 	if (!_thumber_pipe_poll_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
 		g_propagate_error (error, lerror);
 		g_free (priv->uri);
 		return FALSE;
 	}
+
+	g_signal_connect (priv->video_sink, "preroll-handoff",
+			  G_CALLBACK(_thumber_pipe_thumbnail_callback), pipe);
+
+
+	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+			  GST_SEEK_TYPE_SET, 3 * GST_SECOND,
+			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+
+	gst_element_get_state (priv->pipeline, NULL, NULL, 100 * GST_MSECOND);
 
 	success = priv->success;
 
@@ -447,9 +453,6 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 	/* Connect signal for new pads */
 	g_signal_connect (priv->decodebin, "new-decoded-pad", 
 			  G_CALLBACK (_thumber_pipe_newpad_callback), pipe);
-	
-	g_signal_connect (priv->video_sink, "preroll-handoff",
-			  G_CALLBACK(_thumber_pipe_thumbnail_callback), pipe);
 
 	return TRUE;
 }
