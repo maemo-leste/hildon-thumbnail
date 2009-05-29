@@ -57,7 +57,7 @@
 #include "epeg-plugin.h"
 
 #include <hildon-thumbnail-plugin.h>
-
+/*
 #ifdef LARGE_THUMBNAILS
 	#define LARGE	LARGE
 #else
@@ -67,7 +67,7 @@
 		#define LARGE	124
 	#endif
 #endif
-
+*/
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
