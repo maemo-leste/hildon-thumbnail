@@ -1,3 +1,7 @@
+2009-05-29  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/plugins/epeg-plugin.c: Bugfix for cropped images
+
 2009-05-27  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.29
