@@ -27,6 +27,8 @@
 #include "config.h"
 #endif
 
+//#define HAVE_OSSO
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -64,6 +66,11 @@ typedef struct {
 	GThreadPool *normal_pool;
 	GMutex *mutex;
 	GList *tasks;
+#ifdef HAVE_OSSO
+	GMutex *cmutex;
+	gboolean waiting;
+	GCond *cond;
+#endif
 } ThumbnailerPrivate;
 
 enum {
@@ -91,6 +98,58 @@ free_pluginregistration (PluginRegistration *r)
 {
 	g_slice_free (PluginRegistration, r);
 }
+
+#ifdef HAVE_OSSO
+
+#define TRACKER_SERVICE		"org.freedesktop.Tracker"
+#define TRACKER_PATH		"/org/freedesktop/Tracker"
+#define TRACKER_INTERFACE	"org.freedesktop.Tracker"
+
+static DBusGProxy*
+get_tracker (void)
+{
+	static DBusGProxy *proxy = NULL;
+
+	if (!proxy) {
+		GError          *error = NULL;
+		DBusGConnection *connection;
+
+		connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+
+		if (!error) {
+			proxy = dbus_g_proxy_new_for_name (connection,
+							   TRACKER_SERVICE,
+							   TRACKER_PATH,
+							   TRACKER_INTERFACE);
+
+			dbus_g_object_register_marshaller (thumbnailer_marshal_VOID__STRING_BOOLEAN_BOOLEAN_BOOLEAN_BOOLEAN_BOOLEAN_BOOLEAN,
+							   G_TYPE_NONE,
+							   G_TYPE_STRING,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_BOOLEAN,
+							   G_TYPE_INVALID);
+
+			dbus_g_proxy_add_signal (proxy, "IndexStateChange",
+						 G_TYPE_STRING,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_BOOLEAN,
+						 G_TYPE_INVALID);
+		} else {
+			g_error_free (error);
+		}
+	}
+
+	return proxy;
+}
+#endif
 
 static GModule*
 get_plugin (Thumbnailer *object, const gchar *uri_scheme, const gchar *mime_type)
@@ -914,6 +973,16 @@ unqueued:
 static void 
 do_the_large_work (WorkTask *task, gpointer user_data)
 {
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
+
+#ifdef HAVE_OSSO
+	g_mutex_lock (priv->cmutex);
+	priv->waiting = TRUE;
+	g_debug ("Big-queue thread waiting for Tracker to finish Indexing (Maemo specific)");
+	g_cond_wait (priv->cond, priv->cmutex);
+	g_mutex_unlock (priv->cmutex);
+#endif
+
 	initialize_priority ();
 	do_the_work (task, user_data);
 }
@@ -1093,6 +1162,11 @@ thumbnailer_finalize (GObject *object)
 	g_hash_table_unref (priv->plugins_perscheme);
 	g_mutex_free (priv->mutex);
 
+#ifdef HAVE_OSSO
+	g_mutex_free (priv->cmutex);
+	g_cond_free (priv->cond);
+#endif
+
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
 }
 
@@ -1216,6 +1290,12 @@ thumbnailer_init (Thumbnailer *object)
 
 	priv->mutex = g_mutex_new ();
 
+#ifdef HAVE_OSSO
+	priv->cmutex = g_mutex_new ();
+	priv->cond = g_cond_new ();
+	priv->waiting = FALSE;
+#endif
+
 	priv->plugins_perscheme = g_hash_table_new_full (g_str_hash, g_str_equal,
 							 (GDestroyNotify) g_free,
 							 (GDestroyNotify) g_hash_table_unref);
@@ -1229,10 +1309,28 @@ thumbnailer_init (Thumbnailer *object)
 
 	g_thread_pool_set_sort_function (priv->large_pool, pool_sort_compare, NULL);
 	g_thread_pool_set_sort_function (priv->normal_pool, pool_sort_compare, NULL);
-
 }
 
+#ifdef HAVE_OSSO
+static void
+tracker_index_state_changed (DBusGProxy *tracker, gchar *state, gboolean initial_index,
+			     gboolean in_merge, gboolean is_man_paused, gboolean is_bat_paused,
+			     gboolean is_io_paused, gboolean is_indx_en, gpointer user_data)
+{
+	if (g_strcmp0 (state, "Idle") == 0) {
+		Thumbnailer *object = user_data;
+		ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
+		g_mutex_lock (priv->cmutex);
+		if (priv->waiting) {
+			g_debug ("Tracker finised indexing, releasing big-queue thread (Maemo specific)");
+			g_cond_broadcast (priv->cond);
+			priv->waiting = FALSE;
+		}
+		g_mutex_unlock (priv->cmutex);
+	}
+}
+#endif
 
 void 
 thumbnailer_do_stop (void)
@@ -1244,7 +1342,7 @@ void
 thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thumbnailer **thumbnailer, GError **error)
 {
 	guint result;
-	DBusGProxy *proxy;
+	DBusGProxy *proxy, *tracker;
 	GObject *object;
 
 	proxy = dbus_g_proxy_new_for_name (connection, 
@@ -1266,6 +1364,14 @@ thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thu
 	dbus_g_connection_register_g_object (connection, 
 					     THUMBNAILER_PATH, 
 					     object);
+
+#ifdef HAVE_OSSO
+	tracker = get_tracker ();
+
+	dbus_g_proxy_connect_signal (tracker, "IndexStateChange",
+				     G_CALLBACK (tracker_index_state_changed),
+				     object, NULL);
+#endif
 
 	*thumbnailer = THUMBNAILER (object);
 }

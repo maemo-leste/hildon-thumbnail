@@ -1,3 +1,9 @@
+2009-06-01  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/thumbnailer.c
+	* daemon/thumbnailer-marshal.list: Letting the big-task queue thread
+	wait until Tracker is finished indexing, in Maemo
+
 2009-05-29  Mikael Ottela <mikael.ottela@ixonos.com>
 
 	* thumbnailers/gst-video-thumbnailer/reg/com.nokia.thumbnailer.Gstreamer.service
