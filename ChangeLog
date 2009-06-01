@@ -1,3 +1,7 @@
+2009-06-01  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.30
+
 2009-06-01  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/thumbnailer.c
