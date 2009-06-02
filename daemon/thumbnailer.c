@@ -27,8 +27,6 @@
 #include "config.h"
 #endif
 
-//#define HAVE_OSSO
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -68,10 +66,14 @@ typedef struct {
 	GList *tasks;
 #ifdef HAVE_OSSO
 	GMutex *cmutex;
-	gboolean waiting;
+	gboolean waiting, must_wait;
 	GCond *cond;
 #endif
 } ThumbnailerPrivate;
+
+#ifdef HAVE_OSSO
+static __thread int big_thread = 0;
+#endif
 
 enum {
 	PROP_0,
@@ -564,6 +566,16 @@ do_the_work (WorkTask *task, gpointer user_data)
 		guint64 mtime_x = 0;
 		gchar *mhint = NULL;
 
+#ifdef HAVE_OSSO
+		if (big_thread && priv->must_wait) {
+			g_mutex_lock (priv->cmutex);
+			priv->waiting = TRUE;
+			g_debug ("Big-queue thread waiting for Tracker to finish Indexing (Maemo specific)");
+			g_cond_wait (priv->cond, priv->cmutex);
+			g_mutex_unlock (priv->cmutex);
+		}
+#endif
+
 		hildon_thumbnail_util_get_thumb_paths (urls[i], &large, &normal, &cropped, 
 						       NULL, NULL, NULL, FALSE);
 
@@ -976,11 +988,7 @@ do_the_large_work (WorkTask *task, gpointer user_data)
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (task->object);
 
 #ifdef HAVE_OSSO
-	g_mutex_lock (priv->cmutex);
-	priv->waiting = TRUE;
-	g_debug ("Big-queue thread waiting for Tracker to finish Indexing (Maemo specific)");
-	g_cond_wait (priv->cond, priv->cmutex);
-	g_mutex_unlock (priv->cmutex);
+	big_thread = 1;
 #endif
 
 	initialize_priority ();
@@ -1294,6 +1302,7 @@ thumbnailer_init (Thumbnailer *object)
 	priv->cmutex = g_mutex_new ();
 	priv->cond = g_cond_new ();
 	priv->waiting = FALSE;
+	priv->must_wait = FALSE;
 #endif
 
 	priv->plugins_perscheme = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -1317,9 +1326,10 @@ tracker_index_state_changed (DBusGProxy *tracker, gchar *state, gboolean initial
 			     gboolean in_merge, gboolean is_man_paused, gboolean is_bat_paused,
 			     gboolean is_io_paused, gboolean is_indx_en, gpointer user_data)
 {
+	Thumbnailer *object = user_data;
+	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
+
 	if (g_strcmp0 (state, "Idle") == 0) {
-		Thumbnailer *object = user_data;
-		ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
 		g_mutex_lock (priv->cmutex);
 		if (priv->waiting) {
@@ -1328,6 +1338,10 @@ tracker_index_state_changed (DBusGProxy *tracker, gchar *state, gboolean initial
 			priv->waiting = FALSE;
 		}
 		g_mutex_unlock (priv->cmutex);
+
+		priv->must_wait = FALSE;
+	} else {
+		priv->must_wait = TRUE;
 	}
 }
 #endif
