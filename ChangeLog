@@ -1,3 +1,8 @@
+
+2009-06-02  Philip Van Hoof  <philip@codeminded.be>
+
+        * daemon/hildon-thumbnailer-daemon.c: NB#120328
+
 2009-06-02  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/thumbnailer.c: Wait per thumbnail

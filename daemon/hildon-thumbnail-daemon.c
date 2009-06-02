@@ -395,7 +395,7 @@ thumbnailer_oom(void)
 static void set_oom_adj(void)
 {
 	int fd = open("/proc/self/oom_adj", O_WRONLY);
-	write(fd, "16", 2);
+	write(fd, "15", 2);
 	close(fd);
 }
 
