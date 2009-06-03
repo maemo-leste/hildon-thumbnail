@@ -1,3 +1,7 @@
+2009-06-03  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/plugins/gdkpixbuf-png-out-plugin.c
+	* daemon/plugins/gdkpixbuf-jpeg-out-plugin.c: Removed version from fail dir
 
 2009-06-02  Philip Van Hoof  <philip@codeminded.be>
 

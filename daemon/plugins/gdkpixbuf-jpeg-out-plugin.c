@@ -198,7 +198,7 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 	parent = g_file_get_child (fail_dir, "fail"); /* ~/.thumbnails/fail */
 	g_object_unref (fail_dir);
 
-	fail_dir = g_file_get_child (parent, PACKAGE_NAME "-" PACKAGE_VERSION); /* ~/.thumbnails/large/hild-thum-version/ */
+	fail_dir = g_file_get_child (parent, PACKAGE_NAME /* "-" PACKAGE_VERSION */); /* ~/.thumbnails/large/hild-thum-version/ */
 	g_object_unref (parent);
 
 	fail_file = g_file_get_child (fail_dir, filenp);
@@ -266,7 +266,7 @@ hildon_thumbnail_outplugin_put_error (guint64 mtime, const gchar *uri, GError *e
 	parent = g_file_get_child (fail_dir, "fail"); /* ~/.thumbnails/fail */
 	g_object_unref (fail_dir);
 
-	fail_dir = g_file_get_child (parent, PACKAGE_NAME "-" PACKAGE_VERSION); /* ~/.thumbnails/large/hild-thum-version/ */
+	fail_dir = g_file_get_child (parent, PACKAGE_NAME /* "-" PACKAGE_VERSION */); /* ~/.thumbnails/large/hild-thum-version/ */
 	dirn = g_file_get_path (fail_dir);
 	g_mkdir_with_parents (dirn, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	g_free (dirn);
