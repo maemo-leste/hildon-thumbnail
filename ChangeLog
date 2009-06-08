@@ -1,6 +1,12 @@
 2009-06-08  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c
+	* daemon/plugins/gdkpixbuf-plugin.c: Refuse to make thumbnails for images
+	 that are too large
+
+2009-06-08  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/pixbuf-io-loader.c: Ensure that we use our own pixbuf loaders
 

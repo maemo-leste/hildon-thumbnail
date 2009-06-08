@@ -45,6 +45,24 @@
 
 #include <hildon-thumbnail-plugin.h>
 
+#ifdef HAVE_OSSO
+#define MAX_SIZE	(1024*1024*5)
+#else
+#define MAX_SIZE	(1024*1024*100)
+#endif
+
+GdkPixbuf *
+my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
+				     gint	    width,
+				     gint 	    height,
+				     gboolean       preserve_aspect_ratio,
+				     GCancellable  *cancellable,
+		  	    	     GError       **error);
+
+GdkPixbuf *
+my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
+			    GCancellable  *cancellable,
+			    GError       **error);
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
@@ -98,7 +116,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		GdkPixbuf *pixbuf_large;
 		GdkPixbuf *pixbuf_normal;
 		GdkPixbuf *pixbuf, *pixbuf_cropped;
-		guint64 mtime;
+		guint64 mtime, msize;
 		const guchar *rgb8_pixels;
 		guint width; guint height;
 		guint rowstride; 
@@ -106,12 +124,21 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		file = g_file_new_for_uri (uri);
 
-		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED,
+		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED ","
+					        G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					  G_FILE_QUERY_INFO_NONE,
 					  NULL, &nerror);
 
 		if (nerror)
 			goto nerror_handler;
+
+		msize = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
+		
+		if (msize > MAX_SIZE) {
+			g_set_error (&nerror, DEFAULT_ERROR, 0, "%s is too large",
+				     uri);
+			goto nerror_handler;
+		}
 
 		mtime = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 

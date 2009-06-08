@@ -58,6 +58,19 @@ typedef struct {
 } HildonThumbnailFactoryPrivate;
 
 
+GdkPixbuf *
+my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
+			    GCancellable  *cancellable,
+			    GError       **error);
+GdkPixbuf *
+my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
+				     gint	    width,
+				     gint 	    height,
+				     gboolean       preserve_aspect_ratio,
+				     GCancellable  *cancellable,
+		  	    	     GError       **error);
+
+
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
 #define FACTORY_ERROR g_quark_from_static_string (HILDON_THUMBNAIL_APPLICATION)
 
