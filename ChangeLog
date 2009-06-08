@@ -1,3 +1,7 @@
+2009-06-08  Marius Vollmer  <marius.vollmer@nokia.com>
+
+	Released 3.0.31
+
 2009-06-08  Mikael Ottela <mikael.ottela@ixonos.com>
 
         * thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c: NB#121043

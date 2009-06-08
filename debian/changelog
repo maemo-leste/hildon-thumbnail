@@ -1,3 +1,14 @@
+hildon-thumbnail (3.0.31) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Fixes: NB#121043 - gst-video-thumbnailerd is crashing when trying to make
+                       thumbnails at least from avi or mp4 files.
+
+  [Philip Van Hoof]
+  * Fixes: NB#120328 - oom_adj value in thumbnailer shall be updated
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 08 Jun 2009 14:07:26 +0300
+
 hildon-thumbnail (3.0.30) unstable; urgency=low
 
   * Bugfixes.
