@@ -58,24 +58,6 @@ typedef struct {
 } HildonThumbnailFactoryPrivate;
 
 
-#ifndef gdk_pixbuf_new_from_stream
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
-			    GCancellable  *cancellable,
-			    GError       **error);
-#endif 
-
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf *
-gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
-				     gint	    width,
-				     gint 	    height,
-				     gboolean       preserve_aspect_ratio,
-				     GCancellable  *cancellable,
-		  	    	     GError       **error);
-#endif
-
 #define HILDON_THUMBNAIL_APPLICATION "hildon-thumbnail"
 #define FACTORY_ERROR g_quark_from_static_string (HILDON_THUMBNAIL_APPLICATION)
 
@@ -186,7 +168,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 
 		if (!error) {
 			/* Read the stream as a pixbuf at the requested exact scale */
-			pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+			pixbuf = my_gdk_pixbuf_new_from_stream_at_scale (stream,
 				r_priv->width, r_priv->height, TRUE, 
 				NULL, &error);
 		}

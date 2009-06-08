@@ -1,3 +1,9 @@
+2009-06-08  Philip Van Hoof  <philip@codeminded.be>
+
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c: Ensure that we use our own pixbuf loaders
+
 2009-06-08  Marius Vollmer  <marius.vollmer@nokia.com>
 
 	Released 3.0.31

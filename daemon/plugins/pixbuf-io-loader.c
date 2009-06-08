@@ -28,7 +28,6 @@
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#ifndef gdk_pixbuf_new_from_stream_at_scale
 
 #define LOAD_BUFFER_SIZE 65536
 
@@ -134,7 +133,7 @@ at_scale_size_prepared_cb (GdkPixbufLoader *loader,
 }
 
 /**
- * gdk_pixbuf_new_from_stream_at_scale:
+ * my_gdk_pixbuf_new_from_stream_at_scale:
  * @stream:  a #GInputStream to load the pixbuf from
  * @width: The width the image should have or -1 to not constrain the width
  * @height: The height the image should have or -1 to not constrain the height
@@ -167,7 +166,7 @@ at_scale_size_prepared_cb (GdkPixbufLoader *loader,
  * Since: 2.14
  */
 GdkPixbuf *
-gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
+my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 				     gint	    width,
 				     gint 	    height,
 				     gboolean       preserve_aspect_ratio,
@@ -194,7 +193,7 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 }
 
 /**
- * gdk_pixbuf_new_from_stream:
+ * my_gdk_pixbuf_new_from_stream:
  * @stream:  a #GInputStream to load the pixbuf from
  * @cancellable: optional #GCancellable object, %NULL to ignore
  * @error: Return location for an error
@@ -217,7 +216,7 @@ gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
  * Since: 2.14
  **/
 GdkPixbuf *
-gdk_pixbuf_new_from_stream (GInputStream  *stream,
+my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
 			    GError       **error)
 {
@@ -231,5 +230,4 @@ gdk_pixbuf_new_from_stream (GInputStream  *stream,
 	return pixbuf;
 }
 
-#endif
 

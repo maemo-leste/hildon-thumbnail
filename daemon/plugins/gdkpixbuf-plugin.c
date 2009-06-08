@@ -45,19 +45,6 @@
 
 #include <hildon-thumbnail-plugin.h>
 
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf* gdk_pixbuf_new_from_stream_at_scale (GInputStream *stream, gint width,
-			gint height, gboolean preserve_aspect_ratio,
-			GCancellable *cancellable, GError **error);
-#endif
-
-#ifndef gdk_pixbuf_new_from_stream
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
-			    GCancellable  *cancellable,
-			    GError       **error);
-#endif 
 
 static gchar **supported = NULL;
 static gboolean do_cropped = TRUE;
@@ -146,7 +133,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 #ifdef LARGE_THUMBNAILS
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_LARGE, mtime, uri, &err_file)) {
 
-			GdkPixbuf *pixbuf_large1 = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf_large1 = my_gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
 									    256, 256,
 									    TRUE,
 									    NULL,
@@ -195,7 +182,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_NORMAL, mtime, uri, &err_file)) {
 
-			GdkPixbuf *pixbuf_normal1 = gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf_normal1 = my_gdk_pixbuf_new_from_stream_at_scale (G_INPUT_STREAM (stream),
 									     128, 128,
 									     TRUE,
 									     NULL,
@@ -242,7 +229,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
 
-			GdkPixbuf *pixbuf1 = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
+			GdkPixbuf *pixbuf1 = my_gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
 							     NULL,
 							     &nerror);
 
