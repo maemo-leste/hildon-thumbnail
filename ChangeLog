@@ -2,7 +2,7 @@
 
 	* thumbs/hildon-thumbnail-obj.c
 	* daemon/plugins/gdkpixbuf-plugin.c: Refuse to make thumbnails for images
-	 that are too large
+	 that are too large. NB#121200
 
 2009-06-08  Philip Van Hoof  <philip@codeminded.be>
 
