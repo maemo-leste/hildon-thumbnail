@@ -235,6 +235,7 @@ thumber_pipe_run (ThumberPipe *pipe,
 	ThumberPipePrivate *priv;
 	gchar              *filename;
 	gboolean            success = FALSE;
+	guint               handoff_id = 0;
 	GError             *lerror  = NULL;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
@@ -274,15 +275,17 @@ thumber_pipe_run (ThumberPipe *pipe,
 		return FALSE;
 	}
 
-	g_signal_connect (priv->video_sink, "preroll-handoff",
-			  G_CALLBACK(_thumber_pipe_thumbnail_callback), pipe);
+	handoff_id = g_signal_connect (priv->video_sink, "preroll-handoff",
+				       G_CALLBACK(_thumber_pipe_thumbnail_callback), pipe);
 
 
 	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
 			  GST_SEEK_TYPE_SET, 3 * GST_SECOND,
 			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
-	gst_element_get_state (priv->pipeline, NULL, NULL, 100 * GST_MSECOND);
+	gst_element_get_state (priv->pipeline, NULL, NULL, 3 * GST_SECOND);
+
+	g_signal_handler_disconnect (priv->video_sink, handoff_id);
 
 	success = priv->success;
 

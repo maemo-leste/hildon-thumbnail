@@ -1,3 +1,7 @@
+2009-06-08  Mikael Ottela <mikael.ottela@ixonos.com>
+
+        * thumbnailers/gst-video-thumbnailer/gst-thumb-pipe.c: NB#121043
+
 2009-06-03  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/gdkpixbuf-png-out-plugin.c
