@@ -28,13 +28,21 @@
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-
 #define LOAD_BUFFER_SIZE 65536
+
+typedef struct {
+	guint max_pix;
+	gboolean stop;
+} LoadInfo;
+
+#define DEFAULT_ERROR_DOMAIN	"HildonThumbnailerGdkPixbuf"
+#define DEFAULT_ERROR		g_quark_from_static_string (DEFAULT_ERROR_DOMAIN)
 
 static GdkPixbuf *
 load_from_stream (GdkPixbufLoader  *loader,
 		  GInputStream     *stream,
 		  GCancellable     *cancellable,
+		  LoadInfo         *info,
 		  GError          **error)
 {
 	GdkPixbuf *pixbuf;
@@ -43,7 +51,7 @@ load_from_stream (GdkPixbufLoader  *loader,
 	gboolean res;
 
   	res = TRUE;
-	while (1) { 
+	while (!info->stop) { 
 		n_read = g_input_stream_read (stream, 
 					      buffer, 
 					      sizeof (buffer), 
@@ -56,6 +64,9 @@ load_from_stream (GdkPixbufLoader  *loader,
 		}
 
 		if (n_read == 0)
+			break;
+
+		if (info->stop)
 			break;
 
 		if (!gdk_pixbuf_loader_write (loader, 
@@ -73,6 +84,12 @@ load_from_stream (GdkPixbufLoader  *loader,
 		error = NULL;
 	}
 
+	if (info->stop) {
+		res = FALSE;
+		g_set_error (error, DEFAULT_ERROR, 0,
+			     "original image too large");
+	}
+
 	pixbuf = NULL;
 	if (res) {
 		pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
@@ -88,6 +105,24 @@ typedef	struct {
 	gint height;
 	gboolean preserve_aspect_ratio;
 } AtScaleData; 
+
+
+static void
+max_pix_check_cb (GdkPixbufLoader *loader, 
+	 		   int              width,
+		  	   int              height,
+		  	   gpointer         data)
+{
+	LoadInfo *linfo = data;
+
+	if (linfo->max_pix == 0) {
+		return;
+	}
+
+	if (width * height > linfo->max_pix) {
+		linfo->stop = TRUE;
+	}
+}
 
 static void
 at_scale_size_prepared_cb (GdkPixbufLoader *loader, 
@@ -176,17 +211,21 @@ my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 	GdkPixbufLoader *loader;
 	GdkPixbuf *pixbuf;
 	AtScaleData info;
+	LoadInfo linfo;
 
 	loader = gdk_pixbuf_loader_new ();
 
 	info.width = width;
 	info.height = height;
-        info.preserve_aspect_ratio = preserve_aspect_ratio;
+	info.preserve_aspect_ratio = preserve_aspect_ratio;
+
+	linfo.stop = FALSE;
+	linfo.max_pix = 0;
 
 	g_signal_connect (loader, "size-prepared", 
 			  G_CALLBACK (at_scale_size_prepared_cb), &info);
 
-	pixbuf = load_from_stream (loader, stream, cancellable, error);
+	pixbuf = load_from_stream (loader, stream, cancellable, &linfo, error);
 	g_object_unref (loader);
 
 	return pixbuf;
@@ -218,13 +257,22 @@ my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 GdkPixbuf *
 my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
+			    guint          max_pix,
 			    GError       **error)
 {
 	GdkPixbuf *pixbuf;
 	GdkPixbufLoader *loader;
+	LoadInfo linfo;
 
 	loader = gdk_pixbuf_loader_new ();
-	pixbuf = load_from_stream (loader, stream, cancellable, error);
+
+	g_signal_connect (loader, "size-prepared", 
+			  G_CALLBACK (max_pix_check_cb), &linfo);
+
+	linfo.stop = FALSE;
+	linfo.max_pix = max_pix;
+
+	pixbuf = load_from_stream (loader, stream, cancellable, &linfo, error);
 	g_object_unref (loader);
 
 	return pixbuf;

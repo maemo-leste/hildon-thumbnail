@@ -379,6 +379,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		guint rowstride; 
 		gboolean err_file = FALSE;
 		int ww, wh;
+		gboolean orig_is_crop = FALSE;
 
 		file = g_file_new_for_uri (uri);
 		path = g_file_get_path (file);
@@ -417,32 +418,23 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		epeg_size_get (im, &ow, &oh);
 
-		wanted_size (ow, oh, 256 , 256, &ww, &wh);
+		if (ow <= 256 || oh <= 256) {
 
-		// printf ("%dx%d -> %dx%d\n", ow, oh, ww, wh);
+			/* Changed in NB#118963 comment #38 */
 
-		// Only cropped will work with this currently ugly looking, 
-		// often changed exception code
-
-		if (ow <= 124 || oh <= 124) {
-
-			/* Epeg doesn't behave as expected when the destination is larger
-			 * than the source */
+			/* For items where either x or y is smaller than 124, 
+			 * the image is taken aspect ratio retained by scaling
+			 * the dimension which is greater than 124 to the size
+			 * 124. */
 
 			if (ow <= 124 && oh <= 124) {
-				// If both are smaller, no cropping (crop_resize
-				// will take care of this one)
-
-				pixbuf_large1 = gdk_pixbuf_new_from_file (path,
+				pixbuf_large1 = gdk_pixbuf_new_from_file (path, 
 									  &nerror);
 			} else {
-				// if one of both is smaller, first upscale for
-				// both to become larger, then normal crop
-
 				pixbuf_large1 = gdk_pixbuf_new_from_file_at_scale (path, 
-										 256, 256, 
-										  TRUE,
-										 &nerror);
+										   124, 124, 
+										   TRUE,
+										   &nerror);
 			}
 
 			epeg_close (im);
@@ -451,29 +443,32 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				pixbuf_large = pixbuf_large1;
 				goto nerror_handler;
 			}
+			orig_is_crop = TRUE;
 
 		} else {
-			// if both are larger, normal crop
+			/* For items where x and y are both larger than 124, the 
+			 * thumbnail is taken from the largest square in the 
+			 * middle of the image and scaled down to size 124x124. */
 
-			//gchar *large=NULL, *normal=NULL, *cropped=NULL;
+			wanted_size (ow, oh, 256 , 256, &ww, &wh);
 
 			epeg_decode_colorspace_set (im, EPEG_RGB8);
 			epeg_decode_size_set (im, ww, wh);
 			// epeg_quality_set (im, 75);
 			epeg_thumbnail_comments_enable (im, 0);
 
-			//hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
-			//				       NULL, NULL, NULL, FALSE);
+			// hildon_thumbnail_util_get_thumb_paths (uri, &large, &normal, &cropped,
+			// 				       NULL, NULL, NULL, FALSE);
 
-			//epeg_file_output_set (im, large);
-			//epeg_encode (im);
-			//epeg_close (im);
+			// epeg_file_output_set (im, large);
+			// epeg_encode (im);
+			// epeg_close (im);
 
-			//pixbuf_large = gdk_pixbuf_new_from_file (large, &nerror);
+			// pixbuf_large = gdk_pixbuf_new_from_file (large, &nerror);
 
-			//if (nerror) {
+			// if (nerror) {
 			//	pixbuf_large = pixbuf_large1;
-			//	goto nerror_handler;
+			// 	goto nerror_handler;
 			// }
 
 			data = (guchar *) epeg_pixels_get (im, 0, 0, ww, wh);
@@ -517,7 +512,11 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
 
-			pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
+			if (orig_is_crop) {
+				pixbuf_cropped = g_object_ref (pixbuf_large);
+			} else {
+				pixbuf_cropped = crop_resize (pixbuf_large, 124, 124);
+			}
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);
 			width = gdk_pixbuf_get_width (pixbuf_cropped);

@@ -47,8 +47,10 @@
 
 #ifdef HAVE_OSSO
 #define MAX_SIZE	(1024*1024*5)
+#define MAX_PIX		(5000000)
 #else
 #define MAX_SIZE	(1024*1024*100)
+#define MAX_PIX		(5000000*(100/5))
 #endif
 
 GdkPixbuf *
@@ -62,6 +64,7 @@ my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 GdkPixbuf *
 my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
+			       guint max_pix,
 			    GError       **error);
 
 static gchar **supported = NULL;
@@ -255,10 +258,10 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 #endif
 
 		if (do_cropped && hildon_thumbnail_outplugins_needs_out (HILDON_THUMBNAIL_PLUGIN_OUTTYPE_CROPPED, mtime, uri, &err_file)) {
+			int a, b;
 
-			GdkPixbuf *pixbuf1 = my_gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream),
-							     NULL,
-							     &nerror);
+			GdkPixbuf *pixbuf1 = my_gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), 
+									    NULL, MAX_PIX, &nerror);
 
 			if (nerror) {
 				if (pixbuf1)
@@ -268,10 +271,45 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			pixbuf = gdk_pixbuf_apply_embedded_orientation (pixbuf1);
 
-			pixbuf_cropped = crop_resize (pixbuf, 124, 124);
+			g_object_unref (pixbuf1);
+
+			a = gdk_pixbuf_get_width (pixbuf);
+			b = gdk_pixbuf_get_height (pixbuf);
+
+			/* Changed in NB#118963 comment #38 */
+
+			if (a <= 124 || b <= 124) {
+				int a_wanted, b_wanted;
+
+
+				/* For items where either x or y is smaller than 124, 
+				 * the image is taken aspect ratio retained by scaling
+				 * the dimension which is greater than 124 to the size
+				 * 124. */
+
+				if ((double)b * (double)124 > (double)a * (double)124) {
+					a_wanted = 0.5 + (double)a * (double)124 / (double)b;
+					b_wanted = 124;
+				} else {
+					b_wanted = 0.5 + (double)b * (double)124 / (double)a;
+					a_wanted = 124;
+				}
+
+				pixbuf_cropped = gdk_pixbuf_scale_simple (pixbuf,
+									  a_wanted,
+									  b_wanted,
+									  GDK_INTERP_BILINEAR);
+
+			} else {
+
+				/* For items where x and y are both larger than 124, the 
+				 * thumbnail is taken from the largest square in the 
+				 * middle of the image and scaled down to size 124x124. */
+
+				pixbuf_cropped = crop_resize (pixbuf, 124, 124);
+			}
 
 			g_object_unref (pixbuf);
-			g_object_unref (pixbuf1);
 
 			rgb8_pixels = gdk_pixbuf_get_pixels (pixbuf_cropped);
 			width = gdk_pixbuf_get_width (pixbuf_cropped);

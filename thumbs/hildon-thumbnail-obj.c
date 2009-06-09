@@ -61,6 +61,7 @@ typedef struct {
 GdkPixbuf *
 my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
+			       guint max_pix,
 			    GError       **error);
 GdkPixbuf *
 my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,

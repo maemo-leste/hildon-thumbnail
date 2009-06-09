@@ -1,5 +1,9 @@
 2009-06-09  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/epeg-plugin.c:
+	* thumbs/hildon-thumbnail-obj.c
+	* daemon/plugins/gdkpixbuf-plugin.c
+	* daemon/plugins/pixbuf-io-loader.c
 	* daemon/plugins/epeg-plugin.c: Cropped sizes. NB#118963
 
 2009-06-08  Philip Van Hoof  <philip@codeminded.be>
