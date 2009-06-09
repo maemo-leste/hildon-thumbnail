@@ -1,6 +1,7 @@
 hildon-thumbnail (3.0.32~unreleased) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Fixes: NB#118963 - Size of cropped thumbnail is larger than 124x12.
 
  --
 
