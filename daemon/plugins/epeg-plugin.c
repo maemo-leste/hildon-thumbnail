@@ -424,12 +424,12 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		// Only cropped will work with this currently ugly looking, 
 		// often changed exception code
 
-		if (ow < 124 || oh < 124) {
+		if (ow <= 124 || oh <= 124) {
 
 			/* Epeg doesn't behave as expected when the destination is larger
 			 * than the source */
 
-			if (ow < 124 && oh < 124) {
+			if (ow <= 124 && oh <= 124) {
 				// If both are smaller, no cropping (crop_resize
 				// will take care of this one)
 
