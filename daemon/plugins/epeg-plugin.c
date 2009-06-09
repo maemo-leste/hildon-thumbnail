@@ -418,6 +418,10 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 		epeg_size_get (im, &ow, &oh);
 
+		/* You need some material around the 124x124 boundaries to 
+		 * perform proper cropping with EPeg. This is why the 256x256
+		 * check here */
+
 		if (ow <= 256 || oh <= 256) {
 
 			/* Changed in NB#118963 comment #38 */
