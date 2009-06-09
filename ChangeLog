@@ -1,8 +1,12 @@
+2009-06-09  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/plugins/epeg-plugin.c: Cropped sizes. NB#118963
+
 2009-06-08  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c
-	* daemon/plugins/gdkpixbuf-plugin.c: Refuse to make thumbnails for images
-	 that are too large. NB#121200
+	* daemon/plugins/gdkpixbuf-plugin.c: Refuse to make thumbnails for 
+	  images that are too large. NB#121200
 
 2009-06-08  Philip Van Hoof  <philip@codeminded.be>
 
