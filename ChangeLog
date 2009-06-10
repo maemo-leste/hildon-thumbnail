@@ -1,3 +1,7 @@
+2009-06-10  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/hildon-thumbnail-plugin.c: No need to copy the list here
+
 2009-06-09  Philip Van Hoof  <philip@codeminded.be>
 
 	* daemon/plugins/epeg-plugin.c:

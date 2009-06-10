@@ -41,7 +41,7 @@ hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri, GError *
 	GList *copy;
 
 	g_static_rec_mutex_lock (&mutex);
-	copy = g_list_copy (outplugs);
+	copy = outplugs;
 
 	while (copy) {
 		GModule *module = copy->data;
@@ -61,7 +61,6 @@ hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri, GError *
 
 	g_static_rec_mutex_unlock (&mutex);
 
-	g_list_free (copy);
 }
 
 void
@@ -71,7 +70,7 @@ hildon_thumbnail_outplugins_cleanup (const gchar *uri_match,
 	GList *copy;
 
 	g_static_rec_mutex_lock (&mutex);
-	copy = g_list_copy (outplugs);
+	copy = outplugs;
 
 	while (copy) {
 		GModule *module = copy->data;
@@ -91,7 +90,6 @@ hildon_thumbnail_outplugins_cleanup (const gchar *uri_match,
 
 	g_static_rec_mutex_unlock (&mutex);
 
-	g_list_free (copy);
 }
 
 gchar * 
@@ -101,7 +99,7 @@ hildon_thumbnail_outplugins_get_orig (const gchar *path)
 	gchar *retval = NULL;
 
 	g_static_rec_mutex_lock (&mutex);
-	copy = g_list_copy (outplugs);
+	copy = outplugs;
 
 	while (copy && !retval) {
 		GModule *module = copy->data;
@@ -120,8 +118,6 @@ hildon_thumbnail_outplugins_get_orig (const gchar *path)
 	}
 
 	g_static_rec_mutex_unlock (&mutex);
-
-	g_list_free (copy);
 
 	return retval;
 }
@@ -185,7 +181,7 @@ hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 	gboolean retval = FALSE;
 
 	g_static_rec_mutex_lock (&mutex);
-	copy = g_list_copy (outplugs);
+	copy = outplugs;
 
 	while (copy && !retval) {
 		GModule *module = copy->data;
@@ -205,7 +201,6 @@ hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 
 	g_static_rec_mutex_unlock (&mutex);
 
-	g_list_free (copy);
 
 	return retval;
 }
@@ -228,7 +223,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 	GQuark domain;
 
 	g_static_rec_mutex_lock (&mutex);
-	copy = g_list_copy (outplugs);
+	copy = outplugs;
 
 	while (copy) {
 		GModule *module = copy->data;
@@ -266,7 +261,6 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 
 	g_static_rec_mutex_unlock (&mutex);
 
-	g_list_free (copy);
 }
 
 
