@@ -2,6 +2,7 @@
 
 	* daemon/plugins/gdkpixbuf-plugin.c: Detect animated GIF, and block support
 	for it
+	* daemon/hildon-thumbnail-daemon.c: Setting rlimit on memory usage
 
 2009-06-11  Philip Van Hoof  <philip@codeminded.be>
 

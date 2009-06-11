@@ -45,6 +45,10 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/resource.h>
 
 #include <glib.h>
 #include <dbus/dbus-glib-bindings.h>
@@ -57,6 +61,22 @@
 #include "thumbnail-manager.h"
 #include "albumart-manager.h"
 #include "thumb-hal.h"
+
+/* Maximum here is a G_MAXLONG, so if you want to use > 2GB, you have
+ * to set MEM_LIMIT to RLIM_INFINITY
+ */
+#ifdef __x86_64__
+#define MEM_LIMIT 512 * 1024 * 1024
+#else
+#define MEM_LIMIT 80 * 1024 * 1024
+#endif
+
+#if defined(__OpenBSD__) && !defined(RLIMIT_AS)
+#define RLIMIT_AS RLIMIT_DATA
+#endif
+
+#undef DISABLE_MEM_LIMITS
+
 
 void keep_alive (void);
 
@@ -152,6 +172,108 @@ initialize_priority (void)
 #endif
 #endif
 }
+
+static guint
+get_memory_total (void)
+{
+	GError      *error = NULL;
+	const gchar *filename;
+	gchar       *contents = NULL;
+	glong        total = 0;
+
+	filename = "/proc/meminfo";
+
+	if (!g_file_get_contents (filename,
+				  &contents,
+				  NULL,
+				  &error)) {
+		g_critical ("Couldn't get memory information:'%s', %s",
+			    filename,
+			    error ? error->message : "no error given");
+		g_clear_error (&error);
+	} else {
+		gchar *start, *end, *p;
+
+		start = "MemTotal:";
+		end = "kB";
+
+		p = strstr (contents, start);
+		if (p) {
+			p += strlen (start);
+			end = strstr (p, end);
+
+			if (end) {
+				*end = '\0';
+				total = 1024 * atol (p);
+			}
+		}
+
+		g_free (contents);
+	}
+
+	if (!total) {
+		/* Setting limit to an arbitary limit */
+		total = RLIM_INFINITY;
+	}
+
+	return total;
+}
+
+static gboolean
+memory_setrlimits (void)
+{
+#ifndef DISABLE_MEM_LIMITS
+	struct rlimit rl;
+	glong         total;
+	glong         limit;
+
+	total = get_memory_total ();
+	limit = CLAMP (MEM_LIMIT, 0, total);
+
+	/* We want to limit the max virtual memory
+	 * most extractors use mmap() so only virtual memory can be
+	 * effectively limited.
+	 */
+	getrlimit (RLIMIT_AS, &rl);
+	rl.rlim_cur = limit;
+
+	if (setrlimit (RLIMIT_AS, &rl) == -1) {
+               const gchar *str = g_strerror (errno);
+
+               g_critical ("Could not set virtual memory limit with setrlimit(RLIMIT_AS), %s",
+			   str ? str : "no error given");
+
+               return FALSE;
+	} else {
+		getrlimit (RLIMIT_DATA, &rl);
+		rl.rlim_cur = limit;
+
+		if (setrlimit (RLIMIT_DATA, &rl) == -1) {
+			const gchar *str = g_strerror (errno);
+
+			g_critical ("Could not set heap memory limit with setrlimit(RLIMIT_DATA), %s",
+				    str ? str : "no error given");
+
+			return FALSE;
+		} else {
+			gchar *str1, *str2;
+
+			str1 = g_format_size_for_display (total);
+			str2 = g_format_size_for_display (limit);
+
+			g_message ("Setting memory limitations: total is %s, virtual/heap set to %s",
+				   str1,
+				   str2);
+
+			g_free (str2);
+			g_free (str1);
+		}
+	}
+#endif /* DISABLE_MEM_LIMITS */
+
+	return TRUE;
+}
+
 
 void
 keep_alive (void) 
@@ -437,6 +559,8 @@ main (int argc, char **argv)
 
 	if (!g_thread_supported ())
 		g_thread_init (NULL);
+
+	memory_setrlimits ();
 
 	create_dummy_files ();
 
