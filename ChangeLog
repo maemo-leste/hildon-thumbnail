@@ -4,6 +4,8 @@
 	for it
 	* daemon/hildon-thumbnail-daemon.c: Setting rlimit on memory usage
 
+	Fixes NB#121200
+
 2009-06-11  Philip Van Hoof  <philip@codeminded.be>
 
 	* thumbs/hildon-thumbnail-obj.c
