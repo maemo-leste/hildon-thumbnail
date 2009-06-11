@@ -1,5 +1,10 @@
 2009-06-11  Philip Van Hoof  <philip@codeminded.be>
 
+	* daemon/plugins/gdkpixbuf-plugin.c: Detect animated GIF, and block support
+	for it
+
+2009-06-11  Philip Van Hoof  <philip@codeminded.be>
+
 	* thumbs/hildon-thumbnail-obj.c
 	* daemon/plugins/gdkpixbuf-plugin.c
 	* daemon/plugins/pixbuf-io-loader.c: Sanity checks

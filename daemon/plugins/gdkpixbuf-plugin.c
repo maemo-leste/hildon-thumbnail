@@ -110,6 +110,38 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 	return hildon_thumbnail_crop_resize (src, width, height);
 }
 
+static gboolean
+is_animated_gif (const gchar *filename)
+{
+	guint frame_count = 0;
+	FILE *gif_file = fopen (filename, "r");
+
+	if (gif_file) {
+		while (!feof (gif_file) && frame_count < 2) {
+			gchar buffer[1024];
+			size_t read;
+			size_t t;
+
+			read = fread (buffer, 1, 1024, gif_file);
+			for (t = 0; t < read; t++) {
+//				if (buffer[t]   == 0x00 && buffer[t+1] == 0x21 &&
+//				    buffer[t+2] == 0xF9 && buffer[t+3] == 0x04) {
+//					    frame_count++;
+//				}
+				if (buffer[t]   == 0x00 && buffer[t+1] == 0x2C) {
+					    frame_count++;
+				}
+
+			}
+		}
+
+		fclose (gif_file);
+	}
+
+	return (frame_count > 1);
+}
+
+
 void
 hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris, GError **error)
 {
@@ -131,33 +163,25 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		guint width; guint height;
 		guint rowstride; 
 		gboolean err_file = FALSE;
-/*		gchar *path; */
+		gchar *path; 
 
 		file = g_file_new_for_uri (uri);
-/*
+
 		path = g_file_get_path (file);
 
 		if (path) {
 			gchar *up = g_utf8_strup (path, -1);
 			if (g_str_has_suffix (up, "GIF")) {
-				gchar buffer[16];
-				FILE *f = fopen (path, "r");
-				if (f) {
-					if (fread (buffer, 16, 1, f) == 1) {
-						guint w = 0, h = 0;
-						w |= buffer[6];
-						w |= buffer[7];
-						h |= buffer[8];
-						h |= buffer[9];
-						printf ("%dx%d\n", w, h);
-					}
-					fclose (f);
+				if (is_animated_gif (path)) {
+					g_set_error (&nerror, DEFAULT_ERROR, 0,
+						     "Animated GIF (%s) is not supported",
+						     uri);
 				}
 			}
-			g_free (up);
 			g_free (path);
+			g_free (up);
 		}
-*/
+		
 		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED ","
 					        G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					  G_FILE_QUERY_INFO_NONE,
