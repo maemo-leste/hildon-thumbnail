@@ -31,7 +31,7 @@
 #define LOAD_BUFFER_SIZE 65536
 
 typedef struct {
-	guint max_pix;
+	guint max_pix, max_w, max_h;
 	gboolean stop;
 } LoadInfo;
 
@@ -115,13 +115,24 @@ max_pix_check_cb (GdkPixbufLoader *loader,
 {
 	LoadInfo *linfo = data;
 
-	if (linfo->max_pix == 0) {
+	if (linfo->max_pix == 0 &&
+	    linfo->max_w == 0 &&
+	    linfo->max_h == 0) {
 		return;
 	}
 
 	if (width * height > linfo->max_pix) {
 		linfo->stop = TRUE;
 	}
+
+	if (width > linfo->max_w) {
+		linfo->stop = TRUE;
+	}
+
+	if (height > linfo->max_h) {
+		linfo->stop = TRUE;
+	}
+
 }
 
 static void
@@ -221,6 +232,8 @@ my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 
 	linfo.stop = FALSE;
 	linfo.max_pix = 0;
+	linfo.max_h = 0;
+	linfo.max_w = 0;
 
 	g_signal_connect (loader, "size-prepared", 
 			  G_CALLBACK (at_scale_size_prepared_cb), &info);
@@ -258,6 +271,7 @@ GdkPixbuf *
 my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
 			    guint          max_pix,
+			    guint max_w, guint max_h,
 			    GError       **error)
 {
 	GdkPixbuf *pixbuf;
@@ -271,6 +285,8 @@ my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 
 	linfo.stop = FALSE;
 	linfo.max_pix = max_pix;
+	linfo.max_w = max_w;
+	linfo.max_h = max_h;
 
 	pixbuf = load_from_stream (loader, stream, cancellable, &linfo, error);
 	g_object_unref (loader);

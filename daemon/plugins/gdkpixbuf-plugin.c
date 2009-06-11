@@ -45,12 +45,18 @@
 
 #include <hildon-thumbnail-plugin.h>
 
+#define HAVE_OSSO
+
 #ifdef HAVE_OSSO
 #define MAX_SIZE	(1024*1024*5)
 #define MAX_PIX		(5000000)
+#define MAX_W		(5000)
+#define MAX_H		(5000)
 #else
 #define MAX_SIZE	(1024*1024*100)
 #define MAX_PIX		(5000000*(100/5))
+#define MAX_W		(10000)
+#define MAX_H		(10000)
 #endif
 
 GdkPixbuf *
@@ -65,6 +71,7 @@ GdkPixbuf *
 my_gdk_pixbuf_new_from_stream (GInputStream  *stream,
 			    GCancellable  *cancellable,
 			       guint max_pix,
+			       guint max_w, guint max_h,
 			    GError       **error);
 
 static gchar **supported = NULL;
@@ -124,9 +131,33 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		guint width; guint height;
 		guint rowstride; 
 		gboolean err_file = FALSE;
+/*		gchar *path; */
 
 		file = g_file_new_for_uri (uri);
+/*
+		path = g_file_get_path (file);
 
+		if (path) {
+			gchar *up = g_utf8_strup (path, -1);
+			if (g_str_has_suffix (up, "GIF")) {
+				gchar buffer[16];
+				FILE *f = fopen (path, "r");
+				if (f) {
+					if (fread (buffer, 16, 1, f) == 1) {
+						guint w = 0, h = 0;
+						w |= buffer[6];
+						w |= buffer[7];
+						h |= buffer[8];
+						h |= buffer[9];
+						printf ("%dx%d\n", w, h);
+					}
+					fclose (f);
+				}
+			}
+			g_free (up);
+			g_free (path);
+		}
+*/
 		info = g_file_query_info (file, G_FILE_ATTRIBUTE_TIME_MODIFIED ","
 					        G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					  G_FILE_QUERY_INFO_NONE,
@@ -261,7 +292,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			int a, b;
 
 			GdkPixbuf *pixbuf1 = my_gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), 
-									    NULL, MAX_PIX, &nerror);
+									    NULL, MAX_PIX, 
+									    MAX_W, MAX_H, &nerror);
 
 			if (nerror) {
 				if (pixbuf1)
