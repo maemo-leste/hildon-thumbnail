@@ -432,7 +432,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 			 * the dimension which is greater than 124 to the size
 			 * 124. */
 
-			if (ow <= 124 && oh <= 124) {
+			if (ow < 124 && oh < 124) {
 				pixbuf_large1 = gdk_pixbuf_new_from_file (path, 
 									  &nerror);
 			} else {

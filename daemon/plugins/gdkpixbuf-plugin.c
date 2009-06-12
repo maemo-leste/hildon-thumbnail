@@ -334,7 +334,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			/* Changed in NB#118963 comment #38 */
 
-			if (a <= 124 || b <= 124) {
+			if (a < 124 || b < 124) {
 				int a_wanted, b_wanted;
 
 
