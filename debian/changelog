@@ -1,9 +1,11 @@
-hildon-thumbnail (3.0.32~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.32) unstable; urgency=low
 
   [Philip Van Hoof]
   * Fixes: NB#118963 - Size of cropped thumbnail is larger than 124x12.
+  * Fixes: NB#105592 - Thumbnails not displayed in video library view.
+  * Fixes: NB#121200 - Device rebooting after launching image viewer application.
 
- --
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 15 Jun 2009 19:21:59 +0300
 
 hildon-thumbnail (3.0.31) unstable; urgency=low
 
