@@ -1,7 +1,14 @@
+2009-06-15  Philip Van Hoof  <philip@codeminded.be>
+
+	* daemon/thumbnail-manager.c: NB#105592, GetSupported returned in
+	 format vfs-mime/type instead of mime/type for specialized
+	thumbnailers. Our video thumbnailer is specialized meaning that
+	Tracker wasn't trying to request the thumbnail
+
 2009-06-11  Philip Van Hoof  <philip@codeminded.be>
 
-	* daemon/plugins/gdkpixbuf-plugin.c: Detect animated GIF, and block support
-	for it
+	* daemon/plugins/gdkpixbuf-plugin.c: Detect animated GIF, and block
+	 support for it
 	* daemon/hildon-thumbnail-daemon.c: Setting rlimit on memory usage
 
 	Fixes NB#121200

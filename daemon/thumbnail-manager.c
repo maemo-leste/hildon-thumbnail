@@ -536,7 +536,22 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 
 	copy = g_hash_table_get_keys (priv->handlers);
 	while (copy) {
-		g_hash_table_replace (supported_h, g_strdup (copy->data), NULL);
+		gchar *mime = g_strdup (copy->data), *ptr;
+
+		/* We stored it in the hash as "vfs-mime/type" */
+		ptr = strchr (mime, '-');
+
+		if (ptr) {
+			*ptr = '\0';
+			ptr++;
+		} else {
+			ptr = mime;
+		}
+
+		g_hash_table_replace (supported_h, g_strdup (ptr), NULL);
+
+		g_free (mime);
+
 		copy = g_list_next (copy);
 	}
 	g_mutex_unlock (priv->mutex);
