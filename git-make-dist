@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# git-make-dist -- Make a release tag in a git repository.  The tag
+#                  will have the same content as the tarball produced
+#                  by "make dist", plus the debian/ directory as it is
+#                  tracked by git.
+
+set -e
+
+exportcwd () {
+  for f in `find . -type f`; do
+    ff=`echo $f | sed 's,^./,,'`
+    if [ -x "$f" ]; then
+      echo M 100755 inline $ff
+    else
+      echo M 100644 inline $ff
+    fi
+    echo data `wc -c <$f`
+    cat $f
+  done
+}
+
+exportcommit () {
+  echo commit $1
+  echo committer `git config user.name` '<'`git config user.email`'>' now
+  echo 'data <<EOD'
+  echo Prepare for distribution
+  echo EOD
+  echo from HEAD
+  echo deleteall
+  exportcwd
+}
+
+if [ $# != 1 ]; then
+  echo >&2 "Usage: git-make-dist TAGNAME"
+  exit 1
+fi
+
+tagname="$1"
+
+if ! git diff --quiet ; then
+  echo >&2 "Your working tree is not clean.  Aborting."
+  exit 1
+fi
+
+if ! git diff --quiet --cached; then
+  echo >&2 "Your index is not clean.  Aborting."
+  exit 1
+fi
+
+if git rev-parse --verify $tagname >/dev/null >&/dev/null; then
+  echo >&2 "Tag $tagname exists already.  Aborting."
+  exit 1
+fi
+
+distdir=$(mktemp -d tmp.XXXXXX)
+make distdir distdir=$distdir
+for f in `git ls-files debian`; do
+  if ! [ -a $distdir/$f ]; then
+    mkdir -p $(dirname $distdir/$f)
+    ln $f $distdir/$f
+  fi
+done
+
+(cd $distdir && exportcommit refs/tags/$tagname) \
+ | git fast-import --date-format=now --quiet --force
+
+rm -rf $distdir
