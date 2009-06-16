@@ -11,7 +11,6 @@ BUILT_SOURCES = my.vala.stamp                     \
 
 EXTRA_DIST = my.vala.stamp                     \
              google-images-art-downloader.vala \
-             google-images-art-downloader.c    \ 
              com.nokia.albumart.GoogleImages.service.in \
              com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
@@ -25,10 +24,9 @@ hildon_google_images_art_downloaderd_VALASOURCES = \
 hildon_google_images_art_downloaderd_SOURCES = \
 	my.vala.stamp \
 	$(hildon_google_images_art_downloaderd_VALASOURCES:.vala=.c) \
-	$(hildon_google_images_art_downloaderd_VALASOURCES:.vala=.h) \
 	$(NULL)
 
-google-images-art-downloader.vala my.vala.stamp: $(hildon_google_images_art_downloaderd_VALASOURCES)
+my.vala.stamp: $(hildon_google_images_art_downloaderd_VALASOURCES)
 	$(VALAC) -C --basedir $(top_srcdir) \
 	--pkg=gio-2.0 \
 	--pkg=dbus-glib-1 \
