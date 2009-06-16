@@ -1,8 +1,8 @@
-hildon-thumbnail (3.0.34~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.34) unstable; urgency=low
 
-  * 
+  * Fix the build fixes.
 
- --
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 16 Jun 2009 17:59:39 +0300
 
 hildon-thumbnail (3.0.33) unstable; urgency=low
 
