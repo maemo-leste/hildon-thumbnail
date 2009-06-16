@@ -23,7 +23,9 @@ EXTRA_DIST = \
 	gst-thumb-main.c \
 	gst-thumb-thumber.c \
 	gst-thumb-pipe.c \
-	com.nokia.thumbnailer.Gstreamer.service.in
+	com.nokia.thumbnailer.Gstreamer.service.in \
+	reg/com.nokia.thumbnailer.Gstreamer.service \
+	gst-video-thumbnailer-marshal.list
 
 if HAVE_GSTREAMER
 libexec_PROGRAMS = gst-video-thumbnailerd
@@ -37,10 +39,10 @@ gst-video-thumbnailer-marshal.c: gst-video-thumbnailer-marshal.list
 	$(GLIB_GENMARSHAL) $< --prefix=gst_video_thumbnailer_marshal --body > $@
 
 # Services
-com.nokia.thumbnailer.Gstreamer_servicedir = $(DBUS_SERVICES_DIR)
+com.nokia.thumbnailer.Gstreamer_servicedir = $(datadir)/dbus-1/services
 com.nokia.thumbnailer.Gstreamer_service_DATA = com.nokia.thumbnailer.Gstreamer.service
 
-com.nokia.thumbnailer.Gstreamer_thumbnailersdir = /usr/share/thumbnailers
+com.nokia.thumbnailer.Gstreamer_thumbnailersdir = $(datadir)/thumbnailers
 com.nokia.thumbnailer.Gstreamer_thumbnailers_DATA = reg/com.nokia.thumbnailer.Gstreamer.service
 
 %.service: %.service.in

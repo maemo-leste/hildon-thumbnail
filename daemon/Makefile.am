@@ -6,8 +6,8 @@ INCLUDES = -I. \
 	$(GMODULE_CFLAGS) \
 	$(GIO_CFLAGS) $(HAL_CFLAGS) \
 	$(LIBOSSO_CFLAGS) \
-	-DTHUMBNAILERS_DIR=\""/usr/share/thumbnailers"\" \
-	-DALBUMARTERS_DIR=\""/usr/share/albumart-providers"\" \
+	-DTHUMBNAILERS_DIR=\""$(datadir)/thumbnailers"\" \
+	-DALBUMARTERS_DIR=\""$(datadir)/albumart-providers"\" \
 	-DPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/plugins"\" \
 	-DOUTPUTPLUGINS_DIR=\""$(libdir)/hildon-thumbnailer/output-plugins"\" 
 
@@ -16,8 +16,8 @@ INCLUDES = -I. \
 # inotify.
 #
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)/usr/share/thumbnailers
-	$(mkinstalldirs) $(DESTDIR)/usr/share/albumart-providers
+	$(mkinstalldirs) $(DESTDIR)$(datadir)/thumbnailers
+	$(mkinstalldirs) $(DESTDIR)$(datadir)/albumart-providers
 
 noinst_LTLIBRARIES = libshared.la
 
@@ -80,10 +80,10 @@ hildon_thumbnailerd_LDADD = \
 	$(GIO_LIBS) $(HAL_LIBS)
 
 # Services
-org.freedesktop.thumbnailer_servicedir = $(DBUS_SERVICES_DIR)
+org.freedesktop.thumbnailer_servicedir = $(datadir)/dbus-1/services/
 org.freedesktop.thumbnailer_service_DATA = org.freedesktop.thumbnailer.service
 
-com.nokia.albumart_servicedir = $(DBUS_SERVICES_DIR)
+com.nokia.albumart_servicedir = $(datadir)/dbus-1/services/
 com.nokia.albumart_service_DATA = com.nokia.albumart.service
 
 %.service: %.service.in

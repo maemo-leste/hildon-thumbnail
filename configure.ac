@@ -58,27 +58,6 @@ AC_SUBST(GTK_LIBS)
 
 AM_CONDITIONAL(HAVE_MGTK, test "$have_gtk" = "yes")
 
-
-
-####################################################################
-# DBus Service
-####################################################################
-
-dnl DBus services dir
-AC_ARG_WITH([session_bus_services_dir],
-            AS_HELP_STRING([--with-session-bus-services-dir],
-                           [Path to DBus services directory]))
-
-if test "x$with_session_bus_services_dir" = "x" ; then
-   services_dir="`pkg-config --variable session_bus_services_dir dbus-1`"
-else
-   services_dir="$with_session_bus_services_dir"
-fi
-
-DBUS_SERVICES_DIR="$services_dir"
-AC_SUBST(DBUS_SERVICES_DIR)
-
-
 PKG_CHECK_MODULES(GIO, gio-2.0)
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)

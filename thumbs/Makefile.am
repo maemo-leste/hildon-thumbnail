@@ -13,7 +13,8 @@ generic_libs = \
 
 bin_SCRIPTS = hildon-thumbnailer-wrap.sh
 
-EXTRA_DIST = hildon-thumbnailer-wrap.sh
+EXTRA_DIST = hildon-thumbnailer-wrap.sh \
+	     thumbnailer-marshal.list
 
 if ENABLE_OSSO
 bin_PROGRAMS = hildon-thumb-gdk-pixbuf hildon-thumber-register

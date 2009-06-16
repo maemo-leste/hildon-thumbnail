@@ -37,10 +37,10 @@ hildon_google_images_art_downloaderd_LDADD = \
 	$(DBUS_LIBS) $(GLIB_LIBS) $(GMODULE_LIBS) $(GIO_LIBS)
 
 # Services
-com.nokia.albumart.GoogleImages_servicedir = $(DBUS_SERVICES_DIR)
+com.nokia.albumart.GoogleImages_servicedir = $(datadir)/dbus-1/services
 com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.service
 
-albartdowndir = /usr/share/albumart-providers
+albartdowndir = $(datadir)/dbus-1/services
 albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
 %.service: %.service.in
