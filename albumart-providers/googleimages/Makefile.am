@@ -40,7 +40,7 @@ hildon_google_images_art_downloaderd_LDADD = \
 com.nokia.albumart.GoogleImages_servicedir = $(datadir)/dbus-1/services
 com.nokia.albumart.GoogleImages_service_DATA = com.nokia.albumart.GoogleImages.service
 
-albartdowndir = $(datadir)/dbus-1/services
+albartdowndir = $(datadir)/albumart-providers
 albartdown_DATA = com.nokia.albumart.AlbumartProvider.GoogleImages.service
 
 %.service: %.service.in
