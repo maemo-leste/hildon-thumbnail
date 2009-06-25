@@ -97,7 +97,7 @@ HildonAlbumartFactory* hildon_albumart_factory_get_instance (void);
 /**
  * hildon_albumart_factory_queue:
  * @self: the factory
- * @artist_or_title: (allow-none): The artist or the title of the feed
+ * @artist_or_title: (allow-none): The artist or the title of the feed (you usually use NULL here)
  * @album: (allow-none): The album
  * @kind: (allow-none) (default "album"): Usually "album", "podcast" or "radio"
  * @callback: (allow-none): A callback that will be executed when the art is ready
@@ -122,7 +122,7 @@ HildonAlbumartRequest*
 /**
  * hildon_albumart_factory_queue_thumbnail:
  * @self: the factory
- * @artist_or_title: (allow-none): The artist or the title of the feed
+ * @artist_or_title: (allow-none): The artist or the title of the feed (you usually use NULL here)
  * @album: (allow-none): The album
  * @kind: (allow-none) (default "album"): Usually "album", "podcast" or "radio"
  * @width: Wanted width
@@ -193,7 +193,7 @@ typedef void (*HildonAlbumartFactoryFinishedCallback)(HildonAlbumartFactoryHandl
 
 /**
  * hildon_albumart_factory_load:
- * @artist_or_title: (null-ok): Artist or media title
+ * @artist_or_title: (null-ok): Artist or media title (you usually use NULL here)
  * @album: (null-ok): Album of the media or NULL if not applicable 
  * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
  * @callback: (null-ok): Function to call when albumart creation finished or there was an error
@@ -217,7 +217,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 
 /**
  * hildon_albumart_is_cached:
- * @artist_or_title: (null-ok): Artist or media title
+ * @artist_or_title: (null-ok): Artist or media title (you usually use NULL here)
  * @album: (null-ok): Album of the media or NULL if not applicable 
  * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
  *
@@ -230,7 +230,7 @@ gboolean hildon_albumart_is_cached (const gchar *artist_or_title, const gchar *a
 
 /**
  * hildon_albumart_get_path:
- * @artist_or_title: (null-ok): Artist or media title
+ * @artist_or_title: (null-ok): Artist or media title (you usually use NULL here)
  * @album: (null-ok): Album of the media or NULL if not applicable 
  * @kind: "album", "podcast" or "radio" (depending on what the albumart downloaders support)
  *
