@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.nokia.albumart.GoogleImages
-Exec=@libexecdir@/hildon-google-images-art-downloaderd

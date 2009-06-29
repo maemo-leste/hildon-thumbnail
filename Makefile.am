@@ -1,4 +1,4 @@
-SUBDIRS = daemon thumbs albumart-providers thumbnailers tests
+SUBDIRS = daemon thumbs thumbnailers tests
 
 EXTRA_DIST = debian/changelog \
              debian/control \

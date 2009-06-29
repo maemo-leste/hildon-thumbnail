@@ -2,7 +2,7 @@ Source: hildon-thumbnail
 Section: libs
 Priority: optional
 Maintainer: Marius Vollmer <marius.vollmer@nokia.com>
-Build-Depends: debhelper (>= 4.0.0), pkg-config, libosso-gnomevfs2-dev, libgtk2.0-dev, gtk-doc-tools, libosso-dev, libglib2.0-dev (>= 2.16), libsqlite3-dev, libepeg0-dev, libgstreamer0.10-dev, libhal-dev (>= 0.5), libhal-storage-dev, libplayback-1-dev, libexif-dev
+Build-Depends: debhelper (>= 4.0.0), pkg-config, libosso-gnomevfs2-dev, libgtk2.0-dev, gtk-doc-tools, libosso-dev, libglib2.0-dev (>= 2.16), libsqlite3-dev, libepeg0-dev, libgstreamer0.10-dev, libhal-dev (>= 0.5), libhal-storage-dev, libplayback-1-dev, libexif-dev, libjpeg62-dev
 Standards-Version: 3.6.0
 
 Package: hildon-thumbnail
@@ -44,10 +44,3 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Ve
 Description: libhildon-thumbnail0 development files.
  Contains libhildon-thumbnail0 development files.
 
-Package: google-images-albumart-provider
-Section: libs
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Search Google for albumart.
- This is a albumart provider that tries to find albumart via Google
- image searches.

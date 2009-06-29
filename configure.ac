@@ -126,7 +126,6 @@ fi
 
 AC_CHECK_PROG(GTKDOC, gtkdoc-mkdb, true, false)
 
-AC_PATH_PROG(VALAC, valac, valac)
 
 gtk_doc_min_version=0.10
 if $GTKDOC ; then
@@ -229,8 +228,6 @@ AC_OUTPUT(Makefile tests/Makefile \
 	  daemon/Makefile \
 	  daemon/plugins/Makefile \
 	  thumbs/Makefile \
-          albumart-providers/Makefile \
-          albumart-providers/googleimages/Makefile \
 	  thumbnailers/Makefile \
 	  thumbnailers/gst-video-thumbnailer/Makefile \
           hildon-thumbnail.pc)

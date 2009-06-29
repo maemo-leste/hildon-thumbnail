@@ -1,6 +1,7 @@
 hildon-thumbnail (3.0.35~unreleased) unstable; urgency=low
 
-  * 
+  * Removed the google-album-art downloader from the package
+  * Added libjpeg62-dev as build dependency
 
  --
 
