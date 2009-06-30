@@ -300,7 +300,7 @@ deinitialize (ThumberPipe *pipe)
 
 	gst_element_set_state (priv->pipeline, GST_STATE_NULL);
 	/* State changes to NULL are synchronous */
-	g_object_unref (priv->pipeline);
+	gst_object_unref (priv->pipeline);
 
 	priv->pipeline  = NULL;
 
@@ -456,7 +456,7 @@ newpad_callback (GstElement       *decodebin,
 	
 	videopad = gst_element_get_static_pad (priv->sinkbin, "sink");
 	if (!videopad || GST_PAD_IS_LINKED (videopad)) {
-		g_object_unref (videopad);
+		gst_object_unref (videopad);
 		return;
 	}
 	
@@ -464,7 +464,7 @@ newpad_callback (GstElement       *decodebin,
 	str  = gst_caps_get_structure (caps, 0);
 
 	if (!g_strrstr (gst_structure_get_name (str), "video")) {
-		g_object_unref (videopad);
+		gst_object_unref (videopad);
 		gst_caps_unref (caps);
 		return;
 	}
