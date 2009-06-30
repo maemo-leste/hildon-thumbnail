@@ -1,43 +1,23 @@
 Generated files
 ---------------
 
-No generated file should be committed to trunk or a branch.  After
-checking out (or exporting) trunk or a branch, running "./autogen.sh"
-will get the tree into a shape where "configure; make" or
-"dpkg-buildpackage" will work.
+No generated file should be committed to a branch.  After checking out
+a branch, running "./autogen.sh" will get the tree into a shape where
+"configure; make" or "dpkg-buildpackage" will work.
 
 Tags are different.  Read on.
 
 Making a tag
 ------------
 
-No generated file should be committed to trunk or a branch, but tags
+No generated file should be committed a branch, but release tags
 should be buildable with "dpkg-buildpackage" right away after
 exporting them, without the need to run autogen.sh.
 
 In general, a tag should (at least) contain all the files that would
 be in a distribution tarball produced by "make dist".
 
-Here is the general procedure:
-
-- Make a copy of trunk or the branch in SVN:
-
-  svn copy https://.../trunk https://.../tags/VERSION -m "Prepare VERSION tag"
-
-- Check the tag out:
-
-  cd .../tags/ && svn update VERSION
-
-- Build a dist tarball:
-
-  ./autogen.sh && ./configure && make && make dist
-
-- Add the files to SVN that are in the dist tarball
-
-  svn add `tar tzf TARBALL | sed 's,[^/]*/,,'`
-  svn commit -m "Complete VERSION tag"
-
-See the included "svn-fill-tag" script for one way to automate this.
+Run the included tool "git-make-dist" to create such a tag with Git.
 
 Making releases
 ---------------
@@ -66,8 +46,14 @@ When making the release, remove the "~unreleased" suffix in trunk (or
 in the branch) and add a entry of the form "Released VERSION" in
 ChangeLog.  Commit these changes.
 
-Then make a tag as described above.
+Then make a tag by running 
 
-In trunk or the branch, bump the version in configure.ac and create a
-new debian/changelog (with the "~unreleased" suffix) in
-debian/changelog and commit these changes.
+    $ git-make-dist VERSION
+
+You can check the content of the created tag with, for example,
+
+    $ git ls-tree -R --name-only VERSION
+
+In the branch, bump the version in configure.ac and create a new
+debian/changelog (with the "~unreleased" suffix) in debian/changelog
+and commit these changes.
