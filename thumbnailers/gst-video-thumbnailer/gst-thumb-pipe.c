@@ -31,19 +31,14 @@
 
 #define THUMBER_PIPE_ERROR_DOMAIN "ThumberPipeError"
 
-static void           _thumber_pipe_newpad_callback    (GstElement       *decodebin,
+static void           newpad_callback                  (GstElement       *decodebin,
 							GstPad           *pad,
 							gboolean          last,
 							ThumberPipe      *pipe);
 
-static gboolean       _thumber_pipe_thumbnail_callback (GstElement       *image_sink,
-							GstBuffer        *buffer,
-							GstPad           *pad, 
-							ThumberPipe      *pipe);
-
-static gboolean       _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
-							   GstState     state,
-							   GError     **error);
+static gboolean       poll_for_state_change            (ThumberPipe *pipe,
+							GstState     state,
+							GError     **error);
 
 
 static gboolean       create_thumbnails                (const gchar *uri,
@@ -52,13 +47,15 @@ static gboolean       create_thumbnails                (const gchar *uri,
 							gboolean     cropped,
 							GError     **error);
 
-static gboolean       thumber_pipe_initialize          (ThumberPipe *pipe,
+static gboolean       initialize                       (ThumberPipe *pipe,
 							const gchar *mime,
 							guint size,
 							GError **error);
-static void           thumber_pipe_deinitialize        (ThumberPipe *pipe);
+static void           deinitialize                     (ThumberPipe *pipe);
 
 G_DEFINE_TYPE (ThumberPipe, thumber_pipe, G_TYPE_OBJECT)
+
+#define THUMBER_PIPE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBER_PIPE, ThumberPipePrivate))
 
 typedef struct {
 	GstElement     *pipeline;
@@ -71,10 +68,6 @@ typedef struct {
 	GstElement     *video_filter;
 	GstElement     *video_sink;
 
-	gchar          *uri;
-	gboolean        success;
-	GError         *error;
-
 	gboolean        standard;
 	gboolean        cropped;
 } ThumberPipePrivate;
@@ -85,8 +78,6 @@ enum {
 	PROP_CROPPED
 };
 
-#define THUMBER_PIPE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBER_PIPE, ThumberPipePrivate))
-
 enum {
 	NO_ERROR,
 	INITIALIZATION_ERROR,
@@ -95,7 +86,7 @@ enum {
 };
 
 GQuark
-thumber_pipe_error_quark (void)
+error_quark (void)
 {
 	return g_quark_from_static_string (THUMBER_PIPE_ERROR_DOMAIN);
 }
@@ -106,6 +97,7 @@ thumber_pipe_new ()
 	return g_object_new (TYPE_THUMBER_PIPE, NULL);
 }
 
+static gboolean
 thumber_pipe_get_standard (ThumberPipe *pipe)
 {
 	ThumberPipePrivate *priv;
@@ -233,30 +225,19 @@ thumber_pipe_run (ThumberPipe *pipe,
 		  GError     **error)
 {
 	ThumberPipePrivate *priv;
+	GstBuffer          *buffer = NULL;
 	gchar              *filename;
 	gboolean            success = FALSE;
-	guint               handoff_id = 0;
 	GError             *lerror  = NULL;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
-	priv->uri = g_strdup (uri);
-	priv->success = FALSE;
 
-	if (!thumber_pipe_initialize (pipe,
-				      "dummy",
-				      256,
-				      &lerror)) {
+	if (!initialize (pipe,
+			 "dummy",
+			 256,
+			 &lerror)) {
 		g_propagate_error (error, lerror);
-		g_free (priv->uri);
-		return FALSE;
-	}
-
-	gst_element_set_state (priv->pipeline, GST_STATE_READY);
-
-	if (!_thumber_pipe_poll_for_state_change (pipe, GST_STATE_READY, &lerror)) {
-		g_propagate_error (error, lerror);
-		g_free (priv->uri);
 		return FALSE;
 	}
 
@@ -269,15 +250,10 @@ thumber_pipe_run (ThumberPipe *pipe,
 	g_free (filename);
 
 	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
-	if (!_thumber_pipe_poll_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
+	if (!poll_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
 		g_propagate_error (error, lerror);
-		g_free (priv->uri);
-		return FALSE;
+		goto cleanup;
 	}
-
-	handoff_id = g_signal_connect (priv->video_sink, "preroll-handoff",
-				       G_CALLBACK(_thumber_pipe_thumbnail_callback), pipe);
-
 
 	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
 			  GST_SEEK_TYPE_SET, 3 * GST_SECOND,
@@ -285,41 +261,45 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	gst_element_get_state (priv->pipeline, NULL, NULL, 3 * GST_SECOND);
 
-	g_signal_handler_disconnect (priv->video_sink, handoff_id);
-
-	success = priv->success;
-
+	g_object_get (priv->video_sink, "last-buffer", &buffer, NULL);
+	
+	if (buffer == NULL) {
+		g_set_error (error,
+			     error_quark (),
+			     THUMBNAIL_ERROR,
+			     "Thumbnail creation failed.");
+		goto cleanup;
+	}
+	
+	success = create_thumbnails (uri,
+				     GST_BUFFER_DATA (buffer),
+				     priv->standard,
+				     priv->cropped,
+				     &lerror);
+	
+	gst_buffer_unref (buffer);
+	
 	if (!success) {
-		if (priv->error != NULL) {
-			g_propagate_error (error, priv->error);
-		} else {
-			g_set_error (error,
-				     thumber_pipe_error_quark (),
-				     THUMBNAIL_ERROR,
-				     "Thumbnail creation failed.");
-		}
-		g_free (priv->uri);
-		return FALSE;
+		g_propagate_error (error, lerror);
+		goto cleanup;
 	}
 
-	thumber_pipe_deinitialize (pipe);
+ cleanup:
 
-	g_free (priv->uri);
-	priv->uri = NULL;
+	deinitialize (pipe);
 
 	return success;
 }
 
 static void
-thumber_pipe_deinitialize (ThumberPipe *pipe)
+deinitialize (ThumberPipe *pipe)
 {
 	ThumberPipePrivate *priv;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
 	gst_element_set_state (priv->pipeline, GST_STATE_NULL);
-	gst_element_get_state (priv->pipeline, NULL, NULL, -1);
-
+	/* State changes to NULL are synchronous */
 	g_object_unref (priv->pipeline);
 
 	priv->pipeline  = NULL;
@@ -334,7 +314,7 @@ thumber_pipe_deinitialize (ThumberPipe *pipe)
 }
 
 static gboolean
-thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
+initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 {
 	ThumberPipePrivate *priv;
 	GstPad             *videopad;
@@ -346,7 +326,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 
 	if (!(priv->pipeline)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to create pipeline element");
 		
@@ -359,7 +339,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 	if (!(priv->source &&
 	      priv->decodebin)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to create source and decodebin elements");
 		gst_object_unref (priv->pipeline);
@@ -377,7 +357,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 
 	if (!gst_element_link_many(priv->source, priv->decodebin, NULL)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to link source and decoding components");
 		gst_object_unref (priv->pipeline);
@@ -394,7 +374,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 	      priv->video_filter && 
 	      priv->video_sink)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to create scaler and sink elements");
 		gst_object_unref (priv->pipeline);
@@ -417,7 +397,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 
 	if (!gst_element_link_many(priv->video_scaler, priv->video_filter, NULL)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to link scaler and filter elements");
 		gst_object_unref (priv->pipeline);
@@ -434,7 +414,7 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 
 	if (!gst_element_link_filtered(priv->video_filter, priv->video_sink, caps)) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     INITIALIZATION_ERROR,
 			     "Failed to link filter and sink elements with caps");
 		gst_object_unref (priv->pipeline);
@@ -455,18 +435,16 @@ thumber_pipe_initialize (ThumberPipe *pipe, const gchar *mime, guint size, GErro
 
 	/* Connect signal for new pads */
 	g_signal_connect (priv->decodebin, "new-decoded-pad", 
-			  G_CALLBACK (_thumber_pipe_newpad_callback), pipe);
+			  G_CALLBACK (newpad_callback), pipe);
 
 	return TRUE;
 }
 
-
-
 static void
-_thumber_pipe_newpad_callback (GstElement       *decodebin,
-			       GstPad           *pad,
-			       gboolean          last,
-			       ThumberPipe      *pipe)
+newpad_callback (GstElement       *decodebin,
+		 GstPad           *pad,
+		 gboolean          last,
+		 ThumberPipe      *pipe)
 {
 	ThumberPipePrivate *priv;
 
@@ -498,32 +476,9 @@ _thumber_pipe_newpad_callback (GstElement       *decodebin,
 }
 
 static gboolean
-_thumber_pipe_thumbnail_callback (GstElement       *image_sink,
-				  GstBuffer        *buffer,
-				  GstPad           *pad, 
-				  ThumberPipe      *pipe)
-{
-	ThumberPipePrivate *priv;
-
-	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
-
-	if (!create_thumbnails (priv->uri,
-				GST_BUFFER_DATA (buffer),
-				priv->standard,
-				priv->cropped,
-				&(priv->error))) {
-		priv->success = FALSE;
-	} else {
-		priv->success = TRUE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-_thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
-				     GstState     state,
-				     GError     **error)
+poll_for_state_change (ThumberPipe *pipe,
+		       GstState     state,
+		       GError     **error)
 {
 	ThumberPipePrivate *priv;
 	GstBus             *bus;
@@ -542,7 +497,7 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 		
 		if (!message) {
 			g_set_error (error,
-				     thumber_pipe_error_quark (),
+				     error_quark (),
 				     RUNNING_ERROR,
 				     "Pipeline timed out");
 			return FALSE;
@@ -573,7 +528,7 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 				g_propagate_error (error, lerror);
 			} else {
 				g_set_error (error,
-					     thumber_pipe_error_quark (),
+					     error_quark (),
 					     RUNNING_ERROR,
 					     "Undefined error running the pipeline");
 			}
@@ -585,7 +540,7 @@ _thumber_pipe_poll_for_state_change (ThumberPipe *pipe,
 			gst_message_unref (message);
 
 			g_set_error (error,
-				     thumber_pipe_error_quark (),
+				     error_quark (),
 				     RUNNING_ERROR,
 				     "Reached end-of-file without proper content");
 			return FALSE;
@@ -712,7 +667,7 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 
 	if(!pixbuf) {
 		g_set_error (error,
-			     thumber_pipe_error_quark (),
+			     error_quark (),
 			     THUMBNAIL_ERROR,
 			     "Failed to create thumbnail from buffer");
 		return FALSE;
