@@ -60,13 +60,6 @@ typedef struct {
 } HildonAlbumartFactoryPrivate;
 
 
-#ifndef gdk_pixbuf_new_from_stream
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
-			    GCancellable  *cancellable,
-			    GError       **error);
-#endif 
-
 
 static void
 create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
@@ -88,7 +81,7 @@ create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
 		if (error)
 			goto error_handler;
 
-		pixbuf = gdk_pixbuf_new_from_stream (stream, NULL, &error);
+		pixbuf = my_gdk_pixbuf_new_from_stream (stream, NULL, &error);
 	}
 
 	error_handler:

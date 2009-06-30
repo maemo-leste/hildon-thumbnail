@@ -58,19 +58,6 @@ typedef struct {
 } ArtsItem;
 
 
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf* gdk_pixbuf_new_from_stream_at_scale (GInputStream *stream, gint width,
-			gint height, gboolean preserve_aspect_ratio,
-			GCancellable *cancellable, GError **error);
-#endif
-
-#ifndef gdk_pixbuf_new_from_stream
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
-			    GCancellable  *cancellable,
-			    GError       **error);
-#endif 
 
 #define ARTS_ITEM(handle) (ArtsItem*)(handle)
 #define ARTS_HANDLE(item) (HildonAlbumartFactoryHandle)(item)
@@ -139,7 +126,7 @@ create_pixbuf_and_callback (ArtsItem *item, gchar *path)
 			goto error_handler;
 
 		/* Read the stream as a pixbuf at the requested exact scale */
-		pixbuf = gdk_pixbuf_new_from_stream (stream, NULL, &error);
+		pixbuf = my_gdk_pixbuf_new_from_stream (stream, NULL, &error);
 
 		error_handler:
 

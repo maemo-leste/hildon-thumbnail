@@ -66,19 +66,6 @@ typedef struct {
 } ThumbsItem;
 
 
-#ifndef gdk_pixbuf_new_from_stream_at_scale
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf* gdk_pixbuf_new_from_stream_at_scale (GInputStream *stream, gint width,
-			gint height, gboolean preserve_aspect_ratio,
-			GCancellable *cancellable, GError **error);
-#endif
-
-#ifndef gdk_pixbuf_new_from_stream
-/* It's implemented in pixbuf-io-loader.c in this case */
-GdkPixbuf * gdk_pixbuf_new_from_stream (GInputStream  *stream,
-			    GCancellable  *cancellable,
-			    GError       **error);
-#endif 
 
 #define THUMBS_ITEM(handle) (ThumbsItem*)(handle)
 #define THUMBS_HANDLE(item) (HildonThumbnailFactoryHandle)(item)
@@ -344,7 +331,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 			goto error_handler;
 
 		/* Read the stream as a pixbuf at the requested exact scale */
-		pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+		pixbuf = my_gdk_pixbuf_new_from_stream_at_scale (stream,
 			item->width, item->height, TRUE, 
 			NULL, &error);
 
