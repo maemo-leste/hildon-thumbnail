@@ -40,6 +40,11 @@ static void           newpad_callback                  (GstElement       *decode
 							gboolean          last,
 							ThumberPipe      *pipe);
 
+static gboolean       stream_continue_callback         (GstElement    *bin,
+                                                        GstPad        *pad,
+                                                        GstCaps       *caps,
+                                                        ThumberPipe   *pipe);
+
 static gboolean       wait_for_state_change            (ThumberPipe *pipe,
 							GstState     state,
 							GError     **error);
@@ -244,7 +249,6 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
-
 	if (!initialize (pipe,
 			 "dummy",
 			 256,
@@ -443,6 +447,12 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 	g_signal_connect (priv->decodebin, "new-decoded-pad", 
 			  G_CALLBACK (newpad_callback), pipe);
 
+
+	/* Connect signal for analysing new streams (we only care about video) */
+	g_signal_connect (priv->decodebin, "autoplug-continue", 
+			  G_CALLBACK (stream_continue_callback), pipe);
+
+
 	return TRUE;
 }
 
@@ -478,8 +488,25 @@ newpad_callback (GstElement       *decodebin,
 	gst_pad_link (pad, videopad);
 
 	gst_object_unref (videopad);
-
 }
+
+static gboolean
+stream_continue_callback (GstElement    *bin,
+			  GstPad        *pad,
+			  GstCaps       *caps,
+			  ThumberPipe   *pipe)
+{
+	GstStructure *str;
+	
+	str  = gst_caps_get_structure (caps, 0);
+
+	if (!g_strrstr (gst_structure_get_name (str), "video")) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 static gboolean
 wait_for_state_change (ThumberPipe *pipe,
