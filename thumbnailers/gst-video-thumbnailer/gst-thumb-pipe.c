@@ -30,22 +30,31 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #define THUMBER_PIPE_ERROR_DOMAIN "ThumberPipeError"
+#define SEEK_TIMEOUT 5
+#define PIPE_TIMEOUT 10
+#define VALID_VARIANCE_THRESHOLD  256.0
+
 
 static void           newpad_callback                  (GstElement       *decodebin,
 							GstPad           *pad,
 							gboolean          last,
 							ThumberPipe      *pipe);
 
-static gboolean       poll_for_state_change            (ThumberPipe *pipe,
+static gboolean       wait_for_state_change            (ThumberPipe *pipe,
 							GstState     state,
 							GError     **error);
 
+static gboolean       wait_for_image_buffer            (ThumberPipe *pipe,
+							const gchar *uri,
+							GError     **error);
 
 static gboolean       create_thumbnails                (const gchar *uri,
-							guchar      *buffer,
+							GdkPixbuf   *pixbuf,
 							gboolean     standard,
 							gboolean     cropped,
 							GError     **error);
+
+static gboolean       check_for_valid_thumb            (GdkPixbuf   *pixbuf);
 
 static gboolean       initialize                       (ThumberPipe *pipe,
 							const gchar *mime,
@@ -229,6 +238,9 @@ thumber_pipe_run (ThumberPipe *pipe,
 	gchar              *filename;
 	gboolean            success = FALSE;
 	GError             *lerror  = NULL;
+	gint64              duration;
+	gint64              seek;
+	GstFormat           format = GST_FORMAT_TIME;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
@@ -250,39 +262,35 @@ thumber_pipe_run (ThumberPipe *pipe,
 	g_free (filename);
 
 	gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
-	if (!poll_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
+	if (!wait_for_state_change (pipe, GST_STATE_PAUSED, &lerror)) {
 		g_propagate_error (error, lerror);
+		success = FALSE;
 		goto cleanup;
 	}
 
+	gst_element_query_duration (priv->pipeline, &format, &duration);
+	
+	if (duration > 120 * GST_SECOND) {
+		seek = 45 * GST_SECOND;
+	} else {
+		seek = duration/3;
+	}
+	
 	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-			  GST_SEEK_TYPE_SET, 3 * GST_SECOND,
+			  GST_SEEK_TYPE_SET, seek,
 			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
-	gst_element_get_state (priv->pipeline, NULL, NULL, 3 * GST_SECOND);
+	/* Wait for the seek to finish */
+	gst_element_get_state (priv->pipeline, NULL, NULL, SEEK_TIMEOUT * GST_SECOND);
 
-	g_object_get (priv->video_sink, "last-buffer", &buffer, NULL);
-	
-	if (buffer == NULL) {
-		g_set_error (error,
-			     error_quark (),
-			     THUMBNAIL_ERROR,
-			     "Thumbnail creation failed.");
-		goto cleanup;
-	}
-	
-	success = create_thumbnails (uri,
-				     GST_BUFFER_DATA (buffer),
-				     priv->standard,
-				     priv->cropped,
-				     &lerror);
-	
-	gst_buffer_unref (buffer);
-	
-	if (!success) {
+	gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+	if (!wait_for_image_buffer (pipe, uri, &lerror)) {
 		g_propagate_error (error, lerror);
+		success = FALSE;
 		goto cleanup;
-	}
+        }
+
+	success = TRUE;
 
  cleanup:
 
@@ -367,7 +375,7 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 	priv->sinkbin      = gst_bin_new("sink bin");
 	priv->video_scaler = gst_element_factory_make("videoscale", "video_scaler");
 	priv->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
-	priv->video_sink   = gst_element_factory_make("fakesink", "video_sink");
+	priv->video_sink   = gst_element_factory_make("gdkpixbufsink", "video_sink");
 
 	if (!(priv->sinkbin && 
 	      priv->video_scaler && 
@@ -431,8 +439,6 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 
 	gst_bin_add (GST_BIN (priv->pipeline), priv->sinkbin);
 
-	g_object_set (priv->video_sink, "signal-handoffs", TRUE, NULL);
-
 	/* Connect signal for new pads */
 	g_signal_connect (priv->decodebin, "new-decoded-pad", 
 			  G_CALLBACK (newpad_callback), pipe);
@@ -476,14 +482,14 @@ newpad_callback (GstElement       *decodebin,
 }
 
 static gboolean
-poll_for_state_change (ThumberPipe *pipe,
+wait_for_state_change (ThumberPipe *pipe,
 		       GstState     state,
 		       GError     **error)
 {
 	ThumberPipePrivate *priv;
 	GstBus             *bus;
 	gchar              *error_message;
-	gint64              timeout = 5 * GST_SECOND;
+	gint64              timeout = PIPE_TIMEOUT * GST_SECOND;
 	
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 	
@@ -558,6 +564,121 @@ poll_for_state_change (ThumberPipe *pipe,
 	
 	return FALSE;
 }
+
+static gboolean
+wait_for_image_buffer (ThumberPipe *pipe,
+		       const gchar *uri,
+		       GError     **error)
+{
+       ThumberPipePrivate *priv;
+       GstBus             *bus;
+       gchar              *error_message;
+       gint64              timeout = PIPE_TIMEOUT * GST_SECOND;
+
+       priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+
+       bus = gst_element_get_bus (priv->pipeline);
+
+       while (TRUE) {
+               GstMessage *message;
+               GstElement *src;
+
+               message = gst_bus_timed_pop (bus, timeout);
+
+               if (!message) {
+                       g_set_error (error,
+                                    error_quark (),
+                                    RUNNING_ERROR,
+                                    "Pipeline timed out");
+                       return FALSE;
+               }
+
+               src = (GstElement*)GST_MESSAGE_SRC (message);
+
+               switch (GST_MESSAGE_TYPE (message)) {
+               case GST_MESSAGE_ELEMENT: {
+                       const GstStructure *s = gst_message_get_structure (message);
+                       const gchar *name = gst_structure_get_name (s);
+
+		       if (strcmp (name, "preroll-pixbuf") == 0 ||
+                           strcmp (name, "pixbuf") == 0 ) {
+                               GdkPixbuf *pix;
+			       
+                               g_object_get (G_OBJECT (priv->video_sink), "last-pixbuf", &pix, NULL);
+			       
+                               if (!pix) {
+				       gst_message_unref (message);
+                                       g_set_error (error,
+                                                    error_quark (),
+                                                    RUNNING_ERROR,
+                                                    "Non-existing image buffer returned by pipeline");
+                                       return FALSE;
+                               }
+			       
+			       if (!check_for_valid_thumb (pix)) {
+                                       /* If not good, continue until we get better */
+                                       g_object_unref (pix);
+                                       break;
+			       }
+
+                               if (!create_thumbnails (uri,
+                                                       pix,
+                                                       priv->standard,
+                                                       priv->cropped,
+                                                       error)) {
+                                       g_object_unref (pix);
+				       gst_message_unref (message);
+                                       return FALSE;
+                               }
+
+                               g_object_unref (pix);
+			       gst_message_unref (message);
+                               return TRUE;
+                       }
+		       break;
+               }
+		       
+               case GST_MESSAGE_ERROR: {
+                       GError *lerror = NULL;
+                       gst_message_parse_error (message, &lerror, &error_message);
+                       gst_message_unref (message);
+                       g_free (error_message);
+
+                       if (lerror != NULL) {
+                               g_propagate_error (error, lerror);
+                       } else {
+                               g_set_error (error,
+                                            error_quark (),
+                                            RUNNING_ERROR,
+                                            "Undefined error running the pipeline");
+                       }
+
+                       return FALSE;
+                       break;
+               }
+               case GST_MESSAGE_EOS: {
+                       gst_message_unref (message);
+
+                       g_set_error (error,
+				    error_quark (),
+                                 RUNNING_ERROR,
+                                    "Reached end-of-file without proper content");
+                       return FALSE;
+                       break;
+               }
+               default:
+                       /* Nothing to do here */
+                       break;
+               }
+
+               gst_message_unref (message);
+       }
+
+       g_assert_not_reached ();
+
+       return FALSE;
+}
+
 
 
 static gchar *
@@ -649,21 +770,46 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 }
 
 static gboolean
-create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean cropped, GError **error)
+check_for_valid_thumb (GdkPixbuf   *pixbuf)
 {
-	GdkPixbuf *pixbuf;
+       guchar* pixels = gdk_pixbuf_get_pixels(pixbuf);
+       int     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+       int     height = gdk_pixbuf_get_height(pixbuf);
+       int     samples = (rowstride * height);
+       int     i;
+       float   avg = 0.0f;
+       float   variance = 0.0f;
+
+       /* We calculate the variance of one element (bpp=24) */
+
+       for (i = 0; i < samples; i=i+3) {
+               avg += (float) pixels[i];
+       }
+       avg /= ((float) samples);
+
+       /* Calculate the variance */
+       for (i = 0; i < samples; i=i+3) {
+               float tmp = ((float) pixels[i] - avg);
+	       variance += tmp * tmp;
+       }
+       variance /= ((float) (samples - 1));
+
+       return (variance > VALID_VARIANCE_THRESHOLD);
+}
+
+static gboolean
+create_thumbnails (const gchar *uri,
+		   GdkPixbuf *pixbuf,
+		   gboolean standard,
+		   gboolean cropped,
+		   GError **error)
+{
 	GdkPixbuf *pic;
 	gchar *png_name;
 	gchar *jpg_name;
 	gchar *filename;
 	gchar *checksum;
 	GError *lerror = NULL;
-
-	pixbuf = gdk_pixbuf_new_from_data ((gchar *)buffer,
-					   GDK_COLORSPACE_RGB,
-					   FALSE, 8, 256, 256,
-					   GST_ROUND_UP_4 (256 * 3),
-					   NULL, NULL);
 
 	if(!pixbuf) {
 		g_set_error (error,
@@ -687,7 +833,6 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 				      &lerror,
 				      NULL)) {
 			g_propagate_error (error, lerror);
-			g_object_unref (pixbuf);
 			
 			g_free (png_name);
 			g_free (jpg_name);
@@ -707,7 +852,6 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 				      &lerror,
 				      NULL)) {
 			g_propagate_error (error, lerror);
-			g_object_unref (pixbuf);
 			
 			g_free (png_name);
 			g_free (jpg_name);
@@ -729,7 +873,6 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 				      &lerror,
 				      NULL)) {
 			g_propagate_error (error, lerror);
-			g_object_unref (pixbuf);
 			
 			g_free (png_name);
 			g_free (jpg_name);
@@ -743,10 +886,9 @@ create_thumbnails (const gchar *uri, guchar *buffer, gboolean standard, gboolean
 		g_free (filename);
 	}
 
-	g_object_unref (pixbuf);
-	
 	g_free (png_name);
 	g_free (jpg_name);
 
 	return TRUE;
 }
+
