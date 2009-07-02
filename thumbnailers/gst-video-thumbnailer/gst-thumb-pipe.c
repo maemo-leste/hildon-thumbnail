@@ -500,7 +500,12 @@ stream_continue_callback (GstElement    *bin,
 	
 	str  = gst_caps_get_structure (caps, 0);
 
-	if (!g_strrstr (gst_structure_get_name (str), "video")) {
+	/* Because of some inconsistencies (audio/?? container 
+	   containing video) we have a blacklist here. */
+
+	if (strcasecmp (gst_structure_get_name (str), "audio/mpeg") == 0 ||
+	    strcasecmp (gst_structure_get_name (str), "audio/amr") == 0||
+	    strcasecmp (gst_structure_get_name (str), "audio/amr-wb") == 0 ) {
 		return FALSE;
 	}
 
