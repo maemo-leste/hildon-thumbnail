@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.36~unreleased) unstable; urgency=low
+
+  *
+
+ --
+
+
 hildon-thumbnail (3.0.35) unstable; urgency=low
 
   * Fixes: NB#124502 - Found thumbnailerd crash at pad_added_group_cb while video playing in FSM
