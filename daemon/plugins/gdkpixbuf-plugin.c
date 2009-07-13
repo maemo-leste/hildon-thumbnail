@@ -352,8 +352,8 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 				}
 
 				pixbuf_cropped = gdk_pixbuf_scale_simple (pixbuf,
-									  a_wanted,
-									  b_wanted,
+									  a_wanted > 0 ? a_wanted : 1,
+									  b_wanted > 0 ? b_wanted : 1,
 									  GDK_INTERP_BILINEAR);
 
 			} else {
