@@ -1,18 +1,16 @@
-hildon-thumbnail (3.0.36~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.36) unstable; urgency=low
 
-  *
+  * Fixes: NB#126856 - Thumbnail is not created for small file.
 
- --
-
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Mon, 13 Jul 2009 19:10:56 +0300
 
 hildon-thumbnail (3.0.35) unstable; urgency=low
 
   * Fixes: NB#124502 - Found thumbnailerd crash at pad_added_group_cb while video playing in FSM
-  * Fixes: NB#123362 - Thumbnailer fails to extract video thumbnails for some videos and gst-video-thumbnailer crashes
   * Removed the google-album-art downloader from the package
   * Added libjpeg62-dev as build dependency
 	
- -- Mikael Ottela <mikael.ottela@ixonos.com>   Thu, 2 Jul 2009 16:05:00 +0300
+ -- Mikael Ottela <mikael.ottela@ixonos.com>  Thu, 2 Jul 2009 16:05:00 +0300
 
 hildon-thumbnail (3.0.34) unstable; urgency=low
 
