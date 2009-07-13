@@ -1,3 +1,9 @@
+hildon-thumbnail (3.0.37~unreleased) unstable; urgency=low
+
+  * 
+
+ --
+
 hildon-thumbnail (3.0.36) unstable; urgency=low
 
   * Fixes: NB#126856 - Thumbnail is not created for small file.
