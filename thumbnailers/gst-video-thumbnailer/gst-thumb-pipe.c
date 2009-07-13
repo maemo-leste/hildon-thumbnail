@@ -500,7 +500,12 @@ stream_continue_callback (GstElement    *bin,
 	
 	str  = gst_caps_get_structure (caps, 0);
 
-	if (!g_strrstr (gst_structure_get_name (str), "video")) {
+	/* Because of some inconsistencies (audio/?? container 
+	   containing video) we have a blacklist here. */
+
+	if (strcasecmp (gst_structure_get_name (str), "audio/mpeg") == 0 ||
+	    strcasecmp (gst_structure_get_name (str), "audio/amr") == 0||
+	    strcasecmp (gst_structure_get_name (str), "audio/amr-wb") == 0 ) {
 		return FALSE;
 	}
 
@@ -515,7 +520,6 @@ wait_for_state_change (ThumberPipe *pipe,
 {
 	ThumberPipePrivate *priv;
 	GstBus             *bus;
-	gchar              *error_message;
 	gint64              timeout = PIPE_TIMEOUT * GST_SECOND;
 	
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
@@ -533,7 +537,7 @@ wait_for_state_change (ThumberPipe *pipe,
 				     error_quark (),
 				     RUNNING_ERROR,
 				     "Pipeline timed out");
-			return FALSE;
+			goto error;
 		}
 		
 		src = (GstElement*)GST_MESSAGE_SRC (message);
@@ -546,15 +550,16 @@ wait_for_state_change (ThumberPipe *pipe,
 				gst_message_parse_state_changed (message, &old, &new, &pending);
 				if (new == state) {
 					gst_message_unref (message);
-					return TRUE;
+					goto success;
 				}
 			}
 			break;
 		}
 		case GST_MESSAGE_ERROR: {
 			GError *lerror = NULL;
+			gchar  *error_message = NULL;
+
 			gst_message_parse_error (message, &lerror, &error_message);
-			gst_message_unref (message);
 			g_free (error_message);
 
 			if (lerror != NULL) {
@@ -565,18 +570,21 @@ wait_for_state_change (ThumberPipe *pipe,
 					     RUNNING_ERROR,
 					     "Undefined error running the pipeline");
 			}
+			
+			gst_message_unref (message);
+			goto error;
 
-			return FALSE;
 			break;
 		}
 		case GST_MESSAGE_EOS: {
-			gst_message_unref (message);
-
 			g_set_error (error,
 				     error_quark (),
 				     RUNNING_ERROR,
 				     "Reached end-of-file without proper content");
-			return FALSE;
+
+			gst_message_unref (message);
+			goto error;
+
 			break;
 		}
 		default:
@@ -589,7 +597,13 @@ wait_for_state_change (ThumberPipe *pipe,
 	
 	g_assert_not_reached ();
 	
+ error:
+	gst_object_unref (bus);
 	return FALSE;
+
+ success:
+	gst_object_unref (bus);
+	return TRUE;
 }
 
 static gboolean
@@ -599,7 +613,6 @@ wait_for_image_buffer (ThumberPipe *pipe,
 {
        ThumberPipePrivate *priv;
        GstBus             *bus;
-       gchar              *error_message;
        gint64              timeout = PIPE_TIMEOUT * GST_SECOND;
 
        priv = THUMBER_PIPE_GET_PRIVATE (pipe);
@@ -617,7 +630,7 @@ wait_for_image_buffer (ThumberPipe *pipe,
                                     error_quark (),
                                     RUNNING_ERROR,
                                     "Pipeline timed out");
-                       return FALSE;
+                       goto error;
                }
 
                src = (GstElement*)GST_MESSAGE_SRC (message);
@@ -634,41 +647,41 @@ wait_for_image_buffer (ThumberPipe *pipe,
                                g_object_get (G_OBJECT (priv->video_sink), "last-pixbuf", &pix, NULL);
 			       
                                if (!pix) {
-				       gst_message_unref (message);
                                        g_set_error (error,
                                                     error_quark (),
                                                     RUNNING_ERROR,
                                                     "Non-existing image buffer returned by pipeline");
-                                       return FALSE;
+				       gst_message_unref (message);
+                                       goto error;
                                }
 			       
-			       if (!check_for_valid_thumb (pix)) {
+			       if (check_for_valid_thumb (pix)) {
+				       if (!create_thumbnails (uri,
+							       pix,
+							       priv->standard,
+							       priv->cropped,
+							       error)) {
+					       g_object_unref (pix);
+					       gst_message_unref (message);
+					       goto error;
+				       } else {
+					       g_object_unref (pix);
+					       gst_message_unref (message);
+					       goto success;
+				       }
+			       } else {
                                        /* If not good, continue until we get better */
                                        g_object_unref (pix);
-                                       break;
 			       }
-
-                               if (!create_thumbnails (uri,
-                                                       pix,
-                                                       priv->standard,
-                                                       priv->cropped,
-                                                       error)) {
-                                       g_object_unref (pix);
-				       gst_message_unref (message);
-                                       return FALSE;
-                               }
-
-                               g_object_unref (pix);
-			       gst_message_unref (message);
-                               return TRUE;
                        }
 		       break;
                }
 		       
                case GST_MESSAGE_ERROR: {
                        GError *lerror = NULL;
+		       gchar  *error_message = NULL;
+
                        gst_message_parse_error (message, &lerror, &error_message);
-                       gst_message_unref (message);
                        g_free (error_message);
 
                        if (lerror != NULL) {
@@ -679,18 +692,18 @@ wait_for_image_buffer (ThumberPipe *pipe,
                                             RUNNING_ERROR,
                                             "Undefined error running the pipeline");
                        }
-
-                       return FALSE;
+		       
+		       gst_message_unref (message);
+		       goto error;
                        break;
                }
                case GST_MESSAGE_EOS: {
-                       gst_message_unref (message);
-
                        g_set_error (error,
 				    error_quark (),
                                  RUNNING_ERROR,
                                     "Reached end-of-file without proper content");
-                       return FALSE;
+		       gst_message_unref (message);
+		       goto error;
                        break;
                }
                default:
@@ -703,7 +716,13 @@ wait_for_image_buffer (ThumberPipe *pipe,
 
        g_assert_not_reached ();
 
+ error:
+       gst_object_unref (bus);
        return FALSE;
+
+ success:
+       gst_object_unref (bus);
+       return TRUE;
 }
 
 
