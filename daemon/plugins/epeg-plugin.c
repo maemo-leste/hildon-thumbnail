@@ -333,12 +333,18 @@ wanted_size (int a, int b, int width, int height, int *w, int *h) {
 
 		rw = a / width;
 		rh = b / height;
-		if (rw > rh) {
+
+		if (rw == rh) {
 		    *h = b / rw;
-		    *w = width;
+		    *w = a / rh;
 		} else {
-		    *w =  a / rh;
-		    *h = height;
+			if (rw > rh) {
+			    *h = b / rw;
+			    *w = width;
+			} else {
+			    *w =  a / rh;
+			    *h = height;
+			}
 		}
 	}
 

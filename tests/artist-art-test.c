@@ -109,11 +109,11 @@ g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
             user_data,
             NULL);
 
-/*
+
 hildon_thumbnail_factory_load(
-            "file:///home/pvanhoof/.cache/media-art/album-7215ee9c7d9dc229d2921a40e899ec5f-3e2d42595d728926108329d9771c92d7.jpeg", "image/jpeg",
+            "file:///tmp/20090104_002_anticlock.jpg", "image/jpeg",
             256, 256, _thumbnail_created_cb2, user_data);
-*/
+
 /*
 	g_object_unref (f);
 	g_object_unref (r1);
