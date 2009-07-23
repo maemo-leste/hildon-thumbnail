@@ -1312,7 +1312,7 @@ thumbnailer_init (Thumbnailer *object)
 	/* We could increase the amount of threads to add some parallelism */
 
 	priv->large_pool = g_thread_pool_new ((GFunc) do_the_large_work,NULL,1,TRUE,NULL);
-	priv->normal_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,1,TRUE,NULL);
+	priv->normal_pool = g_thread_pool_new ((GFunc) do_the_work,NULL,5,TRUE,NULL);
 
 	/* This sort function makes the pool a LIFO */
 
