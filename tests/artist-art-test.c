@@ -99,7 +99,7 @@ g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
                  "2008 Grammy Nominees", "album"));
 */
 
-
+/*
  hildon_thumbnail_factory_request_pixbuf (hildon_thumbnail_factory_get_instance (),
             "file:///Does'nexist",
             256, 256,
@@ -108,7 +108,7 @@ g_print ("%s\n", hildon_albumart_get_path("Nelly Furtado",
             _thumbnail_created_cb,
             user_data,
             NULL);
-
+*/
 
 hildon_thumbnail_factory_load(
             "file:///tmp/20090104_002_anticlock.jpg", "image/jpeg",

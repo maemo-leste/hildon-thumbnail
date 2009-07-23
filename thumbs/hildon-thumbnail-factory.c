@@ -652,6 +652,50 @@ have_all_cb (gpointer user_data)
 	return FALSE;
 }
 
+static gboolean
+new_enough (const gchar *orig_uri, const gchar *thumb_path)
+{
+	GFileInfo *info1, *info2;
+	GFile *file1;
+	GFile *file2;
+	gboolean retval = TRUE;
+
+	if (!g_file_test (thumb_path, G_FILE_TEST_EXISTS))
+		return FALSE;
+
+	file1 = g_file_new_for_uri (orig_uri);
+	file2 = g_file_new_for_path (thumb_path);
+
+	info1 = g_file_query_info (file1, 
+				   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+	info2 = g_file_query_info (file2, 
+				   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+	if (info1 && info2) {
+		guint64 fmtime1, fmtime2;
+
+		fmtime1 = g_file_info_get_attribute_uint64 (info1, 
+							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		fmtime2 = g_file_info_get_attribute_uint64 (info2, 
+							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		g_object_unref (info1);
+		g_object_unref (info2);
+
+		if (fmtime1 != fmtime2) {
+			retval = FALSE;
+		}
+	}
+
+	g_object_unref (file1);
+	g_object_unref (file2);
+
+	return retval;
+}
+
+
 HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 				const gchar *uri, const gchar *mime_type,
 				guint width, guint height,
@@ -702,15 +746,15 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 						       (y == 0));
 
 		if (flags & HILDON_THUMBNAIL_FLAG_CROP) {
-			if (g_file_test (cropped, G_FILE_TEST_EXISTS))
+			if (new_enough (uri, cropped))
 				break;
 		} 
 		else if (width > 128 || height > 128) {
-			if (g_file_test (large, G_FILE_TEST_EXISTS))
+			if (new_enough (uri, large))
 				break;
 		} 
 		else {
-			if (g_file_test (normal, G_FILE_TEST_EXISTS))
+			if (new_enough (uri, normal))
 				break;
 		}
 
@@ -737,7 +781,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 			luri = local_normal;
 		}
 		local = g_file_new_for_uri (luri);
-		have_all = (g_file_test (path, G_FILE_TEST_EXISTS) || g_file_query_exists (local, NULL));
+		have_all = (new_enough (uri, path) || g_file_query_exists (local, NULL));
 		g_object_unref (local);
 	}
 

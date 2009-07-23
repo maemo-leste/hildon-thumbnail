@@ -81,6 +81,49 @@ my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
 	#endif
 #endif
 
+static gboolean
+new_enough (const gchar *orig_uri, const gchar *thumb_path)
+{
+	GFileInfo *info1, *info2;
+	GFile *file1;
+	GFile *file2;
+	gboolean retval = TRUE;
+
+	if (!g_file_test (thumb_path, G_FILE_TEST_EXISTS))
+		return FALSE;
+
+	file1 = g_file_new_for_uri (orig_uri);
+	file2 = g_file_new_for_path (thumb_path);
+
+	info1 = g_file_query_info (file1, 
+				   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+	info2 = g_file_query_info (file2, 
+				   G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				   G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+	if (info1 && info2) {
+		guint64 fmtime1, fmtime2;
+
+		fmtime1 = g_file_info_get_attribute_uint64 (info1, 
+							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		fmtime2 = g_file_info_get_attribute_uint64 (info2, 
+							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		g_object_unref (info1);
+		g_object_unref (info2);
+
+		if (fmtime1 != fmtime2) {
+			retval = FALSE;
+		}
+	}
+
+	g_object_unref (file1);
+	g_object_unref (file2);
+
+	return retval;
+}
+
 static void
 create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 {
@@ -470,7 +513,7 @@ hildon_thumbnail_factory_request_generic (HildonThumbnailFactory *self,
 
 		for (i = CHECKER; i < 3  && have; i++) {
 			gchar *localp = g_filename_from_uri (lpaths[i], NULL, NULL);
-			have = ((paths[i] && g_file_test (paths[i], G_FILE_TEST_EXISTS)) ||
+			have = ((paths[i] && new_enough (uri, paths[i])) ||
 				(localp && g_file_test (localp, G_FILE_TEST_EXISTS)));
 			g_free (localp);
 		}
