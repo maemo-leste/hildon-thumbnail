@@ -249,6 +249,9 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
+	g_return_val_if_fail (pipe != NULL, FALSE);
+	g_return_val_if_fail (uri != NULL, FALSE);
+
 	if (!initialize (pipe,
 			 "dummy",
 			 256,
@@ -468,10 +471,23 @@ newpad_callback (GstElement       *decodebin,
 	GstStructure *str;
 	GstPad       *videopad;
 
+	g_return_if_fail (decodebin != NULL);
+	g_return_if_fail (pad != NULL);
+	g_return_if_fail (pipe != NULL);
+
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
+
+	if (!pad) {
+		return;
+	}
 	
 	videopad = gst_element_get_static_pad (priv->sinkbin, "sink");
-	if (!videopad || GST_PAD_IS_LINKED (videopad)) {
+
+	if (!videopad) {
+		return;
+	}
+
+	if (GST_PAD_IS_LINKED (videopad)) {
 		gst_object_unref (videopad);
 		return;
 	}
@@ -497,7 +513,12 @@ stream_continue_callback (GstElement    *bin,
 			  ThumberPipe   *pipe)
 {
 	GstStructure *str;
-	
+
+	g_return_val_if_fail (bin != NULL, FALSE);
+	g_return_val_if_fail (pad != NULL, FALSE);	
+	g_return_val_if_fail (caps != NULL, FALSE);
+	g_return_val_if_fail (pipe != NULL, FALSE);
+
 	str  = gst_caps_get_structure (caps, 0);
 
 	/* Because of some inconsistencies (audio/?? container 
@@ -763,6 +784,8 @@ crop_resize (GdkPixbuf *src, int width, int height) {
 	double offx = 0, offy = 0;
 	double scax, scay;
 
+	g_return_val_if_fail (src != NULL, NULL);
+
 	na = a;
 	nb = b;
 
@@ -826,6 +849,8 @@ check_for_valid_thumb (GdkPixbuf   *pixbuf)
        float   avg = 0.0f;
        float   variance = 0.0f;
 
+       g_return_val_if_fail (pixbuf != NULL, FALSE);
+
        /* We calculate the variance of one element (bpp=24) */
 
        for (i = 0; i < samples; i=i+3) {
@@ -857,7 +882,10 @@ create_thumbnails (const gchar *uri,
 	gchar *checksum;
 	GError *lerror = NULL;
 
-	if(!pixbuf) {
+	g_return_val_if_fail (uri != NULL, FALSE);
+	g_return_val_if_fail (pixbuf != NULL, FALSE);
+
+	if (!pixbuf) {
 		g_set_error (error,
 			     error_quark (),
 			     THUMBNAIL_ERROR,
