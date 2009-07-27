@@ -284,12 +284,14 @@ thumber_pipe_run (ThumberPipe *pipe,
 		seek = duration/3;
 	}
 	
-	gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-			  GST_SEEK_TYPE_SET, seek,
-			  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
-
-	/* Wait for the seek to finish */
-	gst_element_get_state (priv->pipeline, NULL, NULL, SEEK_TIMEOUT * GST_SECOND);
+	if (gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
+			      GST_SEEK_FLAG_FLUSH,
+			      GST_SEEK_TYPE_SET, seek,
+			      GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+		/* Wait for the seek to finish */
+		gst_element_get_state (priv->pipeline, NULL, NULL,
+				       SEEK_TIMEOUT * GST_SECOND);
+	}
 
 skip_seek:
 
