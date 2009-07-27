@@ -578,10 +578,8 @@ wait_for_state_change (ThumberPipe *pipe,
 		}
 		case GST_MESSAGE_ERROR: {
 			GError *lerror = NULL;
-			gchar  *error_message = NULL;
 
-			gst_message_parse_error (message, &lerror, &error_message);
-			g_free (error_message);
+			gst_message_parse_error (message, &lerror, NULL);
 
 			if (lerror != NULL) {
 				g_propagate_error (error, lerror);
@@ -700,10 +698,8 @@ wait_for_image_buffer (ThumberPipe *pipe,
 		       
                case GST_MESSAGE_ERROR: {
                        GError *lerror = NULL;
-		       gchar  *error_message = NULL;
 
-                       gst_message_parse_error (message, &lerror, &error_message);
-                       g_free (error_message);
+                       gst_message_parse_error (message, &lerror, NULL);
 
                        if (lerror != NULL) {
                                g_propagate_error (error, lerror);
