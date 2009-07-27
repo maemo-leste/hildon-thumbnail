@@ -243,7 +243,7 @@ thumber_pipe_run (ThumberPipe *pipe,
 	gchar              *filename;
 	gboolean            success = FALSE;
 	GError             *lerror  = NULL;
-	gint64              duration;
+	gint64              duration = 0;
 	gint64              seek;
 	GstFormat           format = GST_FORMAT_TIME;
 
@@ -275,7 +275,8 @@ thumber_pipe_run (ThumberPipe *pipe,
 		goto cleanup;
 	}
 
-	gst_element_query_duration (priv->pipeline, &format, &duration);
+	if (!gst_element_query_duration (priv->pipeline, &format, &duration))
+		goto skip_seek;
 	
 	if (duration > 120 * GST_SECOND) {
 		seek = 45 * GST_SECOND;
@@ -289,6 +290,8 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	/* Wait for the seek to finish */
 	gst_element_get_state (priv->pipeline, NULL, NULL, SEEK_TIMEOUT * GST_SECOND);
+
+skip_seek:
 
 	gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
 	if (!wait_for_image_buffer (pipe, uri, &lerror)) {
