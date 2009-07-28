@@ -110,13 +110,17 @@ new_enough (const gchar *orig_uri, const gchar *thumb_path)
 							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
 		fmtime2 = g_file_info_get_attribute_uint64 (info2, 
 							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
-		g_object_unref (info1);
-		g_object_unref (info2);
 
 		if (fmtime1 != fmtime2) {
 			retval = FALSE;
 		}
 	}
+
+	if (info1)
+		g_object_unref (info1);
+
+	if (info2)
+		g_object_unref (info2);
 
 	g_object_unref (file1);
 	g_object_unref (file2);
