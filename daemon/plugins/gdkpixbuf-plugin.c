@@ -95,10 +95,14 @@ hildon_thumbnail_plugin_supported (void)
 			}
 			copy = g_slist_next (copy);
 		}
-		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1));
+		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1 + 1));
 		for (i = 0 ; i < types_support->len; i++)
 			supported[i] =  g_strdup (g_ptr_array_index (types_support, i));
 		g_ptr_array_free (types_support, TRUE);
+
+		/* Maemo specific */
+		supported[i] = g_strdup ("sketch/png");
+
 		g_slist_free (formats);
 	}
 
