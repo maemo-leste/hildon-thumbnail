@@ -1,8 +1,13 @@
-hildon-thumbnail (3.0.37~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.37) unstable; urgency=low
 
-  * 
+  [Philip Van Hoof]
+  * Fixes: NB#129172 - Album art not resizing properly in Music Library
+    views for this album.
 
- --
+  [Mikael Ottela]
+  * Robustness improvements for the vido thumbnailer.
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 28 Jul 2009 14:11:22 +0300
 
 hildon-thumbnail (3.0.36) unstable; urgency=low
 
