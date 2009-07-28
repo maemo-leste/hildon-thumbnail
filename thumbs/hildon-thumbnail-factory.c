@@ -1030,14 +1030,14 @@ static void init (void) {
 		dbus_g_object_register_marshaller (thumbnailer_marshal_VOID__UINT_BOXED_INT_STRING,
 					G_TYPE_NONE,
 					G_TYPE_UINT, 
-					G_TYPE_BOXED,
+					G_TYPE_STRV,
 					G_TYPE_INT,
 					G_TYPE_STRING,
 					G_TYPE_INVALID);
 	
 		dbus_g_proxy_add_signal (proxy, "Error", 
 					G_TYPE_UINT, 
-					G_TYPE_BOXED,
+					G_TYPE_STRV,
 					G_TYPE_INT,
 					G_TYPE_STRING,
 					G_TYPE_INVALID);

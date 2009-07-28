@@ -2,6 +2,7 @@ hildon-thumbnail (3.0.38~unreleased) unstable; urgency=low
 
   * Fixes: NB#126843, setting mtime
   * Fixes: NB#128505, thumbnail sketch.png files
+  * Fixes: NB#129014, wrong GType for signal registration
 
  --
 
