@@ -1,10 +1,11 @@
-hildon-thumbnail (3.0.38~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.38) unstable; urgency=low
 
+  [Philip Van Hoof]
   * Fixes: NB#126843, setting mtime
   * Fixes: NB#128505, thumbnail sketch.png files
   * Fixes: NB#129014, wrong GType for signal registration
 
- --
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Tue, 28 Jul 2009 17:39:44 +0300
 
 hildon-thumbnail (3.0.37) unstable; urgency=low
 
