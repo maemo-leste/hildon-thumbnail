@@ -471,6 +471,8 @@ albumart_do_init (DBusGConnection *connection, AlbumartManager *manager, Albumar
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, error);
 
+	g_object_unref (proxy);
+
 	object = g_object_new (TYPE_ALBUMART, 
 			       "manager", manager,
 			       NULL);

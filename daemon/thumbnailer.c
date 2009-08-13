@@ -1368,6 +1368,8 @@ thumbnailer_do_init (DBusGConnection *connection, ThumbnailManager *manager, Thu
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, error);
 
+	g_object_unref (proxy);
+
 	object = g_object_new (TYPE_THUMBNAILER, 
 			       "manager", manager,
 			       NULL);

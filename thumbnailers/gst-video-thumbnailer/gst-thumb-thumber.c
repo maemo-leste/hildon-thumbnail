@@ -609,6 +609,8 @@ thumber_dbus_register(Thumber *thumber,
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, &lerror);
 
+	g_object_unref (proxy);
+
 	if (lerror) {
 		g_printerr ("Problem requesting name, %s\n", lerror->message);
 		g_error_free (lerror);

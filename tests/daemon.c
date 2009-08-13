@@ -208,6 +208,8 @@ main (int argc, char **argv)
 					   DBUS_NAME_FLAG_DO_NOT_QUEUE,
 					   &result, &error);
 
+	g_object_unref (proxy);
+
 	object = g_object_new (TYPE_DAEMON, 
 			       "connection", connection, 
 			       NULL);
