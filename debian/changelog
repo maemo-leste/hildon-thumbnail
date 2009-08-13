@@ -1,8 +1,14 @@
-hildon-thumbnail (3.0.39~unreleased) unstable; urgency=low
+hildon-thumbnail (3.0.39) unstable; urgency=low
 
-  * 
+  [Tim-Philipp Müller]
+  * Helps-Fixing: NB#123682 - Video thumbnails appear black due to wrong
+                              timestamps.
 
- --
+  [Alban Crequy]
+  * Fixes: NB#132665 - hildon-thumbnailerd subscribe too D-Bus signal too
+                       broadly
+  
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 13 Aug 2009 14:53:55 +0300
 
 hildon-thumbnail (3.0.38) unstable; urgency=low
 
