@@ -329,23 +329,16 @@ wanted_size (int a, int b, int width, int height, int *w, int *h) {
 		*w = width;
 		*h = height;
 	} else {
-		int rw, rh;
+		int mag;
 
-		rw = a / width;
-		rh = b / height;
-
-		if (rw == rh) {
-		    *h = b / rw;
-		    *w = a / rh;
+		if (a > b) {
+			mag = b/height;
 		} else {
-			if (rw > rh) {
-			    *h = b / rw;
-			    *w = width;
-			} else {
-			    *w =  a / rh;
-			    *h = height;
-			}
+			mag = a/width;
 		}
+
+		*w = a/mag;
+		*h = b/mag;
 	}
 
 	return;
@@ -429,7 +422,7 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 		 * check here (if you don't do this, you'll get a black border
 		 * at two sides of the cropped final image) */
 
-		if (ow <= 256 || oh <= 256) {
+		if (ow < 256 || oh < 256) {
 
 			/* Changed in NB#118963 comment #38 */
 
