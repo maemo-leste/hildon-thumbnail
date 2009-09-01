@@ -1094,6 +1094,8 @@ hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolea
 
 	g_free (urif);
 
+	g_object_unref (file);
+
 	return retval;
 }
 
