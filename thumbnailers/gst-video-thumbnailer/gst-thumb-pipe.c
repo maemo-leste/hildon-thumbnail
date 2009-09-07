@@ -78,7 +78,6 @@ typedef struct {
 	GstElement     *decodebin;
 
 	GstElement     *sinkbin;
-	GstElement     *video_scaler;
 	GstElement     *video_filter;
 	GstElement     *video_sink;
 
@@ -328,7 +327,6 @@ deinitialize (ThumberPipe *pipe)
 	priv->decodebin = NULL;
 
 	priv->sinkbin      = NULL;
-	priv->video_scaler = NULL;
 	priv->video_filter = NULL;
 	priv->video_sink   = NULL;
 }
@@ -385,23 +383,19 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 	}
 
 	priv->sinkbin      = gst_bin_new("sink bin");
-	priv->video_scaler = gst_element_factory_make("videoscale", "video_scaler");
 	priv->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
 	priv->video_sink   = gst_element_factory_make("gdkpixbufsink", "video_sink");
 
 	if (!(priv->sinkbin && 
-	      priv->video_scaler && 
 	      priv->video_filter && 
 	      priv->video_sink)) {
 		g_set_error (error,
 			     error_quark (),
 			     INITIALIZATION_ERROR,
-			     "Failed to create scaler and sink elements");
+			     "Failed to create filter and sink elements");
 		gst_object_unref (priv->pipeline);
 		if (priv->sinkbin)
 			gst_object_unref (priv->sinkbin);
-		if (priv->video_scaler)
-			gst_object_unref (priv->video_scaler);
 		if (priv->video_filter)
 			gst_object_unref (priv->video_filter);
 		if (priv->video_sink)
@@ -410,29 +404,16 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 	}
 
 	gst_bin_add_many (GST_BIN(priv->sinkbin),
-			  priv->video_scaler, 
 			  priv->video_filter, 
 			  priv->video_sink,
 			  NULL);
 
-	if (!gst_element_link_many(priv->video_scaler, priv->video_filter, NULL)) {
-		g_set_error (error,
-			     error_quark (),
-			     INITIALIZATION_ERROR,
-			     "Failed to link scaler and filter elements");
-		gst_object_unref (priv->pipeline);
-		gst_object_unref (priv->sinkbin);
-		return FALSE;
-	}
-
 	caps = gst_caps_new_simple ("video/x-raw-rgb",
-				    "width", G_TYPE_INT, size,
-				    "height", G_TYPE_INT, size,
 				    "bpp", G_TYPE_INT, 24,
 				    "depth", G_TYPE_INT, 24,
 				    NULL);
 
-	if (!gst_element_link_filtered(priv->video_filter, priv->video_sink, caps)) {
+	if (!gst_element_link_filtered (priv->video_filter, priv->video_sink, caps)) {
 		g_set_error (error,
 			     error_quark (),
 			     INITIALIZATION_ERROR,
@@ -445,7 +426,7 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 
 	gst_caps_unref (caps);
 
-	videopad = gst_element_get_pad (priv->video_scaler, "sink");
+	videopad = gst_element_get_pad (priv->video_filter, "sink");
 	gst_element_add_pad (priv->sinkbin, gst_ghost_pad_new ("sink", videopad));
 	gst_object_unref (videopad);
 
@@ -901,8 +882,34 @@ create_thumbnails (const gchar *uri,
 	g_free (checksum);
 
 	if (standard) {
+		int a;
+		int b;
+		double scale;
+
+		a = gdk_pixbuf_get_width (pixbuf);
+		b = gdk_pixbuf_get_height (pixbuf);
+
+		if (a <= 0 || b <= 0) {
+			g_set_error (error,
+				     error_quark (),
+				     THUMBNAIL_ERROR,
+				     "Invalid size of frame in buffer");
+			return FALSE;
+		}
+
+		if (a < b) {
+			scale = (double)256/(double)b;
+		} else {
+			scale = (double)256/(double)a;
+		}
+
+		pic = gdk_pixbuf_scale_simple (pixbuf,
+					       (int)(scale * a),
+					       (int)(scale * b),
+					       GDK_INTERP_BILINEAR);
+
 		filename = g_build_filename (g_get_home_dir (), ".thumbnails", "large", png_name, NULL);
-		if (!gdk_pixbuf_save (pixbuf,
+		if (!gdk_pixbuf_save (pic,
 				      filename,
 				      "jpeg",
 				      &lerror,
@@ -911,13 +918,20 @@ create_thumbnails (const gchar *uri,
 			
 			g_free (png_name);
 			g_free (jpg_name);
+
+			g_free (filename);
+
+			g_object_unref (pic);
+
 			return FALSE;
 		}	
+		g_object_unref (pic);
+
 		g_free (filename);
 
 		pic = gdk_pixbuf_scale_simple (pixbuf,
-					       128,
-					       128,
+					       (int)(scale * a/2.0),
+					       (int)(scale * b/2.0),
 					       GDK_INTERP_BILINEAR);
 		
 		filename = g_build_filename (g_get_home_dir (), ".thumbnails", "normal", png_name, NULL);
@@ -931,11 +945,15 @@ create_thumbnails (const gchar *uri,
 			g_free (png_name);
 			g_free (jpg_name);
 
+			g_free (filename);
+
 			g_object_unref (pic);
 
 			return FALSE;
 		}
 		g_object_unref (pic);
+
+		g_free (filename);
 	}
 
 	if (cropped) {
@@ -951,6 +969,8 @@ create_thumbnails (const gchar *uri,
 			
 			g_free (png_name);
 			g_free (jpg_name);
+
+			g_free (filename);
 
 			g_object_unref (pic);
 
