@@ -78,6 +78,8 @@ typedef struct {
 	GstElement     *decodebin;
 
 	GstElement     *sinkbin;
+	GstElement     *video_scaler;
+	GstElement     *video_color;
 	GstElement     *video_filter;
 	GstElement     *video_sink;
 
@@ -327,6 +329,8 @@ deinitialize (ThumberPipe *pipe)
 	priv->decodebin = NULL;
 
 	priv->sinkbin      = NULL;
+	priv->video_scaler = NULL;
+	priv->video_color  = NULL;
 	priv->video_filter = NULL;
 	priv->video_sink   = NULL;
 }
@@ -336,6 +340,7 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 {
 	ThumberPipePrivate *priv;
 	GstPad             *videopad;
+	GstPad             *ghostpad;
 	GstCaps            *caps;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
@@ -383,31 +388,51 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 	}
 
 	priv->sinkbin      = gst_bin_new("sink bin");
-	priv->video_filter = gst_element_factory_make("ffmpegcolorspace", "video_filter");
-	priv->video_sink   = gst_element_factory_make("gdkpixbufsink", "video_sink");
+	priv->video_scaler = gst_element_factory_make ("videoscale", "video_scaler");
+	priv->video_color  = gst_element_factory_make ("ffmpegcolorspace", "video_color");
+	priv->video_filter = gst_element_factory_make ("capsfilter", "video_filter");
+	priv->video_sink   = gst_element_factory_make ("gdkpixbufsink", "video_sink");
 
 	if (!(priv->sinkbin && 
+	      priv->video_scaler &&
+	      priv->video_color &&
 	      priv->video_filter && 
 	      priv->video_sink)) {
 		g_set_error (error,
 			     error_quark (),
 			     INITIALIZATION_ERROR,
-			     "Failed to create filter and sink elements");
+			     "Failed to create scaler, filter and sink elements");
 		gst_object_unref (priv->pipeline);
 		if (priv->sinkbin)
 			gst_object_unref (priv->sinkbin);
 		if (priv->video_filter)
 			gst_object_unref (priv->video_filter);
+		if (priv->video_color)
+			gst_object_unref (priv->video_color);
+		if (priv->video_scaler)
+			gst_object_unref (priv->video_scaler);
 		if (priv->video_sink)
 			gst_object_unref (priv->video_sink);
 		return FALSE;
 	}
 
 	gst_bin_add_many (GST_BIN(priv->sinkbin),
+			  priv->video_scaler,
+			  priv->video_color,
 			  priv->video_filter, 
 			  priv->video_sink,
 			  NULL);
 
+	if (!gst_element_link_many(priv->video_scaler, priv->video_color, priv->video_filter, NULL)) {
+		g_set_error (error,
+			     error_quark (),
+			     INITIALIZATION_ERROR,
+			     "Failed to link scaler and filter elements");
+		gst_object_unref (priv->pipeline);
+		gst_object_unref (priv->sinkbin);
+		return FALSE;
+	}
+	
 	caps = gst_caps_new_simple ("video/x-raw-rgb",
 				    "bpp", G_TYPE_INT, 24,
 				    "depth", G_TYPE_INT, 24,
@@ -417,7 +442,7 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 		g_set_error (error,
 			     error_quark (),
 			     INITIALIZATION_ERROR,
-			     "Failed to link filter and sink elements with caps");
+			     "Failed to link filter and sink elements with color caps");
 		gst_object_unref (priv->pipeline);
 		gst_object_unref (priv->sinkbin);
 		gst_caps_unref (caps);
@@ -426,8 +451,10 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 
 	gst_caps_unref (caps);
 
-	videopad = gst_element_get_pad (priv->video_filter, "sink");
-	gst_element_add_pad (priv->sinkbin, gst_ghost_pad_new ("sink", videopad));
+	videopad = gst_element_get_pad (priv->video_scaler, "sink");
+	ghostpad = gst_ghost_pad_new ("sink", videopad);
+	gst_element_add_pad (priv->sinkbin, ghostpad);
+		
 	gst_object_unref (videopad);
 
 	gst_bin_add (GST_BIN (priv->pipeline), priv->sinkbin);
@@ -453,9 +480,9 @@ newpad_callback (GstElement       *decodebin,
 {
 	ThumberPipePrivate *priv;
 
-	GstCaps      *caps;
-	GstStructure *str;
-	GstPad       *videopad;
+	GstCaps            *caps;
+	const GstStructure *str;
+	GstPad             *videopad;
 
 	g_return_if_fail (decodebin != NULL);
 	g_return_if_fail (pad != NULL);
@@ -486,6 +513,7 @@ newpad_callback (GstElement       *decodebin,
 		gst_caps_unref (caps);
 		return;
 	}
+
 	gst_caps_unref (caps);
 	gst_pad_link (pad, videopad);
 
@@ -499,6 +527,12 @@ stream_continue_callback (GstElement    *bin,
 			  ThumberPipe   *pipe)
 {
 	GstStructure *str;
+
+	int i;
+
+	ThumberPipePrivate *priv;
+
+	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
 	g_return_val_if_fail (bin != NULL, FALSE);
 	g_return_val_if_fail (pad != NULL, FALSE);	
@@ -514,6 +548,31 @@ stream_continue_callback (GstElement    *bin,
 	    strcasecmp (gst_structure_get_name (str), "audio/amr") == 0||
 	    strcasecmp (gst_structure_get_name (str), "audio/amr-wb") == 0 ) {
 		return FALSE;
+	}
+
+	for (i = caps->structs->len - 1; i >= 0; i--) {
+		gint width, height;
+		int o;
+		str = gst_caps_get_structure (caps, i);
+		if (gst_structure_get_int (str, "width", &width) &&
+		    gst_structure_get_int (str, "height", &height)) {
+			double scale;
+
+			if (width < height) {
+				scale = 256.0/width;
+			} else {
+				scale = 256.0/height;
+			}
+
+			caps = gst_caps_new_simple ("video/x-raw-rgb",
+						    "width", G_TYPE_INT, (int)(width*scale),
+						    "height", G_TYPE_INT, (int)(height*scale),
+						    NULL);
+			
+			g_object_set (G_OBJECT (priv->video_filter),
+				      "caps", caps,
+				      NULL);			
+		}
 	}
 
 	return TRUE;
@@ -647,7 +706,7 @@ wait_for_image_buffer (ThumberPipe *pipe,
 
 		       if (strcmp (name, "preroll-pixbuf") == 0 ||
                            strcmp (name, "pixbuf") == 0 ) {
-                               GdkPixbuf *pix;
+                               GdkPixbuf *pix = NULL;
 			       
                                g_object_get (G_OBJECT (priv->video_sink), "last-pixbuf", &pix, NULL);
 			       
@@ -845,8 +904,9 @@ check_for_valid_thumb (GdkPixbuf   *pixbuf)
                float tmp = ((float) pixels[i] - avg);
 	       variance += tmp * tmp;
        }
-       variance /= ((float) (samples - 1));
 
+       variance /= ((float) (samples - 1));
+       
        return (variance > VALID_VARIANCE_THRESHOLD);
 }
 
