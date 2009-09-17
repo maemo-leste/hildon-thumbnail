@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.41) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Fixes: NB#137433 - Video thumbnails are distorted.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 17 Sep 2009 13:59:15 +0300
+
 hildon-thumbnail (3.0.40) unstable; urgency=low
 
   [Mikael Ottela]
