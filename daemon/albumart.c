@@ -122,8 +122,12 @@ pool_sort_compare (gconstpointer a, gconstpointer b, gpointer user_data)
 }
 
 static void 
-mark_unqueued (WorkTask *task, guint handle)
+mark_unqueued (gpointer data, 
+	       gpointer user_data)
 {
+	WorkTask *task = data;
+	guint handle = GPOINTER_TO_UINT (user_data);
+
 	if (task->num == handle)
 		task->unqueued = TRUE;
 }
@@ -136,7 +140,7 @@ albumart_unqueue (Albumart *object, guint handle, DBusGMethodInvocation *context
 	keep_alive ();
 
 	g_mutex_lock (priv->mutex);
-	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle);
+	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle));
 	g_mutex_unlock (priv->mutex);
 }
 
@@ -175,7 +179,7 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 	task->kind = g_strdup (kind);
 
 	g_mutex_lock (priv->mutex);
-	g_list_foreach (priv->tasks, (GFunc) mark_unqueued, (gpointer) handle_to_unqueue);
+	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle_to_unqueue));
 	priv->tasks = g_list_prepend (priv->tasks, task);
 	g_thread_pool_push (priv->normal_pool, task, NULL);
 	g_mutex_unlock (priv->mutex);

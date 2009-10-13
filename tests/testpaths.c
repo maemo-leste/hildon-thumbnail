@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include <hildon-thumbnail-factory.h>
+#include <hildon-albumart-factory.h>
 
 #include <unistd.h>
 

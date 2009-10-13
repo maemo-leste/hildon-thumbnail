@@ -379,7 +379,8 @@ reload_config (const gchar *config)
 {
 	GKeyFile *keyfile;
 	GStrv mimetypes;
-	guint i = 0, length;
+	guint i = 0;
+	gsize length;
 	GError *error = NULL;
 
 	if (!execs)

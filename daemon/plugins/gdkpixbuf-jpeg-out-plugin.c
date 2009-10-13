@@ -386,7 +386,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					       filen);
 			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);
-			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %Lu)",
+			sql = g_strdup_printf ("insert into jpegthumbnails (Path, URI, MTime) values ('%s', '%s', %" G_GUINT64_FORMAT ")",
 					       filen, uri, mtime);
 			sqlite3_exec (db, sql, callback, 0, NULL);
 			g_free (sql);

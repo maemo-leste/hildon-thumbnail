@@ -2,14 +2,13 @@
 #include <hildon-albumart-factory.h>
 #include <hildon-thumbnail-factory.h>
 
-
-GtkWindow *window;
-GtkHBox *box;
-GtkVBox *hbox;
-GtkImage *image, *imaget;
-GtkEntry *atext;
-GtkEntry *btext;
-GtkButton *button;
+GtkWidget *window;
+GtkWidget *box;
+GtkWidget *hbox;
+GtkWidget *image, *imaget;
+GtkWidget *atext;
+GtkWidget *btext;
+GtkWidget *button;
 
 
 #ifdef OLDAPI

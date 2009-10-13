@@ -42,7 +42,7 @@ static gboolean cancel_check = FALSE;
 void thumb_callback(HildonThumbnailFactoryHandle handle, gpointer user_data,
     GdkPixbuf *thumbnail, GError *error)
 {
-    g_message("Callback invoked, pixbuf=%08X, error=%s", (int)thumbnail,
+    g_message("Callback invoked, pixbuf=%p, error=%s", thumbnail,
               error ? error->message : "NULL");
               
     // Test running cancel
@@ -55,7 +55,7 @@ void thumb_callback(HildonThumbnailFactoryHandle handle, gpointer user_data,
 
 void thumb_callback_new (HildonThumbnailFactory *self, GdkPixbuf *thumbnail, GError *error, gpointer user_data)
 {
-    g_message("Callback invoked, pixbuf=%08X, error=%s", (int)thumbnail,
+    g_message("Callback invoked, pixbuf=%p, error=%s", thumbnail,
               error ? error->message : "NULL");             
 }
 

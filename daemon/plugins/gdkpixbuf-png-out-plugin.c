@@ -384,7 +384,7 @@ hildon_thumbnail_outplugin_out (const guchar *rgb8_pixmap,
 					   NULL, NULL);
 
 
-	g_sprintf (mtime_str, "%Lu", mtime);
+	g_sprintf (mtime_str, "%" G_GUINT64_FORMAT, mtime);
 
 	temp = g_strdup_printf ("%s.tmp", filen);
 

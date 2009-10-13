@@ -291,7 +291,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 	if (has_override) {
 		GKeyFile *keyfile;
 		gchar *fullfilen = g_build_filename (path, "overrides", NULL);
-		guint length;
+		gsize length;
 
 		keyfile = g_key_file_new ();
 
