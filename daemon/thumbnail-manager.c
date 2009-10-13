@@ -175,6 +175,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 	
 		if (!g_key_file_load_from_file (keyfile, fullfilen, G_KEY_FILE_NONE, NULL)) {
 			g_free (fullfilen);
+			g_key_file_free (keyfile);
 			continue;
 		}
 
@@ -204,7 +205,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		uri_schemes = g_key_file_get_string_list (keyfile, "D-BUS Thumbnailer", "UriSchemes", NULL, NULL);
 
 		if (!uri_schemes) {
-			uri_schemes = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
+			uri_schemes = g_new0 (gchar*, 2);
 			uri_schemes[0] = g_strdup ("file");
 			uri_schemes[1] = NULL;
 		}
@@ -230,6 +231,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			g_strfreev (values);
 			g_strfreev (uri_schemes);
 			g_key_file_free (keyfile);
+			g_clear_error (&error);
 			continue;
 		}
 
