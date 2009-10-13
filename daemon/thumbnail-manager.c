@@ -550,8 +550,6 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 		g_hash_table_replace (supported_h, g_strdup (ptr), NULL);
 
 		g_free (mime);
-
-		copy = g_list_next (copy);
 	}
 	g_list_free (copy);
 
