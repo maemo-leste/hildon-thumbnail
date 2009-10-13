@@ -951,8 +951,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 					g_free (to[z]);
 				}
 
-				if (error)
-					g_error_free (error);
+				g_clear_error (&error);
 			  }
 			}
 			i++;
