@@ -246,30 +246,27 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		  i = 0;
 
 		  while (values[i] != NULL) {
-			ValueInfo *info;
+			ValueInfo *vi;
 
-			info = g_hash_table_lookup (pre, values[i]);
+			vi = g_hash_table_lookup (pre, values[i]);
 
-			if (!info || info->mtime < mtime) {
+			if (!vi || vi->mtime < mtime) {
+				vi = g_slice_new0 (ValueInfo);
 
-				info = g_slice_new0 (ValueInfo);
-
-				info->name = g_strdup (value);
+				vi->name = g_strdup (value);
 
 				/* The modification time of the thumbnailer-service file is
 				 * used, as specified, to determine the priority. We simply 
 				 * override older-ones with newer-ones in the hashtable (using 
 				 * replace). */
-
-				info->mtime = mtime;
+				vi->mtime = mtime;
 
 				/* Only items in overrides are prioritized. */
-
-				info->prio = FALSE;
+				vi->prio = FALSE;
 
 				g_hash_table_replace (pre, 
 						      g_strdup_printf ("%s-%s", uri_schemes[y], values[i]), 
-						      info);
+						      vi);
 			}
 
 			i++;
@@ -302,21 +299,21 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			guint i;
 
 			for (i = 0; i< length; i++) {
-				ValueInfo *info = g_slice_new0 (ValueInfo);
+				ValueInfo *vi = g_slice_new0 (ValueInfo);
 
-				info->name = g_key_file_get_string (keyfile, urisch_and_mimes[i], 
-								    "Name", NULL);
+				vi->name = g_key_file_get_string (keyfile, urisch_and_mimes[i], 
+								  "Name", NULL);
 
 				/* This is atm unused for items in overrides. */
 
-				info->mtime = time (NULL);
+				vi->mtime = time (NULL);
 
 				/* Items in overrides are prioritized. */
 
-				info->prio = TRUE;
+				vi->prio = TRUE;
 
 				g_hash_table_replace (pre, g_strdup (urisch_and_mimes[i]), 
-						      info);
+						      vi);
 			}
 			g_strfreev (urisch_and_mimes);
 		}
