@@ -684,7 +684,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 						     /*XU3 */ g_strdup (urls[i]));
 		}
 
-		//g_free (mime_type);
+		g_free (mime_type);
 		i++;
 	}
 
