@@ -824,8 +824,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 				keep_alive ();
 
-				g_object_unref (proxy);
-
 				if (error) {
 					GStrv failed_urls = (GStrv) g_malloc0 (sizeof (gchar *) * 2);
 
@@ -853,6 +851,8 @@ do_the_work (WorkTask *task, gpointer user_data)
 					g_strfreev (succeeded_urls);
 				}
 			}
+
+			g_object_unref (proxy);
 
 		/* If not if we have a plugin that can handle it, we let the 
 		 * plugin have a go at it */
