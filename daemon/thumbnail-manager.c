@@ -327,7 +327,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 	while (g_hash_table_iter_next (&iter, &pkey, &pvalue))  {
 		gchar *k = pkey;
 		ValueInfo *v = pvalue;
-		gchar *oname = NULL;
+		const gchar *oname = NULL;
 
 		/* If this is a prioritized one, we'll always override the older. If we
 		 * are in overriding mode, we'll also override. We override by looking
@@ -337,7 +337,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 		if (!v->prio && !override) {
 			DBusGProxy *proxy = g_hash_table_lookup (priv->handlers, k);
 			if (proxy)
-				oname = (gchar *) dbus_g_proxy_get_bus_name (proxy);
+				oname = dbus_g_proxy_get_bus_name (proxy);
 		}
 
 		/* Now if the original name is set (we'll override) and if the new name
