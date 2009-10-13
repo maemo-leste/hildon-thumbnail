@@ -19,8 +19,6 @@ on_pre_unmount (GVolumeMonitor *volume_monitor,
 
 	thumbnailer_crash_out (thumbnailer);
 
-	g_object_unref (drive);
-
 	/* The idea here is that if we had to force-shutdown because of an
 	 * unmount event, that it's possible that we get soon-after more
 	 * items to process that are also on the removable device. So we 
