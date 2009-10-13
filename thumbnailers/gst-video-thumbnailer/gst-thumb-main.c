@@ -79,13 +79,7 @@ mount_pre_unmount_cb (GVolumeMonitor *volume_monitor,
 {
 	/* FIXME We should instead cancel offending tasks and handle gracefully */
 
-	GDrive *drive = g_mount_get_drive (mount);
-	if (g_drive_is_media_removable (drive)) {
-		g_object_unref (drive);
-
-		exit (0);
-	}
-	g_object_unref (drive);
+	exit (0);
 }
 
 gboolean
