@@ -366,7 +366,7 @@ HildonAlbumartFactoryHandle hildon_albumart_factory_load(
 	item->handle_id = 0;
 
 	if (have_all) {
-		ArtsItemAndPaths *info = g_slice_new (ArtsItemAndPaths);
+		ArtsItemAndPaths *info = g_slice_new0 (ArtsItemAndPaths);
 
 		info->item = item;
 		info->path = path;

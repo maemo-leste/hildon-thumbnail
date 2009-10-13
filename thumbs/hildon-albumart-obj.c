@@ -352,7 +352,7 @@ hildon_albumart_factory_queue_thumbnail (HildonAlbumartFactory *self,
 					  gpointer user_data,
 					  GDestroyNotify destroy)
 {
-	ArtReqInfo *info = g_slice_new (ArtReqInfo);
+	ArtReqInfo *info = g_slice_new0 (ArtReqInfo);
 	HildonAlbumartRequest *request = g_object_new (HILDON_TYPE_ALBUMART_REQUEST, NULL);
 	HildonAlbumartRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
 

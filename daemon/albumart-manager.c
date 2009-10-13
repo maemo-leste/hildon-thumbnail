@@ -215,7 +215,7 @@ albumart_manager_check_dir (AlbumartManager *object, gchar *path, gboolean overr
 
 		/* And register it in the temporary hashtable that is being formed */
 
-		v_info = g_slice_new (ValueInfo);
+		v_info = g_slice_new0 (ValueInfo);
 
 		v_info->name = g_strdup (value);
 		v_info->prio = prio;

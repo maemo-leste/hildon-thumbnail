@@ -250,7 +250,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 
 			if (!info || info->mtime < mtime) {
 
-				info = g_slice_new (ValueInfo);
+				info = g_slice_new0 (ValueInfo);
 
 				info->name = g_strdup (value);
 
@@ -300,7 +300,7 @@ thumbnail_manager_check_dir (ThumbnailManager *object, gchar *path, gboolean ove
 			guint i;
 
 			for (i = 0; i< length; i++) {
-				ValueInfo *info = g_slice_new (ValueInfo);
+				ValueInfo *info = g_slice_new0 (ValueInfo);
 
 				info->name = g_key_file_get_string (keyfile, urisch_and_mimes[i], 
 								    "Name", NULL);

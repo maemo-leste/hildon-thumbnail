@@ -187,7 +187,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 		hash = g_hash_table_lookup (priv->plugins_perscheme, uri_schemes[i]);
 
 		if (!hash) {
-			PluginRegistration *reg = g_slice_new (PluginRegistration);
+			PluginRegistration *reg = g_slice_new0 (PluginRegistration);
 
 			reg->plugin = plugin;
 			reg->priority = priority;
@@ -206,7 +206,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 			PluginRegistration *o_reg = g_hash_table_lookup (hash, mime_type);
 
 			if (!o_reg || (o_reg && o_reg->priority < priority)) {
-				PluginRegistration *reg = g_slice_new (PluginRegistration);
+				PluginRegistration *reg = g_slice_new0 (PluginRegistration);
 
 				reg->plugin = plugin;
 				reg->priority = priority;
@@ -357,7 +357,7 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 
 	dbus_async_return_if_fail (urls != NULL, context);
 
-	task = g_slice_new (WorkTask);
+	task = g_slice_new0 (WorkTask);
 
 	keep_alive ();
 

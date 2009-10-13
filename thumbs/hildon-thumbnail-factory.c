@@ -806,7 +806,7 @@ HildonThumbnailFactoryHandle hildon_thumbnail_factory_load_custom(
 	item->errors = NULL;
 
 	if (have_all) {
-		ThumbsItemAndPaths *info = g_slice_new (ThumbsItemAndPaths);
+		ThumbsItemAndPaths *info = g_slice_new0 (ThumbsItemAndPaths);
 
 		info->item = item;
 		info->normal = normal;
