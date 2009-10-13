@@ -128,7 +128,7 @@ is_animated_gif (const gchar *filename)
 
 	if (gif_file) {
 		while (!feof (gif_file) && frame_count < 2) {
-			gchar buffer[1024];
+			gchar buffer[1024] = { '\0' };
 			size_t read;
 			size_t t;
 
