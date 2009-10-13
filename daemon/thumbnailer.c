@@ -682,7 +682,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 				urls_for_mime = g_list_prepend (urls_for_mime, uri);
 				g_hash_table_replace (hash, mime_type, 
 				                      urls_for_mime);
-
+				g_free (uri_scheme);
 			} else if (has_thumb)
 				thumb_items = g_list_prepend (thumb_items, 
 						     /*XU3 */ g_strdup (urls[i]));
