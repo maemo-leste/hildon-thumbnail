@@ -268,10 +268,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 			copy = g_list_next (copy);
 
-		g_list_foreach (proxies, (GFunc) g_object_unref, NULL);
+			g_object_unref (proxy);
+		}
+
 		if (proxies)
 			g_list_free (proxies);
-		}
 	}
 
 	g_free (path);
