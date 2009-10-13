@@ -518,7 +518,7 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 	GHashTable *supported_h;
 	GHashTableIter iter;
 	gpointer key, value;
-	GList *copy;
+	GList *copy, *l;
 	guint y;
 
 	keep_alive ();
@@ -535,8 +535,8 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 	}
 
 	copy = g_hash_table_get_keys (priv->handlers);
-	while (copy) {
-		gchar *mime = g_strdup (copy->data), *ptr;
+	for (l = copy; l; l = l->next) {
+		gchar *mime = g_strdup (l->data), *ptr;
 
 		/* We stored it in the hash as "vfs-mime/type" */
 		ptr = strchr (mime, '-');
@@ -554,9 +554,9 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 
 		copy = g_list_next (copy);
 	}
-	g_mutex_unlock (priv->mutex);
-
 	g_list_free (copy);
+
+	g_mutex_unlock (priv->mutex);
 
 	g_hash_table_iter_init (&iter, supported_h);
 
