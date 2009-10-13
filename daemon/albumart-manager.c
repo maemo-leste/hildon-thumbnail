@@ -370,7 +370,7 @@ void
 albumart_manager_do_stop (void)
 {
 	g_object_unref (artdir);
-	g_object_unref (artdir);
+	g_object_unref (artmon);
 }
 
 void 
