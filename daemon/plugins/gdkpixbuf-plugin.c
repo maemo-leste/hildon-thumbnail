@@ -88,11 +88,17 @@ hildon_thumbnail_plugin_supported (void)
 		copy = formats;
 		while (copy) {
 			gchar **mime_types = gdk_pixbuf_format_get_mime_types (copy->data);
-			i = 0;
-			while (mime_types[i] != NULL) {
-				g_ptr_array_add (types_support, mime_types[i]);
-				i++;
+
+			if (!mime_types) {
+				continue;
 			}
+
+			for (i = 0; mime_types[i] != NULL; i++) {
+				g_ptr_array_add (types_support, mime_types[i]);
+			}
+
+			g_strfreev (mime_types);
+
 			copy = g_slist_next (copy);
 		}
 		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1 + 1));
