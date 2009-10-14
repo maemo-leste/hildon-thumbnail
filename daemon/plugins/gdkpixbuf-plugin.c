@@ -94,7 +94,7 @@ hildon_thumbnail_plugin_supported (void)
 			}
 
 			for (i = 0; mime_types[i] != NULL; i++) {
-				g_ptr_array_add (types_support, mime_types[i]);
+				g_ptr_array_add (types_support, g_strdup (mime_types[i]));
 			}
 
 			g_strfreev (mime_types);
@@ -102,8 +102,9 @@ hildon_thumbnail_plugin_supported (void)
 			copy = g_slist_next (copy);
 		}
 		supported = (gchar **) g_malloc0 (sizeof (gchar *) * (types_support->len + 1 + 1));
-		for (i = 0 ; i < types_support->len; i++)
-			supported[i] =  g_strdup (g_ptr_array_index (types_support, i));
+		for (i = 0 ; i < types_support->len; i++) {
+			supported[i] =  g_ptr_array_index (types_support, i);
+		}
 		g_ptr_array_free (types_support, TRUE);
 
 		/* Maemo specific */
