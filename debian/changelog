@@ -1,3 +1,13 @@
+hildon-thumbnail (3.0.42) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Fixes: NB#129326, gst-video-thumbnailer prevents mass storage mode 
+  * Fixes: NB#126579, GLIB CRITICAL ** default - dbus_g_proxy_disconnect_signal:
+    assertion `DBUS_IS_G_PROXY (proxy)' failed
+  * Fixes: NB#142798 - Memory leaks in hildon-thumbnailer
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Thu, 15 Oct 2009 16:31:12 +0300
+
 hildon-thumbnail (3.0.41) unstable; urgency=low
 
   [Mikael Ottela]
