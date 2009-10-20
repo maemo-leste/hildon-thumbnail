@@ -672,24 +672,30 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 				if (!hash) {
 					hash = g_hash_table_new_full (g_str_hash, g_str_equal, 
-					                              (GDestroyNotify) NULL,
+					                              (GDestroyNotify) g_free,
 					                              (GDestroyNotify) NULL);
 					g_hash_table_replace (schemes, uri_scheme, hash);
+
 					urls_for_mime = NULL;
 				} else {
+
 					urls_for_mime = g_hash_table_lookup (hash, mime_type);
+
 					g_free (uri_scheme);
 				}
 
 				urls_for_mime = g_list_prepend (urls_for_mime, uri);
-				g_hash_table_replace (hash, mime_type, 
+				g_hash_table_replace (hash, g_strdup(mime_type), 
 				                      urls_for_mime);
-			} else if (has_thumb)
+			} else if (has_thumb) {
 				thumb_items = g_list_prepend (thumb_items, 
 						     /*XU3 */ g_strdup (urls[i]));
+			}
 		}
 
-		g_free (mime_type);
+		if (mime_type) {
+			g_free (mime_type);
+		}
 		i++;
 	}
 
@@ -743,6 +749,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 		while (copy) {
 			/* Copied as new memory at XU1 or XU2 */
+
 			urlss[i] = (gchar *) copy->data;
 			i++;
 			copy = g_list_next (copy);
@@ -762,7 +769,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 		if (proxy) {
 			guint o;
-
 
 			for (o = 0; urlss[o]; o++) {
 				GError *error = NULL;
@@ -865,7 +871,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 		} else {
 			GModule *module;
 			g_mutex_lock (priv->mutex);
-			module = get_plugin (task->object, uri_scheme, key);
+			module = get_plugin (task->object, uri_scheme, mime_type);
 			g_mutex_unlock (priv->mutex);
 
 			if (module) {
@@ -905,7 +911,7 @@ do_the_work (WorkTask *task, gpointer user_data)
 			/* And if even that is not the case, we are very sorry */
 
 			} else {
-				gchar *str = g_strdup_printf ("No handler for %s", (gchar*) key);
+				gchar *str = g_strdup_printf ("No handler for %s", (gchar*) mime_type);
 				g_signal_emit (task->object, signals[ERROR_SIGNAL],
 						       0, task->num, urlss, 0, str);
 				had_err = TRUE;
@@ -956,8 +962,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 			}
 			i++;
 		}
-
-		g_free (mime_type);
+		if (mime_type) {
+			g_free (mime_type);
+		}
 
 		/* Frees all XU1 and XU2 (in this schemes-group) */
 		g_strfreev (urlss); 
@@ -966,7 +973,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 	}
 
 	g_hash_table_unref (schemes);
-
 
 unqueued:
 
