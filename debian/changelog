@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.43) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Manual memory management madness misery.
+
+ -- Marius Vollmer <marius.vollmer@nokia.com>  Wed, 21 Oct 2009 12:31:52 +0300
+
 hildon-thumbnail (3.0.42) unstable; urgency=low
 
   [Mikael Ottela]
