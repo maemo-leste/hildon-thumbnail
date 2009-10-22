@@ -609,9 +609,9 @@ main (int argc, char **argv)
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 
-		g_timeout_add_seconds (600, 
-				       shut_down_after_timeout,
-				       main_loop);
+//		g_timeout_add_seconds (600, 
+//				       shut_down_after_timeout,
+//				       main_loop);
 
 #ifdef HAVE_OSSO
 		lowmemlim = osso_mem_get_lowmem_limit ();
