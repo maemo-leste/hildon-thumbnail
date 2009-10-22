@@ -484,12 +484,16 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 
 			data = (guchar *) epeg_pixels_get (im, 0, 0, ww, wh);
 
-			pixbuf_large1 = gdk_pixbuf_new_from_data ((const guchar*) data, 
-									  GDK_COLORSPACE_RGB, FALSE, 
-									  8, ww, wh, ww*3,
-									  destroy_pixbuf, im);
+			pixbuf_large1 = NULL;
+
+			if (data)
+				pixbuf_large1 = gdk_pixbuf_new_from_data ((const guchar*) data, 
+										  GDK_COLORSPACE_RGB, FALSE, 
+										  8, ww, wh, ww*3,
+										  destroy_pixbuf, im);
 
 			if (!pixbuf_large1) {
+				had_err = TRUE;
 				if (im) {
 					if (data)
 						epeg_pixels_free (im, data);
