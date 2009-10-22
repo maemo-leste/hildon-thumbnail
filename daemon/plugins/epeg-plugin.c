@@ -489,6 +489,15 @@ hildon_thumbnail_plugin_create (GStrv uris, gchar *mime_hint, GStrv *failed_uris
 									  8, ww, wh, ww*3,
 									  destroy_pixbuf, im);
 
+			if (!pixbuf_large1) {
+				if (im) {
+					if (data)
+						epeg_pixels_free (im, data);
+					epeg_close (im);
+				}
+				goto nerror_handler;
+			}
+
 			restore_orientation (path, pixbuf_large1);
 
 		}

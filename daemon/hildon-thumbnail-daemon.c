@@ -500,7 +500,8 @@ on_outputplugin_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, 
 static void
 thumbnailer_oom_func (size_t cur, size_t max, void *data)
 {
-	exit(1);
+	g_warning ("Excessive memory usage detected for file");
+	// exit(1);
 }
 
 
@@ -609,9 +610,11 @@ main (int argc, char **argv)
 
 		main_loop = g_main_loop_new (NULL, FALSE);
 
-//		g_timeout_add_seconds (600, 
-//				       shut_down_after_timeout,
-//				       main_loop);
+/*
+		g_timeout_add_seconds (600, 
+				       shut_down_after_timeout,
+				       main_loop);
+
 
 #ifdef HAVE_OSSO
 		lowmemlim = osso_mem_get_lowmem_limit ();
@@ -626,8 +629,9 @@ main (int argc, char **argv)
 		} else
 			g_main_loop_run (main_loop);
 #else
-		g_main_loop_run (main_loop);
 #endif
+*/
+		g_main_loop_run (main_loop);
 
 		thumb_hal_shutdown ();
 
