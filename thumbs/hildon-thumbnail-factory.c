@@ -1092,6 +1092,43 @@ hildon_thumbnail_is_cached (const gchar *uri, guint width, guint height, gboolea
 
 	retval = g_file_query_exists (file, NULL);
 
+        /* Check if the cached thumbnail is obsolete */
+        if (retval) {
+          GFileInfo *info1, *info2;
+          GFile *file1;
+          GFile *file2;
+
+          guint64 fmtime1, fmtime2;
+          file1 = g_file_new_for_uri (uri);
+          file2 = g_file_new_for_uri (urif);
+
+          info1 = g_file_query_info (file1, 
+              G_FILE_ATTRIBUTE_TIME_MODIFIED,
+              G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+          info2 = g_file_query_info (file2, 
+              G_FILE_ATTRIBUTE_TIME_MODIFIED,
+              G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+          if (info1 != NULL && info2 != NULL) {
+            fmtime1 = g_file_info_get_attribute_uint64 (info1, 
+                G_FILE_ATTRIBUTE_TIME_MODIFIED);
+            fmtime2 = g_file_info_get_attribute_uint64 (info2, 
+                G_FILE_ATTRIBUTE_TIME_MODIFIED);
+
+            if (fmtime1 != fmtime2) {
+                retval = FALSE;
+            }
+          }
+          g_object_unref (file1);
+          g_object_unref (file2);
+
+          if (info1)
+            g_object_unref (info1);
+          if (info2)
+            g_object_unref (info2);
+        }
+
 	g_free (urif);
 
 	g_object_unref (file);
