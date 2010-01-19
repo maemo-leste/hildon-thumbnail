@@ -596,7 +596,11 @@ wait_for_state_change (ThumberPipe *pipe,
 		GstMessage *message;
 		GstElement *src;
 		
-		message = gst_bus_timed_pop (bus, timeout);
+		/* Yes, gst_bus_poll is not recommended and evil. We need it
+		   to be responsive to pre-unmount
+		*/
+
+		message = gst_bus_poll (bus, GST_MESSAGE_ANY, timeout);
 		
 		if (!message) {
 			g_set_error (error,

@@ -22,6 +22,14 @@
  *
  */
 
+/* NOTE:
+ * In order to be able to respond to pre-unmount signals quickly enough
+ * the pipeline code runs gstreamer in the main loop. This means that
+ * anything being run in the main loop should take into account that
+ * it can be called while a file is being processed.
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
