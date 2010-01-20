@@ -432,6 +432,8 @@ hildon_thumbnail_request_finalize (GObject *object)
 	g_free (r_priv->key);
 	if (r_priv->factory)
 		g_object_unref (r_priv->factory);
+	if (r_priv->errors)
+		g_string_free (r_priv->errors, TRUE);
 }
 
 static void
