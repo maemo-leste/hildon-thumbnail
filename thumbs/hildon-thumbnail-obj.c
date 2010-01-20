@@ -297,7 +297,8 @@ on_task_finished (DBusGProxy *proxy,
 
 	if (request) {
 		HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
-		create_pixbuf_and_callback (r_priv);
+                if (! r_priv->unqueued)
+                        create_pixbuf_and_callback (r_priv);
 		g_hash_table_remove (f_priv->tasks, key);
 	}
 
@@ -464,10 +465,13 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
 	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
 
-	gchar *key = g_strdup_printf ("%d", OUT_handle);
-	r_priv->key = key;
-	g_hash_table_replace (f_priv->tasks, g_strdup (key), 
-			      g_object_ref (request));
+	if (! r_priv->unqueued)
+	{
+		gchar *key = g_strdup_printf ("%d", OUT_handle);
+		r_priv->key = key;
+		g_hash_table_replace (f_priv->tasks, g_strdup (key), 
+				      request);
+	}
 	waiting_for_cb = FALSE;
 
 	g_object_unref (request);
@@ -645,18 +649,33 @@ on_unqueued (DBusGProxy *proxy, GError *error, gpointer userdata)
 void 
 hildon_thumbnail_request_unqueue (HildonThumbnailRequest *self)
 {
-	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (self);
-	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+	HildonThumbnailRequestPrivate *r_priv;
+	HildonThumbnailFactoryPrivate *f_priv;
 	guint handle;
 
-	if (r_priv && r_priv->key) {
+	g_return_if_fail (self != NULL);
+
+	r_priv = REQUEST_GET_PRIVATE (self);
+	g_return_if_fail (r_priv != NULL);
+
+	f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+	g_return_if_fail (f_priv != NULL);
+
+	r_priv->unqueued = TRUE;
+
+	/* if Queue() didn't return yet, r_priv->key is NULL and we cannot
+         * unqueue it.
+         */
+	if (r_priv->key) {
 		handle = atoi (r_priv->key);
 		org_freedesktop_thumbnailer_Generic_unqueue_async (f_priv->proxy, handle,
 								   on_unqueued, 
 								   g_object_ref (self));
 	}
-
-	r_priv->unqueued = TRUE;
+	else
+	{
+		g_object_unref (self);
+	}
 }
 
 void 
