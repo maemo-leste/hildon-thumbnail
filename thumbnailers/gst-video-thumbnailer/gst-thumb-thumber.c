@@ -699,6 +699,8 @@ thumber_set_state (Thumber *thumber,
 		if (priv->idle_id == 0) {
 			priv->idle_id = g_idle_add (thumber_process_func, 
 						    thumber);
+			g_source_set_can_recurse (g_main_context_find_source_by_id (NULL, priv->idle_id),
+						  FALSE);
 		}
 		if (priv->quit_timeout_id != 0) {
 			g_source_remove (priv->quit_timeout_id);
@@ -799,6 +801,11 @@ thumber_populate_file_queue (Thumber *thumber, TaskInfo *task) {
 	}
 }
 
+/* Recurrency is not allowed so there is no risk of new item being started
+   before the previous is done even though the pipeline bus is polled
+   in the mainloop
+*/
+
 static gboolean
 thumber_process_func (gpointer data)
 {
@@ -811,7 +818,7 @@ thumber_process_func (gpointer data)
 	priv = THUMBER_GET_PRIVATE (thumber);
 
 	if ((file = g_queue_peek_head (priv->file_queue)) != NULL) {
-		
+
 		if (!thumber_pipe_run (priv->pipe,
 				       file->uri,
 				       &error)) {

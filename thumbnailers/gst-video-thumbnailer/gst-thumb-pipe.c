@@ -85,6 +85,8 @@ typedef struct {
 
 	gboolean        standard;
 	gboolean        cropped;
+
+	GdkPixbuf      *backup_pixbuf;
 } ThumberPipePrivate;
 
 enum {
@@ -250,6 +252,8 @@ thumber_pipe_run (ThumberPipe *pipe,
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
+	priv->backup_pixbuf = NULL;
+
 	g_return_val_if_fail (pipe != NULL, FALSE);
 	g_return_val_if_fail (uri != NULL, FALSE);
 
@@ -333,6 +337,11 @@ deinitialize (ThumberPipe *pipe)
 	priv->video_color  = NULL;
 	priv->video_filter = NULL;
 	priv->video_sink   = NULL;
+
+	if (priv->backup_pixbuf) {
+		g_object_unref (priv->backup_pixbuf);
+		priv->backup_pixbuf = NULL;
+	}
 }
 
 static gboolean
@@ -690,8 +699,12 @@ wait_for_image_buffer (ThumberPipe *pipe,
        while (TRUE) {
                GstMessage *message;
                GstElement *src;
+		
+		/* Yes, gst_bus_poll is not recommended and evil. We need it
+		   to be responsive to pre-unmount
+		*/
 
-               message = gst_bus_timed_pop (bus, timeout);
+	       message = gst_bus_poll (bus, GST_MESSAGE_ANY, timeout);
 
                if (!message) {
                        g_set_error (error,
@@ -738,8 +751,14 @@ wait_for_image_buffer (ThumberPipe *pipe,
 					       goto success;
 				       }
 			       } else {
-                                       /* If not good, continue until we get better */
-                                       g_object_unref (pix);
+                                       /* If not good, get the first as backup in case there are
+					  no good ones and then continue
+				       */
+				       if (!priv->backup_pixbuf) {
+					       priv->backup_pixbuf = pix;
+				       } else {
+					       g_object_unref (pix);
+				       }
 			       }
                        }
 		       break;
@@ -764,11 +783,29 @@ wait_for_image_buffer (ThumberPipe *pipe,
                        break;
                }
                case GST_MESSAGE_EOS: {
+		       if (priv->backup_pixbuf) {
+			       if (!create_thumbnails (uri,
+						       priv->backup_pixbuf,
+						       priv->standard,
+						       priv->cropped,
+						       error)) {
+				       g_object_unref (priv->backup_pixbuf);
+				       priv->backup_pixbuf = NULL;
+				       gst_message_unref (message);
+				       goto error;
+			       } else {
+				       g_object_unref (priv->backup_pixbuf);
+				       priv->backup_pixbuf = NULL;
+				       gst_message_unref (message);
+				       goto success;
+			       }
+		       }
+		       
                        g_set_error (error,
 				    error_quark (),
                                  RUNNING_ERROR,
                                     "Reached end-of-file without proper content");
-		       gst_message_unref (message);
+		       gst_message_unref (message);		       
 		       goto error;
                        break;
                }
