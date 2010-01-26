@@ -1,3 +1,15 @@
+hildon-thumbnail (3.0.44) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Fixes: NB#129326: gst-video-thumbnailer prevents mass storage mode
+  * Fixes: NB#103061: Thumbnail of replaced image is not updated
+  * Fixes: NB#145376: hildon-thumbnail leak in ThumbsCacheFile->errors
+  * Fixes: NB#128060: Crash observed while opening the copied folder in
+    grid view from filter by folder sub dialog
+  * Fixes: NB#147372: Thumbnailing keeps on being broken
+
+ -- Mikael Ottela <mikael.ottela@ixonos.com>  Tue, 26 Jan 2010 18:27:52 +0300
+
 hildon-thumbnail (3.0.43) unstable; urgency=low
 
   [Mikael Ottela]
