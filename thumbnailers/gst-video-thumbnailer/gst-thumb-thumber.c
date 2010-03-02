@@ -809,7 +809,8 @@ thumber_process_func (gpointer data)
 	thumber = THUMBER (data);
 	priv = THUMBER_GET_PRIVATE (thumber);
 
-	if ((file = g_queue_peek_head (priv->file_queue)) != NULL) {
+	if (priv && priv->pipe &&
+	    ((file = g_queue_pop_head (priv->file_queue)) != NULL)) {
 
 		if (!thumber_pipe_run (priv->pipe,
 				       file->uri,
@@ -838,7 +839,6 @@ thumber_process_func (gpointer data)
 				       file->uri);
 		}
 
-		file = g_queue_pop_head (priv->file_queue);
 		file_info_free (file);
 			
 	} else {
