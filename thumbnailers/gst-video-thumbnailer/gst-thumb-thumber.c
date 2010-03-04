@@ -63,14 +63,16 @@ void thumber_dbus_method_create_many (Thumber *object, GStrv uris, gchar *mime_h
 
 #include "gst-video-thumbnailer-glue.h"
 
+static gboolean thumber_process_func (gpointer data);
+static void     thumber_set_state (Thumber *thumber, ThumberState state);
+
+static void     request_resources (Thumber *thumber);
+static void     release_resources (Thumber *thumber);
+
 G_DEFINE_TYPE (Thumber, thumber, G_TYPE_OBJECT)
 
 typedef struct FileInfo FileInfo;
 typedef struct TaskInfo TaskInfo;
-
-#ifdef HAVE_PLAYBACK
-typedef struct StateRequest StateRequest;
-#endif
 
 typedef struct {
 	/* Properties */
@@ -90,11 +92,8 @@ typedef struct {
 
 	ThumberState     state;
 #ifdef HAVE_PLAYBACK
-	pb_playback_t   *playback;
-	GQueue          *state_req_queue;
+	pb_playback_t    *playback;
 #endif
-
-	gboolean          running;
 
 } ThumberPrivate;
 
@@ -108,14 +107,6 @@ struct TaskInfo {
 	GSList *files;
 };
 
-#ifdef HAVE_PLAYBACK
-struct StateRequest {
-	pb_playback_t   *pb;
-	enum pb_state_e  req_state;
-	pb_req_t        *req;
-};
-#endif
-
 enum {
 	STARTED_SIGNAL,
 	FINISHED_SIGNAL,
@@ -123,16 +114,6 @@ enum {
 	ERROR_SIGNAL,
 	LAST_SIGNAL
 };
-
-static gboolean thumber_process_func (gpointer data);
-static void     thumber_set_state (Thumber *thumber, ThumberState state);
-
-static void     request_resources (Thumber *thumber);
-static void     release_resources (Thumber *thumber);
-
-#ifdef HAVE_PLAYBACK
-static void     handle_state_req (StateRequest *req, void *data);
-#endif
 
 static guint signals[LAST_SIGNAL] = { 0, };
 
@@ -290,7 +271,7 @@ thumber_set_property (GObject      *object,
 		break;
 	case PROP_TIMEOUT:
 		thumber_set_timeout (THUMBER (object), g_value_get_int (value));
-		break;
+		break;		
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
@@ -319,7 +300,7 @@ thumber_get_property (GObject    *object,
 	case PROP_TIMEOUT:
 		g_value_set_int (value,
 				 thumber_get_timeout (THUMBER (object)));
-		break;
+		break;		
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
@@ -333,11 +314,7 @@ thumber_finalize (GObject *object)
 	priv = THUMBER_GET_PRIVATE (object);
 
 #ifdef HAVE_PLAYBACK
-
-	g_queue_foreach (priv->state_req_queue, (GFunc) handle_state_req, object);
-	g_queue_free (priv->state_req_queue);
-
-	pb_playback_destroy (priv->playback);
+	pb_playback_destroy (priv->playback); 
 	priv->playback = NULL;
 #endif
 	if (priv->pipe) {
@@ -427,7 +404,7 @@ thumber_class_init (ThumberClass *klass)
 			      G_TYPE_NONE,
 			      1,
 			      G_TYPE_UINT);
-
+	
 	signals[ERROR_SIGNAL] =
 		g_signal_new ("error",
 			      G_OBJECT_CLASS_TYPE (object_class),
@@ -455,10 +432,6 @@ thumber_init (Thumber *object)
 	priv->task_queue = g_queue_new ();
 	priv->file_queue = g_queue_new ();
 
-#ifdef HAVE_PLAYBACK
-	priv->state_req_queue = g_queue_new ();
-#endif
-
 	priv->idle_id    = 0;
 	priv->quit_timeout_id = 0;
 
@@ -467,8 +440,6 @@ thumber_init (Thumber *object)
 	priv->pipe       = NULL;
 
 	priv->state = THUMBER_STATE_NULL;
-
-	priv->running = FALSE;
 }
 
 #ifdef HAVE_PLAYBACK
@@ -492,7 +463,7 @@ libplayback_state_hint_handler (pb_playback_t *pb,
 		if (allowed_state[PB_STATE_PLAY]) {
 			request_resources (thumber);
 		}
-		break;
+		break;		
 	default:
 		/* Nothing */
 		break;
@@ -503,12 +474,14 @@ libplayback_state_hint_handler (pb_playback_t *pb,
 
 #ifdef HAVE_PLAYBACK
 static void
-handle_state_request (pb_playback_t  *pb,
-		      enum pb_state_e  req_state,
-		      pb_req_t        *req,
-		      Thumber         *thumber)
+libplayback_state_request_handler (pb_playback_t  *pb,
+                                  enum pb_state_e  req_state,
+                                  pb_req_t        *req,
+                                  void            *data)
 {
+	Thumber        *thumber;
 	ThumberPrivate *priv;
+	thumber = data;
 	priv = THUMBER_GET_PRIVATE (thumber);
 
 	switch (req_state) {
@@ -516,6 +489,7 @@ handle_state_request (pb_playback_t  *pb,
 			if (priv->state == THUMBER_STATE_PAUSED) {
 				thumber_set_state (thumber, THUMBER_STATE_WORKING);
 			}
+
 			break;
 		case PB_STATE_STOP:
 			if (priv->state == THUMBER_STATE_WORKING) {
@@ -528,53 +502,6 @@ handle_state_request (pb_playback_t  *pb,
 	}
 
 	pb_playback_req_completed(pb, req);
-}
-
-static void
-handle_state_req (StateRequest *req,
-		  void         *data)
-{
-	handle_state_request (req->pb,
-			      req->req_state,
-			      req->req,
-			      data);
-}
-
-static void
-queue_state_req (pb_playback_t  *pb,
-		 enum pb_state_e  req_state,
-		 pb_req_t        *req,
-		 Thumber         *thumber)
-{
-	StateRequest *request;
-	ThumberPrivate *priv;
-	priv = THUMBER_GET_PRIVATE (thumber);
-
-	request            = g_slice_new0 (StateRequest);
-	request->pb        = pb;
-	request->req_state = req_state;
-	request->req       = req;
-
-	g_queue_push_tail (priv->state_req_queue, request);
-}
-
-static void
-libplayback_state_request_handler (pb_playback_t  *pb,
-                                  enum pb_state_e  req_state,
-                                  pb_req_t        *req,
-                                  void            *data)
-{
-	Thumber        *thumber;
-	ThumberPrivate *priv;
-
-	thumber = data;
-	priv = THUMBER_GET_PRIVATE (thumber);
-
-	if (priv->running) {
-		queue_state_req (pb, req_state, req, thumber);
-	} else {
-		handle_state_request (pb, req_state, req, thumber);
-	}
 }
 #endif
 
@@ -618,14 +545,14 @@ request_resources (Thumber *thumber)
 	ThumberPrivate *priv;
 	priv = THUMBER_GET_PRIVATE (thumber);
 
-	if (!priv->running && priv->state != THUMBER_STATE_WORKING) {
+	if (priv->state != THUMBER_STATE_WORKING) {
 #ifdef HAVE_PLAYBACK
 		pb_playback_req_state (priv->playback,
 				       PB_STATE_PLAY,
 				       libplayback_state_reply,
 				       thumber);
 		thumber_set_state (thumber, THUMBER_STATE_PAUSED);
-#else
+#else	
 		thumber_set_state (thumber, THUMBER_STATE_WORKING);
 #endif
 	}
@@ -637,14 +564,14 @@ release_resources (Thumber *thumber)
 	ThumberPrivate *priv;
 	priv = THUMBER_GET_PRIVATE (thumber);
 
-	if (!priv->running && priv->state != THUMBER_STATE_STOPPED) {
+	if (priv->state != THUMBER_STATE_STOPPED) {
 #ifdef HAVE_PLAYBACK
 		pb_playback_req_state (priv->playback,
 				       PB_STATE_STOP,
 				       libplayback_state_reply,
 				       thumber);
 		thumber_set_state (thumber, THUMBER_STATE_PENDING_STOP);
-#else
+#else	
 		thumber_set_state (thumber, THUMBER_STATE_STOPPED);
 #endif
 	}
@@ -660,7 +587,7 @@ thumber_dbus_register(Thumber *thumber,
 	GError          *lerror     = NULL;
 	DBusGConnection *connection = NULL;
 	DBusConnection  *conn       = NULL;
-	DBusGProxy      *proxy      = NULL;
+	DBusGProxy      *proxy      = NULL;	
 	guint            result;
 	ThumberPrivate  *priv;
 	priv = THUMBER_GET_PRIVATE (thumber);
@@ -673,7 +600,7 @@ thumber_dbus_register(Thumber *thumber,
 		return FALSE;
 	}
 
-	proxy = dbus_g_proxy_new_for_name (connection,
+	proxy = dbus_g_proxy_new_for_name (connection, 
 					   DBUS_SERVICE_DBUS,
 					   DBUS_PATH_DBUS,
 					   DBUS_INTERFACE_DBUS);
@@ -693,8 +620,8 @@ thumber_dbus_register(Thumber *thumber,
 	dbus_g_object_type_install_info (G_OBJECT_TYPE (thumber),
 					 &dbus_glib_gst_video_thumbnailer_object_info);
 
-	dbus_g_connection_register_g_object (connection,
-					     bus_path,
+	dbus_g_connection_register_g_object (connection, 
+					     bus_path, 
 					     G_OBJECT (thumber));
 
 #ifdef HAVE_PLAYBACK
@@ -762,7 +689,7 @@ thumber_set_state (Thumber *thumber,
 	switch (state) {
 	case THUMBER_STATE_WORKING:
 		if (priv->idle_id == 0) {
-			priv->idle_id = g_idle_add (thumber_process_func,
+			priv->idle_id = g_idle_add (thumber_process_func, 
 						    thumber);
 			g_source_set_can_recurse (g_main_context_find_source_by_id (NULL, priv->idle_id),
 						  FALSE);
@@ -790,7 +717,7 @@ thumber_set_state (Thumber *thumber,
 		if (priv->quit_timeout_id == 0) {
 			if (priv->quit_timeout >= 0) {
 				priv->quit_timeout_id = g_timeout_add_seconds (priv->quit_timeout,
-									       quit_timeout_cb,
+									       quit_timeout_cb, 
 									       thumber);
 			}
 		}
@@ -801,8 +728,8 @@ thumber_set_state (Thumber *thumber,
 			priv->idle_id = 0;
 		}
 		if (priv->quit_timeout_id == 0) {
-			priv->quit_timeout_id = g_timeout_add_seconds (priv->quit_timeout,
-								       quit_timeout_cb,
+			priv->quit_timeout_id = g_timeout_add_seconds (priv->quit_timeout, 
+								       quit_timeout_cb, 
 								       thumber);
 		}
 		break;
@@ -866,23 +793,23 @@ thumber_populate_file_queue (Thumber *thumber, TaskInfo *task) {
 	}
 }
 
+/* Recurrency is not allowed so there is no risk of new item being started
+   before the previous is done even though the pipeline bus is polled
+   in the mainloop
+*/
+
 static gboolean
 thumber_process_func (gpointer data)
 {
 	Thumber *thumber;
 	FileInfo *file;
 	TaskInfo *task;
-#ifdef HAVE_PLAYBACK
-	StateRequest *req;
-#endif
 	ThumberPrivate *priv;
 	GError *error = NULL;
 	thumber = THUMBER (data);
 	priv = THUMBER_GET_PRIVATE (thumber);
 
 	if ((file = g_queue_peek_head (priv->file_queue)) != NULL) {
-
-		priv->running = TRUE;
 
 		if (!thumber_pipe_run (priv->pipe,
 				       file->uri,
@@ -913,15 +840,7 @@ thumber_process_func (gpointer data)
 
 		file = g_queue_pop_head (priv->file_queue);
 		file_info_free (file);
-
-#ifdef HAVE_PLAYBACK
-		while ( (req = g_queue_pop_head (priv->state_req_queue)) != NULL ) {
-			handle_state_req (req, thumber);
-		}
-#endif
-
-		priv->running = FALSE;
-
+			
 	} else {
 
 		if (priv->current_task) {
@@ -941,21 +860,21 @@ thumber_process_func (gpointer data)
 				g_object_unref (priv->pipe);
 				priv->pipe = NULL;
 			}
-
-			priv->pipe = thumber_pipe_new ();
+			
+			priv->pipe = thumber_pipe_new ();		       			
 
 			g_value_init (&val, G_TYPE_BOOLEAN);
 			g_value_set_boolean (&val, priv->standard);
 			g_object_set_property (G_OBJECT(priv->pipe), "standard", &val);
 			g_value_unset (&val);
-
+			
 			g_value_init (&val, G_TYPE_BOOLEAN);
 			g_value_set_boolean (&val, priv->cropped);
 			g_object_set_property (G_OBJECT(priv->pipe), "cropped", &val);
 			g_value_unset (&val);
 
 			thumber_populate_file_queue (thumber, task);
-
+			
 			priv->current_task = task;
 			g_signal_emit (thumber,
 				       signals[STARTED_SIGNAL],
@@ -973,7 +892,7 @@ thumber_process_func (gpointer data)
 			return FALSE;
 		}
 	}
-
+	
 	return TRUE;
 }
 
