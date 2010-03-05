@@ -1,3 +1,12 @@
+hildon-thumbnail (3.0.45) unstable; urgency=low
+
+  [Mikael Ottela]
+  * Fixes: NB#155644: gst-video-thumbnailerd crash after scrolling videos in
+    media player by reverting "Queue playback state requests until done with
+    particular clip."
+
+ -- Marc Ordinas i Llopis <marc.ordinasillopis@collabora.cu.uk>  Fri, 05 Feb 2010 11:06:52 +0200
+
 hildon-thumbnail (3.0.44) unstable; urgency=low
 
   [Mikael Ottela]
