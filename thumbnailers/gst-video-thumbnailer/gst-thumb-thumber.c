@@ -157,9 +157,12 @@ task_info_new (const gchar *mime)
 void
 task_info_add_uri (TaskInfo *info, gchar *uri)
 {
-	FileInfo *file;
-	file = file_info_new (uri);
-	info->files = g_slist_prepend (info->files, file);
+  if (info && uri && *uri)
+    {
+      FileInfo *file;
+      file = file_info_new (uri);
+      info->files = g_slist_prepend (info->files, file);
+    }
 }
 
 void
