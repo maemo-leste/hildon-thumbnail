@@ -130,11 +130,14 @@ file_info_new (const gchar *uri)
 void
 file_info_free (FileInfo *info)
 {
+  if (info)
+    {
 	if (info->uri) {
 		g_free (info->uri);
 	}
 
 	g_slice_free (FileInfo, info);
+    }
 }
 
 TaskInfo *
