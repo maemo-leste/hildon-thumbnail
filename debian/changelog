@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.45-test1) unstable; urgency=low
+
+  * Fixes: NB#160239 Ignore failed request for 5 seconds in case the writing
+    is still in progress (Workaround)
+
+ -- Alban Crequy <alban.crequy@collabora.co.uk>  Wed, 24 Mar 2010 18:47:37 +0000
+
 hildon-thumbnail (3.0.45) unstable; urgency=low
 
   [Mikael Ottela]
