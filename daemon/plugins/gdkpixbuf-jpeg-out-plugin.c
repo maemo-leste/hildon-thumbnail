@@ -30,6 +30,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sys/time.h>
 #include <utime.h>
 
 #include <string.h>
@@ -221,9 +222,14 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 					   G_FILE_QUERY_INFO_NONE, NULL, NULL);
 		if (info) {
 			guint64 fmtime;
+                        struct timeval now;
+                        gettimeofday(&now, NULL);
 			fmtime = g_file_info_get_attribute_uint64 (info, 
 								   G_FILE_ATTRIBUTE_TIME_MODIFIED);
-			if (fmtime == (guint64) mtime) {
+                        /* Ugly hack for NB#160239: consider only "fail" file
+                         * older than 5 seconds */
+			if (fmtime == (guint64) mtime &&
+                            fmtime + 5 < now.tv_sec) {
 				if (err_file && f)
 					*err_file = TRUE;
 				retval = FALSE;
