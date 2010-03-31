@@ -462,11 +462,18 @@ static void
 on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer userdata)
 {
 	HildonThumbnailRequest *request = userdata;
-	HildonThumbnailRequestPrivate *r_priv = REQUEST_GET_PRIVATE (request);
-	HildonThumbnailFactoryPrivate *f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+	HildonThumbnailRequestPrivate *r_priv;
+
+	g_return_if_fail (request != NULL);
+	r_priv = REQUEST_GET_PRIVATE (request);
+	g_return_if_fail (r_priv != NULL);
 
 	if (! r_priv->unqueued)
 	{
+		HildonThumbnailFactoryPrivate *f_priv;
+		f_priv = FACTORY_GET_PRIVATE (r_priv->factory);
+		g_return_if_fail (f_priv != NULL);
+
 		gchar *key = g_strdup_printf ("%d", OUT_handle);
 		r_priv->key = key;
 		g_hash_table_replace (f_priv->tasks, g_strdup (key), 
@@ -671,10 +678,6 @@ hildon_thumbnail_request_unqueue (HildonThumbnailRequest *self)
 		org_freedesktop_thumbnailer_Generic_unqueue_async (f_priv->proxy, handle,
 								   on_unqueued, 
 								   g_object_ref (self));
-	}
-	else
-	{
-		g_object_unref (self);
 	}
 }
 
