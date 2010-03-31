@@ -1,3 +1,10 @@
+hildon-thumbnail (3.0.47) unstable; urgency=low
+
+  * Fixes: NB#148356 Fix refcount issue in inqueue, and more resistant code
+    in on_got_handle
+
+ -- Alban Crequy <alban.crequy@collabora.co.uk>  Wed, 31 Mar 2010 13:40:29 +0100
+
 hildon-thumbnail (3.0.46) unstable; urgency=low
 
   * Fixes: NB#160239 Ignore failed request for 5 seconds in case the writing
