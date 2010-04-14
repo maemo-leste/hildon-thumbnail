@@ -500,9 +500,18 @@ thumb_check (const gchar *filename, guint64 mtime)
 					   G_FILE_QUERY_INFO_NONE, NULL, NULL);
 		if (info) {
 			guint64 fmtime;
+                        gint64 time_difference;
 			fmtime = g_file_info_get_attribute_uint64 (info, 
 							   G_FILE_ATTRIBUTE_TIME_MODIFIED);
-			if (fmtime == (guint64) mtime) {
+
+                        /* FAT mtime has only a 2 second resolution. So it
+                         * must not check strict equality between fmtime and
+                         * mtime. NB#162957 */
+                        time_difference = fmtime - mtime;
+                        if (time_difference < 0)
+                          time_difference = - time_difference;
+
+			if (time_difference < 2) {
 				retval = TRUE;
 			}
 			g_object_unref (info);

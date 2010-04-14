@@ -222,13 +222,21 @@ hildon_thumbnail_outplugin_needs_out (HildonThumbnailPluginOutType type, guint64
 					   G_FILE_QUERY_INFO_NONE, NULL, NULL);
 		if (info) {
 			guint64 fmtime;
+                        gint64 time_difference;
                         struct timeval now;
                         gettimeofday(&now, NULL);
 			fmtime = g_file_info_get_attribute_uint64 (info, 
 								   G_FILE_ATTRIBUTE_TIME_MODIFIED);
+                        /* FAT mtime has only a 2 second resolution. So it
+                         * must not check strict equality between fmtime and
+                         * mtime. NB#162957 */
+                        time_difference = fmtime - mtime;
+                        if (time_difference < 0)
+                          time_difference = - time_difference;
+
                         /* Ugly hack for NB#160239: consider only "fail" file
                          * older than 5 seconds */
-			if (fmtime == (guint64) mtime &&
+			if (time_difference < 2 &&
                             fmtime + 5 < now.tv_sec) {
 				if (err_file && f)
 					*err_file = TRUE;
