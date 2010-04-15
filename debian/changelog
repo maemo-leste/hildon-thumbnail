@@ -7,9 +7,9 @@ hildon-thumbnail (3.0.49) unstable; urgency=low
 hildon-thumbnail (3.0.48) unstable; urgency=low
 
   [Alban Crequy]
-  * Fixes: NB#162985 - Mediaplayer crashed once when trying to play avi clip
+  * Fixed NB#162985 - Mediaplayer crashed once when trying to play avi clip
     from video library view (PE1 version)
-  * Fixes: NB#162986 - Captured images are getting corrupted (PE1 version)
+  * Fixed NB#162986 - Captured images are getting corrupted (PE1 version)
 
  -- Marc Ordinas i Llopis <marc.ordinasillopis@collabora.cu.uk>  Thu, 01 Apr 2010 11:06:52 +0200
 
