@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <utime.h>
+#include <stdlib.h>
 
 #include <string.h>
 #include <glib.h>
@@ -66,6 +67,18 @@ hildon_thumbnail_outplugin_cleanup (const gchar *uri_match, guint since)
 #ifdef HAVE_SQLITE3
 	sqlite3_stmt *stmt;
 	gint result = SQLITE_OK;
+        gchar *fail_thumbnails;
+        gchar *cmd;
+
+        /* Remove old failed thumbnails. NB#160239 */
+        fail_thumbnails = g_build_filename (g_get_home_dir (), ".thumbnails", 
+            "fail", "hildon-thumbnail", 
+            "????????????????????????????????.jpeg",
+            NULL);
+        cmd = g_strconcat ("/bin/rm -f ", fail_thumbnails, NULL);
+        system (cmd);
+        g_free (fail_thumbnails);
+        g_free (cmd);
 
 	if (!db) {
 		gchar *dbfile;
