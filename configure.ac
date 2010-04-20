@@ -1,4 +1,4 @@
-AC_INIT([hildon-thumbnail], [3.0.49])
+AC_INIT([hildon-thumbnail], [3.0.50])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([tar-ustar])
