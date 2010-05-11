@@ -1,3 +1,9 @@
+hildon-thumbnail (3.0.51) unstable; urgency=low
+
+  * Fixes: NB#160239 - Clean failed thumbnails at every reboot
+
+ -- Alban Crequy <alban.crequy@collabora.co.uk>  Tue, 11 May 2010 19:13:36 +0100
+
 hildon-thumbnail (3.0.50) unstable; urgency=low
 
   * Fixes: NB#160239 - When cleaning up old thumbnails, also remove "fail" files
