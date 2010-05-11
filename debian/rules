@@ -42,6 +42,9 @@ install: build
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/build
 
+	install -m 644 -o root -g root rc-clean-fail-thumbnail \
+		debian/hildon-thumbnail/etc/event.d
+
 # Build architecture-independent files here.
 binary-indep: build install
 # We have nothing to do by default.

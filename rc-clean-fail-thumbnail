@@ -1,0 +1,12 @@
+description "clean failed thumbnails"
+
+start on MOUNTS_OK
+
+console none
+
+script
+    rm -f /home/user/.thumbnails/fail/hildon-thumbnail/????????????????????????????????.jpeg > /dev/null 2>&1
+end script                                                      
+          
+normal exit 0                                                 
+
