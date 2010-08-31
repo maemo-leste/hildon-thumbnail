@@ -581,6 +581,7 @@ stream_continue_callback (GstElement    *bin,
 			g_object_set (G_OBJECT (priv->video_filter),
 				      "caps", caps,
 				      NULL);			
+			gst_caps_unref (caps);
 		}
 	}
 
