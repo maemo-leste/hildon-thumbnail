@@ -1,3 +1,20 @@
+hildon-thumbnail (3.0.51+0m5+0cssu1) unstable; urgency=low
+
+  * Disable creating thumbnails for obex in client part as
+    there is no working implementation of obexftp in gvfs
+  * Prepare for obex support
+  * Fix leak in autoplug-continue
+  * Add rc-clean-fail-thumbnail
+
+ -- Ludek Finstrle <luf@pzkagis.cz>  Thu, 07 Mar 2013 01:35:06 +0100
+
+hildon-thumbnail (3.0.51+0m5) unstable; urgency=low
+
+  * This entry has been added by BIFH queue processor
+    version has been changed to 3.0.51+0m5
+
+ -- Gary Birkett <ext-gary.2.birkett@nokia.com>  Mon, 07 Jun 2010 19:21:32 +0300
+
 hildon-thumbnail (3.0.51) unstable; urgency=low
 
   * Fixes: NB#160239 - Clean failed thumbnails at every reboot
