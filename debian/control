@@ -1,7 +1,7 @@
 Source: hildon-thumbnail
 Section: libs
 Priority: optional
-Maintainer: Marius Vollmer <marius.vollmer@nokia.com>
+Maintainer: Ludek Finstrle <luf@pzkagis.cz>
 Build-Depends: debhelper (>= 4.0.0), pkg-config, libosso-gnomevfs2-dev, libgtk2.0-dev, gtk-doc-tools, libosso-dev, libglib2.0-dev (>= 2.16), libsqlite3-dev, libepeg0-dev, libgstreamer0.10-dev, libhal-dev (>= 0.5), libhal-storage-dev, libplayback-1-dev, libexif-dev, libjpeg62-dev
 Standards-Version: 3.6.0
 
