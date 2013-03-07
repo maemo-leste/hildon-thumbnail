@@ -544,9 +544,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 	GList *thumb_items = NULL, *copy;
 	GStrv cached_items;
 
-	static const gchar *remotefss[9] = { 
+	static const gchar *remotefss[10] = { 
 		"smb://", "file:///media", 
-		"file:///mnt", "ftp://", 
+		"file:///mnt", "obex://", "ftp://", 
 		"ftps://", "dav://", "nfs://",
 		"file:///home/user/MyDocs",
 		NULL };

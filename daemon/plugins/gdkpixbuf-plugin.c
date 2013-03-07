@@ -524,8 +524,8 @@ hildon_thumbnail_plugin_init (gboolean *cropping, hildon_thumbnail_register_func
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "gdkpixbuf-plugin.conf", NULL);
 	GFile *file = g_file_new_for_path (config);
 	guint i = 0;
-	const gchar *uri_schemes[8] = { "file", "http", "https", 
-					"smb", "nfs", "ftp", 
+	const gchar *uri_schemes[9] = { "file", "http", "https", 
+					"smb", "nfs", "obex", "ftp", 
 					"ftps", NULL };
 
 	monitor =  g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, NULL);
