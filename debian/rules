@@ -17,7 +17,16 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 	INSTALL_PROGRAM += -s
 endif
 
+ifeq ($(DEB_BUILD_ARCH), armel)
+	CFLAGS += -mfpu=neon -mfloat-abi=softfp
+
+ifneq (,$(findstring thumb,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -mthumb
+endif
+endif
+
 config.status:
+	ACLOCAL=aclocal-1.9 AUTOMAKE=automake-1.9 ./autogen.sh
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --sysconfdir=/etc
 
