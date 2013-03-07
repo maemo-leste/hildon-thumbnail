@@ -603,6 +603,12 @@ hildon_thumbnail_factory_request_pixbuf (HildonThumbnailFactory *self,
 					 gpointer user_data,
 					 GDestroyNotify destroy)
 {
+	/* Just ignore thumbnails for obex:// */
+	/* It's not configurable as there is old obexftp implementation
+	 * in gvfs so it doesn't work */
+	if (g_str_has_prefix(uri, "obex://"))
+		return NULL;
+
 	return hildon_thumbnail_factory_request_generic (self, uri, width, height,
 							 cropped, mime_type, 
 							 NULL,
