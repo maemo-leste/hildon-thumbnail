@@ -16,7 +16,7 @@ endif
 
 
 hildon_thumbnail_daemon_plugin_test_SOURCES = daemon.c daemon-glue.h
-hildon_thumbnail_daemon_plugin_test_LDADD = $(top_builddir)/thumbs/libhildonthumbnail.la
+hildon_thumbnail_daemon_plugin_test_LDADD = $(top_builddir)/thumbs/libhildonthumbnail.la \
 	$(DBUS_LIBS) $(GLIB_LIBS) $(GMODULE_LIBS) $(GIO_LIBS)
 
 

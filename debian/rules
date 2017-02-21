@@ -26,7 +26,7 @@ endif
 endif
 
 config.status:
-	ACLOCAL=aclocal-1.9 AUTOMAKE=automake-1.9 ./autogen.sh
+	./autogen.sh
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --sysconfdir=/etc
 
