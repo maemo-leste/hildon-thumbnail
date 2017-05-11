@@ -479,9 +479,11 @@ on_got_handle (DBusGProxy *proxy, guint OUT_handle, GError *error, gpointer user
 		g_hash_table_replace (f_priv->tasks, g_strdup (key), 
 				      request);
 	}
+	else
+	  g_object_unref (request);
+
 	waiting_for_cb = FALSE;
 
-	g_object_unref (request);
 }
 
 static HildonThumbnailRequest*
