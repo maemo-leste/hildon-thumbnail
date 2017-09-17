@@ -40,7 +40,7 @@ Description: Debug symbols for libhildon-thumbnail0
 Package: libhildon-thumbnail-dev
 Section: devel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${source:Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${source:Version}), libgtk2.0-dev, libosso-dev
 Description: libhildon-thumbnail0 development files.
  Contains libhildon-thumbnail0 development files.
 
