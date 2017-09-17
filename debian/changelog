@@ -1,3 +1,9 @@
+hildon-thumbnail (3.0.51) unstable; urgency=medium
+
+  * enable git builds
+
+ -- Ivan J. <parazyd@dyne.org>  Sun, 17 Sep 2017 21:31:00 +0200
+
 hildon-thumbnail (3.0.51+0m5+0cssu1) unstable; urgency=low
 
   * Disable creating thumbnails for obex in client part as

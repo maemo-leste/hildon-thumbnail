@@ -8,7 +8,7 @@ Standards-Version: 3.6.0
 Package: hildon-thumbnail
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${source:Version})
 Recommends: osso-thumbnailer-libid3 (>= 0.3.0)
 Conflicts: osso-thumbnail (<< 0.11)
 Replaces: osso-thumbnail (<< 0.11)
@@ -33,14 +33,14 @@ Description: Thumbnail library.
 Package: libhildon-thumbnail0-dbg
 Section: devel
 Architecture: any
-Depends: libhildon-thumbnail0 (= ${Source-Version})
+Depends: libhildon-thumbnail0 (= ${source:Version})
 Description: Debug symbols for libhildon-thumbnail0
  Contains debug symbols for libhildon-thumbnail0.
 
 Package: libhildon-thumbnail-dev
 Section: devel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${Source-Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhildon-thumbnail0 (= ${source:Version}), libosso-gnomevfs2-dev, libgtk2.0-dev, libosso-dev
 Description: libhildon-thumbnail0 development files.
  Contains libhildon-thumbnail0 development files.
 
