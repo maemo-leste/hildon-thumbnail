@@ -242,13 +242,11 @@ thumber_pipe_run (ThumberPipe *pipe,
 		  GError     **error)
 {
 	ThumberPipePrivate *priv;
-	GstBuffer          *buffer = NULL;
 	gchar              *filename;
 	gboolean            success = FALSE;
 	GError             *lerror  = NULL;
 	gint64              duration = 0;
 	gint64              seek;
-	GstFormat           format = GST_FORMAT_TIME;
 
 	priv = THUMBER_PIPE_GET_PRIVATE (pipe);
 
@@ -280,8 +278,10 @@ thumber_pipe_run (ThumberPipe *pipe,
 		goto cleanup;
 	}
 
-	if (!gst_element_query_duration (priv->pipeline, &format, &duration))
+	if (!gst_element_query_duration (priv->pipeline, GST_FORMAT_TIME,
+					 &duration)) {
 		goto skip_seek;
+	}
 	
 	if (duration > 120 * GST_SECOND) {
 		seek = 45 * GST_SECOND;
@@ -460,7 +460,7 @@ initialize (ThumberPipe *pipe, const gchar *mime, guint size, GError **error)
 
 	gst_caps_unref (caps);
 
-	videopad = gst_element_get_pad (priv->video_scaler, "sink");
+	videopad = gst_element_get_static_pad (priv->video_scaler, "sink");
 	ghostpad = gst_ghost_pad_new ("sink", videopad);
 	gst_element_add_pad (priv->sinkbin, ghostpad);
 		
@@ -514,7 +514,7 @@ newpad_callback (GstElement       *decodebin,
 		return;
 	}
 	
-	caps = gst_pad_get_caps (pad);
+	caps = gst_pad_query_caps (pad, NULL);
 	str  = gst_caps_get_structure (caps, 0);
 
 	if (!g_strrstr (gst_structure_get_name (str), "video")) {
@@ -537,7 +537,7 @@ stream_continue_callback (GstElement    *bin,
 {
 	GstStructure *str;
 
-	int i;
+	guint i;
 
 	ThumberPipePrivate *priv;
 
@@ -559,9 +559,8 @@ stream_continue_callback (GstElement    *bin,
 		return FALSE;
 	}
 
-	for (i = caps->structs->len - 1; i >= 0; i--) {
+	for (i = gst_caps_get_size(caps) - 1; i >= 0; i--) {
 		gint width, height;
-		int o;
 		str = gst_caps_get_structure (caps, i);
 		if (gst_structure_get_int (str, "width", &width) &&
 		    gst_structure_get_int (str, "height", &height)) {

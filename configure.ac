@@ -1,4 +1,4 @@
-AC_INIT([hildon-thumbnail], [3.0.51])
+AC_INIT([hildon-thumbnail], [3.1.1])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE([tar-ustar])
@@ -79,7 +79,7 @@ AC_ARG_ENABLE(gstreamer,
 	      [enable_gstreamer=yes])
 
 if test "x$enable_gstreamer" = "xyes"; then
-   PKG_CHECK_MODULES(GSTREAMER,[gstreamer-0.10 >= 0.10.0],
+   PKG_CHECK_MODULES(GSTREAMER,[gstreamer-1.0],
    			       [have_gstreamer=yes],
 			       [have_gstreamer=no])
    AC_SUBST(GSTREAMER_CFLAGS)

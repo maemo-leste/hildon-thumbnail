@@ -1,3 +1,9 @@
+hildon-thumbnail (3.1.1) unstable; urgency=medium
+
+  * port to gstreamer-1.0
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 10 Jan 2018 18:47:23 +0200
+
 hildon-thumbnail (3.0.51) unstable; urgency=medium
 
   * enable git builds
