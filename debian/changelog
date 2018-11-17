@@ -1,3 +1,9 @@
+hildon-thumbnail (3.1.2) unstable; urgency=medium
+
+  * Add aarch64 support
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 17 Nov 2018 12:13:26 +0100
+
 hildon-thumbnail (3.1.1) unstable; urgency=medium
 
   * port to gstreamer-1.0
