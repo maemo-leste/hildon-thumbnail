@@ -1,0 +1,7 @@
+option('libplayback', type : 'feature', value : 'auto')
+option('gstreamer', type : 'feature')
+option('libpng', type : 'feature')
+option('epeg', type : 'feature')
+option('sqlite3', type : 'feature')
+option('libosso', type : 'feature')
+option('libexif', type : 'feature')
