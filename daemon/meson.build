@@ -105,6 +105,6 @@ executable('hildon_thumbnailerd',
     link_with: libshared
 )
 
+# TODO: Install .service files
 
-# TODO: Enable
-#subdir('plugins')
+subdir('plugins')
