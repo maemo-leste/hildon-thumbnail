@@ -11,5 +11,4 @@ for arg in sys.argv[1:]:
         arg = arg[:9] + subst
     args.append(arg)
 
-args.insert(0, 'dbus-binding-tool')
 subprocess.call(args)
