@@ -63,3 +63,5 @@ if epeg.found()
         link_with: libshared
     )
 endif
+
+# TODO: Maybe some libs have to be linked against sqlite3, etc?

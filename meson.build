@@ -28,8 +28,6 @@ sqlite3 = dependency('sqlite3', required: get_option('sqlite3'))
 libosso = dependency('libosso', required: get_option('libosso'))
 libexif = dependency('libexif', version: '>=0.6', required: get_option('libexif'))
 
-# TODO AC_CONFIG_LINKS(thumbs/pixbuf-io-loader.c:daemon/plugins/pixbuf-io-loader.c)
-
 # Generate config.h
 compiler = meson.get_compiler('c')
 conf_data = configuration_data()
@@ -44,12 +42,48 @@ conf_data.set_quoted('VERSION', meson.project_version())
 configure_file(output : 'config.h',
                configuration : conf_data)
 
+glue_gen = generator(prefix_wrapper,
+                output  : '@BASENAME@-glue.h',
+                arguments : [dbusbindingtool.path(),
+                             '--mode=glib-server',
+                             '--output=@OUTPUT@',
+                             # Dashes will get replaced with underscores in the wrapper script
+                             '--prefix=@BASENAME@',
+                             '@INPUT@'])
+
+client_gen = generator(prefix_wrapper,
+                output  : '@BASENAME@-client.h',
+                arguments : [dbusbindingtool.path(),
+                             '--mode=glib-client',
+                             '--output=@OUTPUT@',
+                             # Dashes will get replaced with underscores in the wrapper script
+                             '--prefix=@BASENAME@',
+                             '@INPUT@'])
+
+marshal_h_gen = generator(prefix_wrapper,
+                output  : '@BASENAME@.h',
+                arguments : [glib_genmarshal.path(),
+                             '@INPUT@',
+                             # Dashes will get replaced with underscores in the wrapper script
+                             '--prefix=@BASENAME@',
+                             '--header'],
+                capture : true)
+
+marshal_c_gen = generator(prefix_wrapper,
+                output  : '@BASENAME@.c',
+                arguments : [glib_genmarshal.path(),
+                             '@INPUT@',
+                             # Dashes will get replaced with underscores in the wrapper script
+                             '--prefix=@BASENAME@',
+                             '--body'],
+                capture : true)
+
 subdir('daemon')
 subdir('thumbs')
 subdir('thumbnailers')
 subdir('tests')
 
 pkg = import('pkgconfig')
-#pkg.generate(libraries : libs,
-#             subdirs : h,
-#             description : 'LGPL-licensed thumbs and albumart library')
+pkg.generate(name : meson.project_name(),
+             libraries : libhildonthumbnail,
+             description : 'LGPL-licensed thumbs and albumart library')

@@ -25,15 +25,6 @@ daemon_includes = [
     include_directories('..') # for config.h
 ]
 
-glue_gen = generator(prefix_wrapper,
-                output  : '@BASENAME@-glue.h',
-                arguments : [dbusbindingtool.path(),
-                             '--mode=glib-server',
-                             '--output=@OUTPUT@',
-                             # Dashes will get replaced with underscores in the wrapper script
-                             '--prefix=@BASENAME@',
-                             '@INPUT@'])
-
 libshared_sources = [
     'utils.c'
 ]
@@ -58,24 +49,6 @@ executable('hildon_thumbnailer_plugin_runner',
     dependencies: daemon_deps,
     include_directories: daemon_includes
 )
-
-marshal_h_gen = generator(prefix_wrapper,
-                output  : '@BASENAME@.h',
-                arguments : [glib_genmarshal.path(),
-                             '@INPUT@',
-                             # Dashes will get replaced with underscores in the wrapper script
-                             '--prefix=@BASENAME@',
-                             '--header'],
-                capture : true)
-
-marshal_c_gen = generator(prefix_wrapper,
-                output  : '@BASENAME@.c',
-                arguments : [glib_genmarshal.path(),
-                             '@INPUT@',
-                             # Dashes will get replaced with underscores in the wrapper script
-                             '--prefix=@BASENAME@',
-                             '--body'],
-                capture : true)
 
 hildon_thumbnailerd_sources = [
     plugin_stuff,
