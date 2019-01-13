@@ -3,7 +3,8 @@ project('hildon-thumbnail', 'c',
   meson_version : '>=0.47.0', # "feature" options
   default_options : ['warning_level=3'])
 
-glib = dependency('glib-2.0', version: '>=2.4.0') # TODO: What about gthread-2.0
+glib = dependency('glib-2.0', version: '>=2.4.0')
+gthread = dependency('gthread-2.0', version: '>=2.4.0')
 xml = dependency('libxml-2.0')
 dbus = dependency('dbus-1')
 dbus_glib = dependency('dbus-glib-1')
