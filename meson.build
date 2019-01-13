@@ -39,8 +39,8 @@ conf_data.set('HAVE_MALLOPT', compiler.has_function('mallopt', prefix : '#includ
 conf_data.set('HAVE_OSSO', libosso.found())
 conf_data.set('HAVE_PLAYBACK', playback.found())
 conf_data.set('HAVE_SQLITE3', sqlite3.found())
-conf_data.set('PACKAGE_NAME', meson.project_name())
-conf_data.set('VERSION', meson.project_version())
+conf_data.set_quoted('PACKAGE_NAME', meson.project_name())
+conf_data.set_quoted('VERSION', meson.project_version())
 configure_file(output : 'config.h',
                configuration : conf_data)
 
