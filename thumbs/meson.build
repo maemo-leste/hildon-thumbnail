@@ -5,6 +5,10 @@ generic_deps = [
     gio
 ]
 
+generic_includes = [
+    include_directories('..') # for config.h
+]
+
 hildonthumbnail_sources = [
     'hildon-thumbnail-factory.c',
     'hildon-thumbnail-factory.h',
@@ -32,8 +36,9 @@ if libosso.found()
 
     executable('hildon-thumb-gdk-pixbuf',
         sources: thumb_gdk_pixbuf_sources,
-        dependencies: [generic_deps, gdk_pixbuf, libosso],
-        link_with: [libshared, libhildonthumbnail]
+        dependencies: [generic_deps, gthread, gdk_pixbuf, libosso],
+        link_with: [libshared, libhildonthumbnail],
+        include_directories: generic_includes
     )
 
     thumber_register_sources = [
@@ -43,6 +48,7 @@ if libosso.found()
     executable('hildon-thumber-register',
         sources: thumber_register_sources,
         dependencies: [generic_deps, libosso],
-        link_with: [libshared, libhildonthumbnail]
+        link_with: [libshared, libhildonthumbnail],
+        c_args: ['-DBIN_PATH="@0@/bin"'.format(get_option('prefix'))]
     )
 endif
