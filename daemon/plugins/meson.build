@@ -7,8 +7,7 @@ shared_module('hildon_thumbnailer_jpeg',
     sources: jpeg_sources,
     dependencies: [dbus, gmodule, glib, gdk_pixbuf],
     include_directories: daemon_includes,
-    link_with: libshared,
-    c_args: ['-DHAVE_CONFIG_H'] # TODO Remove
+    link_with: libshared
 )
 
 if png.found()
@@ -21,8 +20,7 @@ if png.found()
         sources: png_sources,
         dependencies: [dbus, gmodule, glib, gdk_pixbuf],
         include_directories: daemon_includes,
-        link_with: libshared,
-        c_args: ['-DHAVE_CONFIG_H'] # TODO Remove
+        link_with: libshared
     )
 endif
 
@@ -49,8 +47,7 @@ shared_module('hildon_thumbnailer_exec',
     sources: exec_sources,
     dependencies: [dbus, gmodule, glib, gdk_pixbuf],
     include_directories: daemon_includes,
-    link_with: libshared,
-    c_args: ['-DHAVE_CONFIG_H'] # TODO Remove
+    link_with: libshared
 )
 
 if epeg.found()
@@ -63,7 +60,6 @@ if epeg.found()
         sources: png_sources,
         dependencies: [dbus, gmodule, glib, gdk_pixbuf],
         include_directories: daemon_includes,
-        link_with: libshared,
-        c_args: ['-DHAVE_CONFIG_H'] # TODO Remove
+        link_with: libshared
     )
 endif
