@@ -44,40 +44,61 @@ plugin_runner_sources = [
     plugin_stuff
 ]
 
-executable('hildon_thumbnailer_plugin_runner',
+executable('hildon-thumbnailer-plugin-runner',
     sources: plugin_runner_sources,
     dependencies: daemon_deps,
-    include_directories: daemon_includes
+    include_directories: daemon_includes,
+    install : true,
+    install_dir : get_option('libexecdir')
 )
 
 hildon_thumbnailerd_sources = [
     plugin_stuff,
     'hildon-thumbnail-daemon.c',
     'thumbnailer.c',
-    'thumbnailer.h',
     'thumbnail-manager.c',
-    'thumbnail-manager.h',
-    'dbus-utils.h',
     'dbus-utils.c',
     'albumart.c',
-    'albumart.h',
     'thumb-hal.c',
-    'thumb-hal.h',
     'albumart-manager.c',
-    'albumart-manager.h',
     marshal_c_gen.process('thumbnailer-marshal.list', 'albumart-marshal.list'),
     marshal_h_gen.process('thumbnailer-marshal.list', 'albumart-marshal.list'),
     glue_gen.process('manager.xml', 'thumbnailer.xml', 'albumart.xml')
 ]
 
-executable('hildon_thumbnailerd',
+executable('hildon-thumbnailerd',
     sources: hildon_thumbnailerd_sources,
     dependencies: daemon_deps,
     include_directories: daemon_includes,
     c_args: daemon_defines,
-    link_with: libshared
+    link_with: libshared,
+    install : true,
+    install_dir : get_option('libexecdir')
 )
 
-# TODO: Install .service files
+# Install .service files
+# Similar construct in thumbnailers/gst-video-thumbnailer/meson.build
+service_conf_data = configuration_data({
+    'libexecdir': join_paths(get_option('prefix'), get_option('libexecdir'))
+})
+
+service_files = [
+    'org.freedesktop.thumbnailer.service',
+    'com.nokia.albumart.service'
+]
+
+foreach service_file : service_files
+    configure_file(input : service_file + '.in',
+                   output : service_file,
+                   configuration : service_conf_data,
+                   install: true,
+                   install_dir: join_paths(get_option('datadir'), 'dbus-1', 'services'))
+endforeach
+
+# Install .xml files
+install_data('albumart.xml', 'manager.xml', 'thumbnailer.xml',
+             install_dir: join_paths(get_option('datadir'), 'hildon-thumbnail'))
+install_headers('hildon-thumbnail-plugin.h',
+                subdir : 'hildon-thumbnail')
 
 subdir('plugins')
