@@ -8,7 +8,9 @@ e = executable('hildon-thumbnail-tester',
     sources: thumbnail_tester_sources,
     dependencies: [gdk_pixbuf],
     link_with: libhildonthumbnail,
-    include_directories: thumbs_include
+    include_directories: thumbs_include,
+    install: true,
+    install_dir: get_option('bindir')
 )
 test('hildon thumbnail tester', e, workdir: meson.source_root())
 
@@ -20,7 +22,9 @@ thumbnail_daemon_plugin_test_sources = [
 e = executable('hildon-thumbnail-daemon-plugin-test',
     sources: thumbnail_daemon_plugin_test_sources,
     dependencies: [dbus, dbus_glib, glib, gmodule, gio],
-    link_with: libhildonthumbnail
+    link_with: libhildonthumbnail,
+    install: true,
+    install_dir: get_option('bindir')
 )
 test('hildon thumbnail daemon plugin test', e)
 
@@ -33,7 +37,9 @@ if gtk.found()
         sources: artist_art_tester_sources,
         dependencies: gtk,
         link_with: libhildonthumbnail,
-        include_directories: thumbs_include
+        include_directories: thumbs_include,
+        install: true,
+        install_dir: get_option('bindir')
     )
     test('artist art tester', e)
 
@@ -45,7 +51,9 @@ if gtk.found()
         sources: test_paths_sources,
         dependencies: gdk_pixbuf,
         link_with: libhildonthumbnail,
-        include_directories: thumbs_include
+        include_directories: thumbs_include,
+        install: true,
+        install_dir: get_option('bindir')
     )
     test('test paths', e)
 endif

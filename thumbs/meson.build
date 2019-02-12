@@ -1,3 +1,5 @@
+# TODO: osso-thumb-gdk-pixbuf and osso-thumber-register symlinks
+
 generic_deps = [
     dbus,
     dbus_glib,
@@ -11,10 +13,8 @@ generic_includes = [
 
 hildonthumbnail_sources = [
     'hildon-thumbnail-factory.c',
-    'hildon-thumbnail-factory.h',
     '../daemon/plugins/pixbuf-io-loader.c',
     'hildon-albumart-factory.c',
-    'hildon-albumart-factory.h',
     'hildon-thumbnail-obj.c',
     'hildon-albumart-obj.c',
     client_gen.process('../daemon/thumbnailer.xml', '../daemon/albumart.xml'),
@@ -23,9 +23,12 @@ hildonthumbnail_sources = [
 ]
 
 libhildonthumbnail = library('hildonthumbnail',
-        sources: hildonthumbnail_sources,
-        dependencies: [generic_deps, gdk_pixbuf],
-        link_with: [libshared]
+    sources: hildonthumbnail_sources,
+    dependencies: [generic_deps, gdk_pixbuf],
+    link_with: [libshared],
+    version: '0.0.4',
+    install: true,
+    install_dir: get_option('libdir')
 )
 
 if libosso.found()
@@ -38,7 +41,9 @@ if libosso.found()
         sources: thumb_gdk_pixbuf_sources,
         dependencies: [generic_deps, gthread, gdk_pixbuf, libosso],
         link_with: [libshared, libhildonthumbnail],
-        include_directories: generic_includes
+        include_directories: generic_includes,
+        install: true,
+        install_dir: get_option('bindir')
     )
 
     thumber_register_sources = [
@@ -49,6 +54,14 @@ if libosso.found()
         sources: thumber_register_sources,
         dependencies: [generic_deps, libosso],
         link_with: [libshared, libhildonthumbnail],
-        c_args: ['-DBIN_PATH="@0@/bin"'.format(get_option('prefix'))]
+        c_args: ['-DBIN_PATH="@0@/bin"'.format(get_option('prefix'))],
+        install: true,
+        install_dir: get_option('bindir')
     )
 endif
+
+install_data('hildon-thumbnailer-wrap.sh',
+             install_dir: get_option('bindir'),
+             install_mode: 'rwxr-xr-x')
+install_headers('hildon-thumbnail-factory.h', 'hildon-thumber-common.h', 'hildon-albumart-factory.h',
+                subdir : 'hildon-thumbnail')
