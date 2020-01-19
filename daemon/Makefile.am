@@ -73,7 +73,7 @@ hildon_thumbnailerd_SOURCES = \
 	albumart-manager.h
 
 hildon_thumbnailerd_LDADD = \
-	$(top_builddir)/daemon/libshared.la \
+	libshared.la \
 	$(DBUS_LIBS) $(LIBOSSO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) $(GDK_PIXBUF_LIBS) \
