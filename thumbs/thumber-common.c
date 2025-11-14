@@ -233,7 +233,7 @@ int hildon_thumber_main(
     if(keys) g_strfreev(keys);
     if(values) g_strfreev(values);
 
-    gdk_pixbuf_unref(pixbuf);
+    g_object_unref(pixbuf);
 
     g_free(local_file);
 

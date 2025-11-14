@@ -253,7 +253,7 @@ create_pixbuf_and_callback (HildonThumbnailRequestPrivate *r_priv)
 		}
 
 		if (pixbuf)
-			gdk_pixbuf_unref (pixbuf);
+			g_object_unref (pixbuf);
 	}
 
 	if (r_priv->ucallback) {

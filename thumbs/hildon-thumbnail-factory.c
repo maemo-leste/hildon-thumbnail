@@ -366,7 +366,7 @@ create_pixbuf_and_callback (ThumbsItem *item, gchar *large, gchar *normal, gchar
 			g_error_free (error);
 
 		if (pixbuf)
-			gdk_pixbuf_unref (pixbuf);
+			g_object_unref (pixbuf);
 }
 
 static void

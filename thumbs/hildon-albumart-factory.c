@@ -147,7 +147,7 @@ create_pixbuf_and_callback (ArtsItem *item, gchar *path)
 			g_error_free (error);
 
 		if (pixbuf)
-			gdk_pixbuf_unref (pixbuf);
+			g_object_unref (pixbuf);
 }
 
 static void
