@@ -126,7 +126,7 @@ create_pixbuf_and_callback (ArtsItem *item, gchar *path)
 			goto error_handler;
 
 		/* Read the stream as a pixbuf at the requested exact scale */
-		pixbuf = my_gdk_pixbuf_new_from_stream (stream, NULL, &error);
+		pixbuf = gdk_pixbuf_new_from_stream (stream, NULL, &error);
 
 		error_handler:
 

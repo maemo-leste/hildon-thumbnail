@@ -73,7 +73,8 @@ thumber_register(char *cmd, char *mime_type, GError **err)
 		g_strfreev (mimetypes);
 
 	} else {
-		guint length, i, z = 0;
+		guint i, z = 0;
+		gsize length;
 		gchar **o;
 		gchar **mimetypes;
 
@@ -117,7 +118,8 @@ thumber_unregister(char *cmd, GError **err)
 	keyfile = g_key_file_new ();
 
 	if (g_key_file_load_from_file (keyfile, config, G_KEY_FILE_NONE, NULL)) {
-		guint length, i, z;
+		guint i, z;
+		gsize length;
 		gchar **o;
 		gchar **mimetypes = NULL;
 
@@ -184,7 +186,8 @@ thumber_unregister_mime (char *mime, GError **err)
 	gchar *config = g_build_filename (g_get_user_config_dir (), "hildon-thumbnailer", "exec-plugin.conf", NULL);
 	GKeyFile *keyfile;
 	gchar **mimetypes = NULL;
-	guint i = 0, length;
+	guint i = 0;
+	gsize length;
 
 	keyfile = g_key_file_new ();
 

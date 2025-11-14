@@ -26,6 +26,7 @@
 
 #include "hildon-thumbnail-factory.h"
 #include "hildon-thumber-common.h"
+#include "pixbuf-io-loader.h"
 #include "thumbnailer-client.h"
 #include "thumbnailer-marshal.h"
 #include "utils.h"
