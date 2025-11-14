@@ -30,13 +30,6 @@ Conflicts: osso-thumbnail0 (<< 0.3.0), osso-thumbnail-libid3 (<< 0.3.0)
 Description: Thumbnail library.
  Contains the thumbnail library.
 
-Package: libhildon-thumbnail0-dbg
-Section: devel
-Architecture: any
-Depends: libhildon-thumbnail0 (= ${source:Version})
-Description: Debug symbols for libhildon-thumbnail0
- Contains debug symbols for libhildon-thumbnail0.
-
 Package: libhildon-thumbnail-dev
 Section: devel
 Architecture: any
