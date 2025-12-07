@@ -27,7 +27,7 @@
 #include <hildon-thumbnail-plugin.h>
 
 static GList *outplugs = NULL;
-static GStaticRecMutex mutex = G_STATIC_REC_MUTEX_INIT;
+static GRecMutex mutex;
 
 typedef gboolean (*IsActiveFunc) (void);
 typedef gboolean (*StopFunc) (void);
@@ -40,7 +40,7 @@ hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri, GError *
 {
 	GList *copy;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 	copy = outplugs;
 
 	while (copy) {
@@ -59,7 +59,7 @@ hildon_thumbnail_outplugins_put_error (guint64 mtime, const gchar *uri, GError *
 		copy = g_list_next (copy);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 }
 
@@ -69,7 +69,7 @@ hildon_thumbnail_outplugins_cleanup (const gchar *uri_match,
 {
 	GList *copy;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 	copy = outplugs;
 
 	while (copy) {
@@ -88,7 +88,7 @@ hildon_thumbnail_outplugins_cleanup (const gchar *uri_match,
 		copy = g_list_next (copy);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 }
 
@@ -98,7 +98,7 @@ hildon_thumbnail_outplugins_get_orig (const gchar *path)
 	GList *copy;
 	gchar *retval = NULL;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 	copy = outplugs;
 
 	while (copy && !retval) {
@@ -117,7 +117,7 @@ hildon_thumbnail_outplugins_get_orig (const gchar *path)
 		copy = g_list_next (copy);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 	return retval;
 }
@@ -128,7 +128,7 @@ hildon_thumbnail_outplugin_unload (GModule *module)
 	StopFunc stop_func;
 	gboolean resident = FALSE;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_outplugin_stop", (gpointer *) &stop_func)) {
 		resident = stop_func ();
@@ -139,7 +139,7 @@ hildon_thumbnail_outplugin_unload (GModule *module)
 	if (!resident)
 		g_module_close (module);
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 }
 
 GModule*
@@ -149,7 +149,7 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
@@ -162,7 +162,7 @@ hildon_thumbnail_outplugin_load (const gchar *module_name)
 		outplugs = g_list_prepend (outplugs, module);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 	return module;
 }
@@ -180,7 +180,7 @@ hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 	GList *copy;
 	gboolean retval = FALSE;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 	copy = outplugs;
 
 	while (copy && !retval) {
@@ -199,7 +199,7 @@ hildon_thumbnail_outplugins_needs_out (HildonThumbnailPluginOutType type,
 		copy = g_list_next (copy);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 
 	return retval;
@@ -222,7 +222,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 	GString *errors = NULL;
 	GQuark domain;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 	copy = outplugs;
 
 	while (copy) {
@@ -259,7 +259,7 @@ hildon_thumbnail_outplugins_do_out (const guchar *rgb8_pixmap,  guint width,
 		g_string_free (errors, TRUE);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 }
 
@@ -272,7 +272,7 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 
 	g_return_val_if_fail (module_name != NULL, NULL);
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	module = g_module_open (module_name, G_MODULE_BIND_LOCAL);
 
@@ -284,7 +284,7 @@ hildon_thumbnail_plugin_load (const gchar *module_name)
 		g_module_make_resident (module);
 	} */
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 	return module;
 }
@@ -297,13 +297,13 @@ hildon_thumbnail_plugin_get_supported (GModule *module)
 	GStrv supported = NULL;
 	SupportedFunc supported_func;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_supported", (gpointer *) &supported_func)) {
 		supported = (supported_func) ();
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 	return supported;
 }
@@ -317,13 +317,13 @@ hildon_thumbnail_plugin_do_init (GModule *module, gboolean *cropping, hildon_thu
 {
 	InitFunc func;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_init", (gpointer *) &func)) {
 		(func) (cropping, in_func, instance, module, error);
 	}
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 
 }
 
@@ -334,13 +334,13 @@ hildon_thumbnail_plugin_do_create (GModule *module, GStrv uris, gchar *mime_hint
 {
 	CreateFunc func;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_create", (gpointer *) &func)) {
-		g_static_rec_mutex_unlock (&mutex);
+		g_rec_mutex_unlock (&mutex);
 		(func) (uris, mime_hint, failed_uris, error);
 	} else
-		g_static_rec_mutex_unlock (&mutex);
+		g_rec_mutex_unlock (&mutex);
 
 }
 
@@ -350,7 +350,7 @@ hildon_thumbnail_plugin_do_stop (GModule *module)
 	StopFunc func;
 	gboolean resident = FALSE;
 
-	g_static_rec_mutex_lock (&mutex);
+	g_rec_mutex_lock (&mutex);
 
 	if (g_module_symbol (module, "hildon_thumbnail_plugin_stop", (gpointer *) &func)) {
 		resident = (func) ();
@@ -359,5 +359,5 @@ hildon_thumbnail_plugin_do_stop (GModule *module)
 	if (!resident)
 		g_module_close (module);
 
-	g_static_rec_mutex_unlock (&mutex);
+	g_rec_mutex_unlock (&mutex);
 }
