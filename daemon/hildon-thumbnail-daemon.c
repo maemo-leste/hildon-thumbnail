@@ -261,8 +261,8 @@ memory_setrlimits (void)
 		} else {
 			gchar *str1, *str2;
 
-			str1 = g_format_size_for_display (total);
-			str2 = g_format_size_for_display (limit);
+			str1 = g_format_size_full (total, G_FORMAT_SIZE_IEC_UNITS);
+			str2 = g_format_size_full (limit, G_FORMAT_SIZE_IEC_UNITS);
 
 			g_message ("Setting memory limitations: total is %s, virtual/heap set to %s",
 				   str1,
