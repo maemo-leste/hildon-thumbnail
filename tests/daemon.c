@@ -192,11 +192,6 @@ main (int argc, char **argv)
 	GMainLoop *main_loop;
 	GObject *object;
 
-	g_type_init ();
-
-	if (!g_thread_supported ())
-		g_thread_init (NULL);
-
 	connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
 
 	proxy = dbus_g_proxy_new_for_name (connection, 

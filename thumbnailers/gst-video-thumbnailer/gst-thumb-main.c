@@ -97,12 +97,6 @@ main (gint argc, gchar *argv[])
 	Thumber         *thumber        = NULL;
 	GVolumeMonitor  *volume_monitor = NULL;
 
-	g_type_init ();
-
-	if (!g_thread_supported ()) {
-		g_thread_init (NULL);
-	}
-
 	context = g_option_context_new (" - Gstreamer based specialized video thumbnailer");
 
 	group = g_option_group_new ("thumbnailer", 

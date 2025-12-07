@@ -244,8 +244,6 @@ void test_clean()
 int main() {
     printf("Running tests...\n");
 
-    g_type_init ();
-
     if(!g_file_test("tests/images", G_FILE_TEST_IS_DIR)) {
         g_error("Tester can't find test images in tests/images directory");
 

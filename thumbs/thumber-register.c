@@ -233,8 +233,6 @@ int main(int argc, char **argv)
 {
     int status = 0;
 
-    g_type_init();
- 
     if(argc != 3) {
         printf( "Usage:\n"
                 "    osso-thumber-register <handler-cmd> <mime-type>\n"

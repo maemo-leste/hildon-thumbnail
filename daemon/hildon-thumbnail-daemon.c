@@ -559,11 +559,6 @@ main (int argc, char **argv)
 	set_oom_adj();
 #endif
 
-	g_type_init ();
-
-	if (!g_thread_supported ())
-		g_thread_init (NULL);
-
 	memory_setrlimits ();
 
 	create_dummy_files ();

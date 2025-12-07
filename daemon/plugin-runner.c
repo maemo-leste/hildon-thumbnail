@@ -312,11 +312,6 @@ main (int argc, char **argv)
 	GObject *object;
 	GModule *module;
 
-	g_type_init ();
-
-	if (!g_thread_supported ())
-		g_thread_init (NULL);
-
 	context = g_option_context_new ("- start a plugin as a standalone daemon");
 
 	/* Daemon group */

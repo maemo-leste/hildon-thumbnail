@@ -35,8 +35,6 @@ main (gint argc,
         HildonThumbnailRequest *thumbnail_request;
         gchar *thumbnail;
 
-        g_type_init ();
-
         loop = g_main_loop_new (NULL, FALSE);
 
         thumbnail_factory = hildon_thumbnail_factory_get_instance ();
