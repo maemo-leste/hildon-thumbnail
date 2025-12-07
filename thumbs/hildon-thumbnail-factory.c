@@ -26,7 +26,6 @@
 
 #include "hildon-thumbnail-factory.h"
 #include "hildon-thumber-common.h"
-#include "pixbuf-io-loader.h"
 #include "thumbnailer-client.h"
 #include "thumbnailer-marshal.h"
 #include "utils.h"
@@ -99,6 +98,14 @@ typedef struct {
 		#define CHECKER 2
 	#endif
 #endif
+
+GdkPixbuf *
+my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
+					gint	       width,
+					gint	       height,
+					gboolean       preserve_aspect_ratio,
+					GCancellable  *cancellable,
+					GError       **error);
 
 static DBusGProxy*
 get_tracker_proxy (void)
