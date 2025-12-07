@@ -43,7 +43,7 @@
 
 #include <hildon-thumbnail-plugin.h>
 
-#define HAVE_OSSO
+//#define HAVE_OSSO
 
 #ifdef HAVE_OSSO
 #define MAX_SIZE	(1024*1024*5)
