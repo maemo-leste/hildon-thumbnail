@@ -66,9 +66,9 @@ enum {
 void daemon_create (Daemon *object, GStrv uris, gchar *mime_hint, DBusGMethodInvocation *context);
 GType daemon_get_type (void);
 
-G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (Daemon, daemon, G_TYPE_OBJECT)
 
-#define DAEMON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_DAEMON, DaemonPrivate))
+#define DAEMON_GET_PRIVATE(obj) ((DaemonPrivate *)daemon_get_instance_private((Daemon *)(obj)))
 
 #define plugin_runner_create daemon_create
 
@@ -209,8 +209,6 @@ daemon_class_init (DaemonClass *klass)
 							       "Module to proxy to",
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
-
-	g_type_class_add_private (object_class, sizeof (DaemonPrivate));
 }
 
 static void

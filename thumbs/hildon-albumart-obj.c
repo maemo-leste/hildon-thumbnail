@@ -37,9 +37,8 @@
 #define ALBUMARTER_PATH         "/com/nokia/albumart/Requester"
 #define ALBUMARTER_INTERFACE    "com.nokia.albumart.Requester"
 
-#define REQUEST_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_ALBUMART_REQUEST, HildonAlbumartRequestPrivate))
-#define FACTORY_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_ALBUMART_FACTORY, HildonAlbumartFactoryPrivate))
-
+#define REQUEST_GET_PRIVATE(obj) ((HildonAlbumartRequestPrivate *)hildon_albumart_request_get_instance_private((HildonAlbumartRequest *)(obj)))
+#define FACTORY_GET_PRIVATE(obj) ((HildonAlbumartFactoryPrivate *)hildon_albumart_factory_get_instance_private((HildonAlbumartFactory *)(obj)))
 
 typedef struct {
 	gchar *artist_or_title;
@@ -60,6 +59,9 @@ typedef struct {
 } HildonAlbumartFactoryPrivate;
 
 
+G_DEFINE_TYPE_WITH_PRIVATE (HildonAlbumartFactory, hildon_albumart_factory, G_TYPE_OBJECT)
+
+G_DEFINE_TYPE_WITH_PRIVATE (HildonAlbumartRequest, hildon_albumart_request, G_TYPE_OBJECT)
 
 static void
 create_pixbuf_and_callback (HildonAlbumartRequestPrivate *r_priv)
@@ -223,8 +225,6 @@ hildon_albumart_request_class_init (HildonAlbumartRequestClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = hildon_albumart_request_finalize;
-
-	g_type_class_add_private (object_class, sizeof (HildonAlbumartRequestPrivate));
 }
 
 static void
@@ -233,8 +233,6 @@ hildon_albumart_factory_class_init (HildonAlbumartFactoryClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = hildon_albumart_factory_finalize;
-
-	g_type_class_add_private (object_class, sizeof (HildonAlbumartFactoryPrivate));
 }
 
 static gboolean waiting_for_cb = FALSE;
@@ -460,7 +458,3 @@ hildon_albumart_factory_get_instance (void)
 
 	return g_object_ref (singleton);
 }
-
-G_DEFINE_TYPE (HildonAlbumartFactory, hildon_albumart_factory, G_TYPE_OBJECT)
-
-G_DEFINE_TYPE (HildonAlbumartRequest, hildon_albumart_request, G_TYPE_OBJECT)

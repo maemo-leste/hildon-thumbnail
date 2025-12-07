@@ -234,7 +234,6 @@ int main(int argc, char **argv)
     int result;
 
     setpriority(PRIO_PROCESS, getpid(), 10);
-    g_thread_init(NULL);
     result = osso_mem_saw_enable(4 << 20, 64, thumbnailer_oom_func, NULL);
     if (result != 0)
       ULOG_ERR_F("osso_mem_saw_enable failed with error %d", result);

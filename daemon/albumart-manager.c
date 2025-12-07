@@ -35,10 +35,6 @@
 static GFile *artdir;
 static GFileMonitor *artmon;
 
-#define ALBUMART_MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_ALBUMART_MANAGER, AlbumartManagerPrivate))
-
-G_DEFINE_TYPE (AlbumartManager, albumart_manager, G_TYPE_OBJECT)
-
 void keep_alive (void);
 
 typedef struct {
@@ -46,6 +42,10 @@ typedef struct {
 	GList *handlers;
 	GMutex mutex;
 } AlbumartManagerPrivate;
+
+#define ALBUMART_MANAGER_GET_PRIVATE(obj) ((AlbumartManagerPrivate *)albumart_manager_get_instance_private((AlbumartManager *)(obj)))
+
+G_DEFINE_TYPE_WITH_PRIVATE (AlbumartManager, albumart_manager, G_TYPE_OBJECT)
 
 enum {
 	PROP_0,
@@ -351,8 +351,6 @@ albumart_manager_class_init (AlbumartManagerClass *klass)
 							       "DBus connection",
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
-
-	g_type_class_add_private (object_class, sizeof (AlbumartManagerPrivate));
 }
 
 static void

@@ -38,10 +38,6 @@
 static GFile *homedir, *thumbdir;
 static GFileMonitor *homemon, *thumbmon;
 
-#define THUMBNAIL_MANAGER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAIL_MANAGER, ThumbnailManagerPrivate))
-
-G_DEFINE_TYPE (ThumbnailManager, thumbnail_manager, G_TYPE_OBJECT)
-
 #ifndef dbus_g_method_get_sender
 gchar* dbus_g_method_get_sender (DBusGMethodInvocation *context);
 #endif
@@ -54,6 +50,10 @@ typedef struct {
 	GMutex mutex;
 	GList *thumber_has;
 } ThumbnailManagerPrivate;
+
+#define THUMBNAIL_MANAGER_GET_PRIVATE(obj) ((ThumbnailManagerPrivate *)thumbnail_manager_get_instance_private((ThumbnailManager *)(obj)))
+
+G_DEFINE_TYPE_WITH_PRIVATE (ThumbnailManager, thumbnail_manager, G_TYPE_OBJECT)
 
 enum {
 	PROP_0,
@@ -652,8 +652,6 @@ thumbnail_manager_class_init (ThumbnailManagerClass *klass)
 							       "DBus connection",
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
-
-	g_type_class_add_private (object_class, sizeof (ThumbnailManagerPrivate));
 }
 
 static void

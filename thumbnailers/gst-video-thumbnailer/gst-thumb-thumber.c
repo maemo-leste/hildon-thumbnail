@@ -67,8 +67,6 @@ static void     thumber_set_state (Thumber *thumber, ThumberState state);
 static void     request_resources (Thumber *thumber);
 static void     release_resources (Thumber *thumber);
 
-G_DEFINE_TYPE (Thumber, thumber, G_TYPE_OBJECT)
-
 typedef struct FileInfo FileInfo;
 typedef struct TaskInfo TaskInfo;
 
@@ -94,6 +92,10 @@ typedef struct {
 #endif
 
 } ThumberPrivate;
+
+#define THUMBER_GET_PRIVATE(obj) ((ThumberPrivate *)thumber_get_instance_private((Thumber *)(obj)))
+
+G_DEFINE_TYPE_WITH_PRIVATE (Thumber, thumber, G_TYPE_OBJECT)
 
 struct FileInfo {
 	gchar *uri;
@@ -197,8 +199,6 @@ enum {
 	PROP_CROPPED,
 	PROP_TIMEOUT
 };
-
-#define THUMBER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj),TYPE_THUMBER, ThumberPrivate))
 
 Thumber *
 thumber_new ()
@@ -421,8 +421,6 @@ thumber_class_init (ThumberClass *klass)
 			      G_TYPE_STRING,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
-
-	g_type_class_add_private (object_class, sizeof (ThumberPrivate));
 }
 
 static void

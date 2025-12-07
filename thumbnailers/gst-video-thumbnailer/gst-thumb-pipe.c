@@ -67,10 +67,6 @@ static gboolean       initialize                       (ThumberPipe *pipe,
 							GError **error);
 static void           deinitialize                     (ThumberPipe *pipe);
 
-G_DEFINE_TYPE (ThumberPipe, thumber_pipe, G_TYPE_OBJECT)
-
-#define THUMBER_PIPE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBER_PIPE, ThumberPipePrivate))
-
 typedef struct {
 	GstElement     *pipeline;
 
@@ -88,6 +84,10 @@ typedef struct {
 
 	GdkPixbuf      *backup_pixbuf;
 } ThumberPipePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (ThumberPipe, thumber_pipe, G_TYPE_OBJECT)
+
+#define THUMBER_PIPE_GET_PRIVATE(obj) ((ThumberPipePrivate *)thumber_pipe_get_instance_private((ThumberPipe *)(obj)))
 
 enum {
 	PROP_0,
@@ -225,8 +225,6 @@ thumber_pipe_class_init (ThumberPipeClass *klass)
 							       "Whether we create the cropped thumbnail",
 							       FALSE,
 							       G_PARAM_READWRITE));
-	
-	g_type_class_add_private (object_class, sizeof (ThumberPipePrivate));
 }
 
 static void

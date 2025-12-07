@@ -48,10 +48,6 @@
 #define THUMB_ERROR_DOMAIN	"HildonThumbnailer"
 #define THUMB_ERROR		g_quark_from_static_string (THUMB_ERROR_DOMAIN)
 
-#define THUMBNAILER_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_THUMBNAILER, ThumbnailerPrivate))
-
-G_DEFINE_TYPE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
-
 void keep_alive (void);
 void initialize_priority (void);
 
@@ -68,6 +64,10 @@ typedef struct {
 	GCond cond;
 #endif
 } ThumbnailerPrivate;
+
+#define THUMBNAILER_GET_PRIVATE(obj) ((ThumbnailerPrivate *)thumbnailer_get_instance_private((Thumbnailer *)(obj)))
+
+G_DEFINE_TYPE_WITH_PRIVATE (Thumbnailer, thumbnailer, G_TYPE_OBJECT)
 
 #ifdef HAVE_OSSO
 static __thread int big_thread = 0;
@@ -1294,8 +1294,6 @@ thumbnailer_class_init (ThumbnailerClass *klass)
 			      G_TYPE_STRV,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
-
-	g_type_class_add_private (object_class, sizeof (ThumbnailerPrivate));
 }
 
 static void

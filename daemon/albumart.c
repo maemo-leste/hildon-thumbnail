@@ -42,10 +42,6 @@
 #define ALBUMART_ERROR_DOMAIN	"HildonAlbumart"
 #define ALBUMART_ERROR		g_quark_from_static_string (ALBUMART_ERROR_DOMAIN)
 
-#define ALBUMART_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_ALBUMART, AlbumartPrivate))
-
-G_DEFINE_TYPE (Albumart, albumart, G_TYPE_OBJECT)
-
 void keep_alive (void);
 
 
@@ -55,6 +51,10 @@ typedef struct {
 	GMutex mutex;
 	GList *tasks;
 } AlbumartPrivate;
+
+#define ALBUMART_GET_PRIVATE(obj) ((AlbumartPrivate *)albumart_get_instance_private((Albumart *)(obj)))
+
+G_DEFINE_TYPE_WITH_PRIVATE (Albumart, albumart, G_TYPE_OBJECT)
 
 enum {
 	PROP_0,
@@ -428,8 +428,6 @@ albumart_class_init (AlbumartClass *klass)
 			      G_TYPE_UINT,
 			      G_TYPE_INT,
 			      G_TYPE_STRING);
-
-	g_type_class_add_private (object_class, sizeof (AlbumartPrivate));
 }
 
 static void

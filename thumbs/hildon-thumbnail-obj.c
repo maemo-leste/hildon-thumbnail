@@ -36,8 +36,8 @@
 #define THUMBNAILER_PATH         "/org/freedesktop/thumbnailer/Generic"
 #define THUMBNAILER_INTERFACE    "org.freedesktop.thumbnailer.Generic"
 
-#define REQUEST_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_THUMBNAIL_REQUEST, HildonThumbnailRequestPrivate))
-#define FACTORY_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), HILDON_TYPE_THUMBNAIL_FACTORY, HildonThumbnailFactoryPrivate))
+#define REQUEST_GET_PRIVATE(obj) ((HildonThumbnailRequestPrivate *)hildon_thumbnail_request_get_instance_private((HildonThumbnailRequest *)(obj)))
+#define FACTORY_GET_PRIVATE(obj) ((HildonThumbnailFactoryPrivate *)hildon_thumbnail_factory_get_instance_private((HildonThumbnailFactory *)(obj)))
 
 typedef struct {
 	GStrv uris;
@@ -57,6 +57,8 @@ typedef struct {
 	GHashTable *tasks;
 } HildonThumbnailFactoryPrivate;
 
+G_DEFINE_TYPE_WITH_PRIVATE (HildonThumbnailFactory, hildon_thumbnail_factory, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (HildonThumbnailRequest, hildon_thumbnail_request, G_TYPE_OBJECT)
 
 GdkPixbuf *
 my_gdk_pixbuf_new_from_stream_at_scale (GInputStream  *stream,
@@ -443,8 +445,6 @@ hildon_thumbnail_request_class_init (HildonThumbnailRequestClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = hildon_thumbnail_request_finalize;
-
-	g_type_class_add_private (object_class, sizeof (HildonThumbnailRequestPrivate));
 }
 
 static void
@@ -453,8 +453,6 @@ hildon_thumbnail_factory_class_init (HildonThumbnailFactoryClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = hildon_thumbnail_factory_finalize;
-
-	g_type_class_add_private (object_class, sizeof (HildonThumbnailFactoryPrivate));
 }
 
 
@@ -726,7 +724,3 @@ hildon_thumbnail_factory_get_instance (void)
 
 	return g_object_ref (singleton);
 }
-
-G_DEFINE_TYPE (HildonThumbnailFactory, hildon_thumbnail_factory, G_TYPE_OBJECT)
-
-G_DEFINE_TYPE (HildonThumbnailRequest, hildon_thumbnail_request, G_TYPE_OBJECT)

@@ -59,9 +59,9 @@ enum {
 	PROP_CONNECTION
 };
 
-G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (Daemon, daemon, G_TYPE_OBJECT)
 
-#define DAEMON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_DAEMON, DaemonPrivate))
+#define DAEMON_GET_PRIVATE(obj) ((DaemonPrivate *)daemon_get_instance_private((Daemon *)(obj)))
 
 void 
 daemon_create (Daemon *object, GStrv uris, DBusGMethodInvocation *context)
@@ -145,8 +145,6 @@ daemon_class_init (DaemonClass *klass)
 							       "DBus connection",
 							      G_PARAM_READWRITE |
 							      G_PARAM_CONSTRUCT));
-
-	g_type_class_add_private (object_class, sizeof (DaemonPrivate));
 }
 
 static void
