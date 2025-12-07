@@ -444,19 +444,19 @@ hildon_albumart_request_join (HildonAlbumartRequest *self)
 	}
 }
 
-static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+static GMutex mutex;
 static HildonAlbumartFactory *singleton = NULL;
 
 HildonAlbumartFactory* 
 hildon_albumart_factory_get_instance (void)
 {
-	g_static_mutex_lock (&mutex);
+	g_mutex_lock (&mutex);
 
 	if (!singleton) {
 		singleton = g_object_new (HILDON_TYPE_ALBUMART_FACTORY, NULL);
 	}
 
-	g_static_mutex_unlock (&mutex);
+	g_mutex_unlock (&mutex);
 
 	return g_object_ref (singleton);
 }

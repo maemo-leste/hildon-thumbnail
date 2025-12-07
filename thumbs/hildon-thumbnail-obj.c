@@ -710,19 +710,19 @@ hildon_thumbnail_request_join (HildonThumbnailRequest *self)
 	}
 }
 
-static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+static GMutex mutex;
 static HildonThumbnailFactory *singleton = NULL;
 
 HildonThumbnailFactory* 
 hildon_thumbnail_factory_get_instance (void)
 {
-	g_static_mutex_lock (&mutex);
+	g_mutex_lock (&mutex);
 
 	if (!singleton) {
 		singleton = g_object_new (HILDON_TYPE_THUMBNAIL_FACTORY, NULL);
 	}
 
-	g_static_mutex_unlock (&mutex);
+	g_mutex_unlock (&mutex);
 
 	return g_object_ref (singleton);
 }
