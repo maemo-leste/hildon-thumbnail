@@ -44,7 +44,7 @@ void keep_alive (void);
 typedef struct {
 	DBusGConnection *connection;
 	GList *handlers;
-	GMutex *mutex;
+	GMutex mutex;
 } AlbumartManagerPrivate;
 
 enum {
@@ -75,7 +75,7 @@ albumart_manager_get_handlers (AlbumartManager *object)
 	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
 	GList *retval = NULL, *copy = priv->handlers;
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	while (copy) {
 		ValueInfo *info = copy->data;
@@ -83,7 +83,7 @@ albumart_manager_get_handlers (AlbumartManager *object)
 		copy = g_list_next (copy);
 	}
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	return retval;
 }
@@ -250,9 +250,9 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 		case G_FILE_MONITOR_EVENT_CREATED: {
 			AlbumartManager *object = user_data;
 			AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
-			g_mutex_lock (priv->mutex);
+			g_mutex_lock (&priv->mutex);
 			albumart_manager_check_dir (object, ALBUMARTERS_DIR, FALSE);
-			g_mutex_unlock (priv->mutex);
+			g_mutex_unlock (&priv->mutex);
 		} break;
 		default:
 		break;
@@ -264,7 +264,7 @@ albumart_manager_check (AlbumartManager *object)
 {
 	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	albumart_manager_check_dir (object, ALBUMARTERS_DIR, FALSE);
 
@@ -274,7 +274,7 @@ albumart_manager_check (AlbumartManager *object)
 	g_signal_connect (G_OBJECT (artmon), "changed", 
 			  G_CALLBACK (on_dir_changed), object);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 
@@ -287,8 +287,6 @@ albumart_manager_finalize (GObject *object)
 		g_list_foreach (priv->handlers, (GFunc) free_valueinfo, NULL);
 		g_list_free (priv->handlers);
 	}
-
-	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (albumart_manager_parent_class)->finalize (object);
 }
@@ -362,7 +360,7 @@ albumart_manager_init (AlbumartManager *object)
 {
 	AlbumartManagerPrivate *priv = ALBUMART_MANAGER_GET_PRIVATE (object);
 
-	priv->mutex = g_mutex_new ();
+	g_mutex_init (&priv->mutex);
 	priv->handlers = NULL;
 }
 

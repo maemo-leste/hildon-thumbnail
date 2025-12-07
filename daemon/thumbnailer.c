@@ -60,12 +60,12 @@ typedef struct {
 	GHashTable *plugins_perscheme;
 	GThreadPool *large_pool;
 	GThreadPool *normal_pool;
-	GMutex *mutex;
+	GMutex mutex;
 	GList *tasks;
 #ifdef HAVE_OSSO
-	GMutex *cmutex;
+	GMutex cmutex;
 	gboolean waiting, must_wait;
-	GCond *cond;
+	GCond cond;
 #endif
 } ThumbnailerPrivate;
 
@@ -177,7 +177,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 	guint i = 0;
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	while (uri_schemes[i] != NULL) {
 		GHashTable *hash;
@@ -219,7 +219,7 @@ thumbnailer_register_plugin (Thumbnailer *object, const gchar *mime_type, GModul
 
 	thumbnail_manager_i_have (priv->manager, mime_type);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 }
 
@@ -246,11 +246,11 @@ thumbnailer_unregister_plugin (Thumbnailer *object, GModule *plugin)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	/* This might leave an empty node in case there are no more plugins
 	 * for a specific scheme. But that's harmless. */
 	g_hash_table_foreach (priv->plugins_perscheme, foreach_scheme, plugin);
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 static void
@@ -322,9 +322,9 @@ thumbnailer_unqueue (Thumbnailer *object, guint handle, DBusGMethodInvocation *c
 
 	keep_alive ();
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle));
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 static void 
@@ -341,9 +341,9 @@ thumbnailer_crash_out (Thumbnailer *object)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	g_list_foreach (priv->tasks, (GFunc) crash_queued, NULL);
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 void
@@ -370,14 +370,14 @@ thumbnailer_queue (Thumbnailer *object, GStrv urls, GStrv mime_hints, guint hand
 	else
 		task->mime_types = NULL;
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle_to_unqueue));
 	priv->tasks = g_list_prepend (priv->tasks, task);
 	if (g_strv_length (urls) > 50)
 		g_thread_pool_push (priv->large_pool, task, NULL);
 	else
 		g_thread_pool_push (priv->normal_pool, task, NULL);
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	dbus_g_method_return (context, num);
 }
@@ -437,8 +437,8 @@ subtract_strv (GStrv a, GStrv b)
 
 
 typedef struct {
-	GCond *condition;
-	GMutex *mutex;
+	GCond condition;
+	GMutex mutex;
 	gchar *error_msg;
 	gint error_code;
 	const gchar *uri, *mime_type;
@@ -458,10 +458,10 @@ specialized_error (DBusGProxy   *proxy,
 		info->error_msg = g_strdup (error_msg);
 		info->error_code = error_code;
 
-		g_mutex_lock (info->mutex);
-		g_cond_broadcast (info->condition);
+		g_mutex_lock (&info->mutex);
+		g_cond_broadcast (&info->condition);
 		info->had_callback = TRUE;
-		g_mutex_unlock (info->mutex);
+		g_mutex_unlock (&info->mutex);
 	}
 }
 
@@ -475,10 +475,10 @@ specialized_ready (DBusGProxy   *proxy,
 	if (g_strcmp0 (info->uri, uri) == 0) {
 		info->error_msg = NULL;
 
-		g_mutex_lock (info->mutex);
-		g_cond_broadcast (info->condition);
+		g_mutex_lock (&info->mutex);
+		g_cond_broadcast (&info->condition);
 		info->had_callback = TRUE;
-		g_mutex_unlock (info->mutex);
+		g_mutex_unlock (&info->mutex);
 	}
 }
 
@@ -552,13 +552,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
 			task->num);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
 	if (task->unqueued) {
-		g_mutex_unlock (priv->mutex);
+		g_mutex_unlock (&priv->mutex);
 		goto unqueued;
 	}
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	/* We split the request into groups that have items with the same 
 	  * mime-type and one group with items that already have a thumbnail */
@@ -579,11 +579,11 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 #ifdef HAVE_OSSO
 		if (big_thread && priv->must_wait) {
-			g_mutex_lock (priv->cmutex);
+			g_mutex_lock (&priv->cmutex);
 			priv->waiting = TRUE;
 			g_debug ("Big-queue thread waiting for Tracker to finish Indexing (Maemo specific)");
-			g_cond_wait (priv->cond, priv->cmutex);
-			g_mutex_unlock (priv->cmutex);
+			g_cond_wait (&priv->cond, &priv->cmutex);
+			g_mutex_unlock (&priv->cmutex);
 		}
 #endif
 
@@ -780,13 +780,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 			for (o = 0; urlss[o]; o++) {
 				GError *error = NULL;
 				SpecializedInfo info;
-				GTimeVal timev;
+				gint64 end_time;
 
 				keep_alive ();
 
-				info.condition = g_cond_new ();
+				g_cond_init (&info.condition);
 				info.had_callback = FALSE;
-				info.mutex = g_mutex_new ();
+				g_mutex_init (&info.mutex);
 				info.uri = urlss[o];
 				info.mime_type = mime_type;
 				info.error_msg = NULL;
@@ -807,15 +807,14 @@ do_the_work (WorkTask *task, gpointer user_data)
 							    G_TYPE_INVALID, 
 							    G_TYPE_INVALID);
 
-				g_get_current_time (&timev);
-				g_time_val_add  (&timev, 100000000); /* 100 seconds worth of timeout */
+				end_time = g_get_monotonic_time () + 100 * G_TIME_SPAN_SECOND;
 
-				g_mutex_lock (info.mutex);
+				g_mutex_lock (&info.mutex);
 				/* We are a thread, so the mainloop will still be
 				 * be running to receive the error and ready signals */
 				if (!info.had_callback)
-					g_cond_timed_wait (info.condition, info.mutex, &timev);
-				g_mutex_unlock (info.mutex);
+					g_cond_wait_until (&info.condition, &info.mutex, end_time);
+				g_mutex_unlock (&info.mutex);
 
 				if (!info.had_callback) {
 					g_set_error (&error, DAEMON_ERROR, 0,
@@ -836,9 +835,6 @@ do_the_work (WorkTask *task, gpointer user_data)
 				dbus_g_proxy_disconnect_signal (proxy, "Ready",
 								G_CALLBACK (specialized_ready),
 								&info);
-
-				g_cond_free (info.condition);
-				g_mutex_free (info.mutex);
 
 				keep_alive ();
 
@@ -877,9 +873,9 @@ do_the_work (WorkTask *task, gpointer user_data)
 
 		} else {
 			GModule *module;
-			g_mutex_lock (priv->mutex);
+			g_mutex_lock (&priv->mutex);
 			module = get_plugin (task->object, uri_scheme, mime_type);
-			g_mutex_unlock (priv->mutex);
+			g_mutex_unlock (&priv->mutex);
 
 			if (module) {
 				GError *error = NULL;
@@ -1185,12 +1181,6 @@ thumbnailer_finalize (GObject *object)
 
 	g_object_unref (priv->manager);
 	g_hash_table_unref (priv->plugins_perscheme);
-	g_mutex_free (priv->mutex);
-
-#ifdef HAVE_OSSO
-	g_mutex_free (priv->cmutex);
-	g_cond_free (priv->cond);
-#endif
 
 	G_OBJECT_CLASS (thumbnailer_parent_class)->finalize (object);
 }
@@ -1313,11 +1303,11 @@ thumbnailer_init (Thumbnailer *object)
 {
 	ThumbnailerPrivate *priv = THUMBNAILER_GET_PRIVATE (object);
 
-	priv->mutex = g_mutex_new ();
+	g_mutex_init (&priv->mutex);
 
 #ifdef HAVE_OSSO
-	priv->cmutex = g_mutex_new ();
-	priv->cond = g_cond_new ();
+	g_mutex_init (&priv->cmutex);
+	g_cond_init (&priv->cond);
 	priv->waiting = FALSE;
 	priv->must_wait = FALSE;
 #endif
@@ -1348,13 +1338,13 @@ tracker_index_state_changed (DBusGProxy *tracker, gchar *state, gboolean initial
 
 	if (g_strcmp0 (state, "Idle") == 0) {
 
-		g_mutex_lock (priv->cmutex);
+		g_mutex_lock (&priv->cmutex);
 		if (priv->waiting) {
 			g_debug ("Tracker finised indexing, releasing big-queue thread (Maemo specific)");
-			g_cond_broadcast (priv->cond);
+			g_cond_broadcast (&priv->cond);
 			priv->waiting = FALSE;
 		}
-		g_mutex_unlock (priv->cmutex);
+		g_mutex_unlock (&priv->cmutex);
 
 		priv->must_wait = FALSE;
 	} else {

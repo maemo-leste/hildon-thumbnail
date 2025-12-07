@@ -51,7 +51,7 @@ void keep_alive (void);
 typedef struct {
 	DBusGConnection *connection;
 	GHashTable *handlers;
-	GMutex *mutex;
+	GMutex mutex;
 	GList *thumber_has;
 } ThumbnailManagerPrivate;
 
@@ -67,12 +67,12 @@ thumbnail_manager_get_handler (ThumbnailManager *object, const gchar *uri_scheme
 	DBusGProxy *proxy;
 	gchar *query = g_strdup_printf ("%s-%s", uri_scheme, mime_type);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	proxy = g_hash_table_lookup (priv->handlers, query);
 	if (proxy) {
 		g_object_ref (proxy);
 	}
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	g_free (query);
 
@@ -368,10 +368,10 @@ on_dir_changed (GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMoni
 			gchar *path = g_file_get_path (file);
 			gboolean override = (strcmp (THUMBNAILERS_DIR, path) == 0);
 
-			g_mutex_lock (priv->mutex);
+			g_mutex_lock (&priv->mutex);
 			/* We override when it's the dir in the user's homedir*/
 			thumbnail_manager_check_dir (object, path, override);
-			g_mutex_unlock (priv->mutex);
+			g_mutex_unlock (&priv->mutex);
 
 			g_free (path);
 		} 
@@ -389,7 +389,7 @@ thumbnail_manager_check (ThumbnailManager *object)
 	gchar *home_thumbnlrs = g_build_filename (g_get_user_data_dir (), 
 		"thumbnailers", NULL);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	/* We override when it's the one in the user's homedir*/
 	thumbnail_manager_check_dir (object, THUMBNAILERS_DIR, FALSE);
@@ -407,7 +407,7 @@ thumbnail_manager_check (ThumbnailManager *object)
 	g_signal_connect (G_OBJECT (thumbmon), "changed", 
 			  G_CALLBACK (on_dir_changed), object);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	g_free (home_thumbnlrs);
 }
@@ -426,7 +426,7 @@ service_gone (DBusGProxy *proxy, ThumbnailManager *object)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	/* This only happens for not-activable ones: if the service disappears, we
 	 * unregister it. Note that this is actually only for our plugin-runner to
@@ -436,7 +436,7 @@ service_gone (DBusGProxy *proxy, ThumbnailManager *object)
 				     do_remove_or_not,
 				     proxy);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 /* This is a custom spec addition, for dynamic registration of thumbnailers.
@@ -457,7 +457,7 @@ thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *
 
 	keep_alive ();
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 
 	sender = dbus_g_method_get_sender (context);
 
@@ -475,7 +475,7 @@ thumbnail_manager_register (ThumbnailManager *object, gchar *uri_scheme, gchar *
 			  G_CALLBACK (service_gone),
 			  object);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	dbus_g_method_return (context);
 }
@@ -490,7 +490,7 @@ thumbnail_manager_i_have (ThumbnailManager *object, const gchar *mime_type)
 	GList *list;
 	gboolean found = FALSE;
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	list = priv->thumber_has;
 	while (list) {
 		if (strcmp (list->data, mime_type) == 0) {
@@ -502,7 +502,7 @@ thumbnail_manager_i_have (ThumbnailManager *object, const gchar *mime_type)
 	if (!found)
 		priv->thumber_has = g_list_prepend (priv->thumber_has, 
 						    g_strdup (mime_type));
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 
@@ -526,7 +526,7 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 					     (GDestroyNotify) g_free, 
 					     (GDestroyNotify) NULL);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	copy = priv->thumber_has;
 	while (copy) {
 		g_hash_table_replace (supported_h, g_strdup (copy->data), NULL);
@@ -553,7 +553,7 @@ thumbnail_manager_get_supported (ThumbnailManager *object, DBusGMethodInvocation
 	}
 	g_list_free (copy);
 
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	g_hash_table_iter_init (&iter, supported_h);
 
@@ -581,7 +581,6 @@ thumbnail_manager_finalize (GObject *object)
 		g_list_free (priv->thumber_has);
 	}
 	g_hash_table_unref (priv->handlers);
-	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (thumbnail_manager_parent_class)->finalize (object);
 }
@@ -662,7 +661,7 @@ thumbnail_manager_init (ThumbnailManager *object)
 {
 	ThumbnailManagerPrivate *priv = THUMBNAIL_MANAGER_GET_PRIVATE (object);
 
-	priv->mutex = g_mutex_new ();
+	g_mutex_init (&priv->mutex);
 	priv->thumber_has = NULL;
 	priv->handlers = g_hash_table_new_full (g_str_hash, g_str_equal,
 						(GDestroyNotify) g_free, 

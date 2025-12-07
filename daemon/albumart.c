@@ -52,7 +52,7 @@ void keep_alive (void);
 typedef struct {
 	AlbumartManager *manager;
 	GThreadPool *normal_pool;
-	GMutex *mutex;
+	GMutex mutex;
 	GList *tasks;
 } AlbumartPrivate;
 
@@ -137,9 +137,9 @@ albumart_unqueue (Albumart *object, guint handle, DBusGMethodInvocation *context
 
 	keep_alive ();
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle));
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 }
 
 void
@@ -176,11 +176,11 @@ albumart_queue (Albumart *object, gchar *artist_or_title, gchar *album, gchar *k
 	task->artist = g_strdup (artist_or_title);
 	task->kind = g_strdup (kind);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	g_list_foreach (priv->tasks, mark_unqueued, GUINT_TO_POINTER (handle_to_unqueue));
 	priv->tasks = g_list_prepend (priv->tasks, task);
 	g_thread_pool_push (priv->normal_pool, task, NULL);
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	dbus_g_method_return (context, num);
 }
@@ -206,13 +206,13 @@ do_the_work (WorkTask *task, gpointer user_data)
 	g_signal_emit (task->object, signals[STARTED_SIGNAL], 0,
 			task->num);
 
-	g_mutex_lock (priv->mutex);
+	g_mutex_lock (&priv->mutex);
 	priv->tasks = g_list_remove (priv->tasks, task);
 	if (task->unqueued) {
-		g_mutex_unlock (priv->mutex);
+		g_mutex_unlock (&priv->mutex);
 		goto unqueued;
 	}
-	g_mutex_unlock (priv->mutex);
+	g_mutex_unlock (&priv->mutex);
 
 	hildon_thumbnail_util_get_albumart_path (artist, album, kind, &path);
 
@@ -313,7 +313,6 @@ albumart_finalize (GObject *object)
 
 	g_thread_pool_free (priv->normal_pool, TRUE, TRUE);
 	g_object_unref (priv->manager);
-	g_mutex_free (priv->mutex);
 
 	G_OBJECT_CLASS (albumart_parent_class)->finalize (object);
 }
@@ -438,7 +437,7 @@ albumart_init (Albumart *object)
 {
 	AlbumartPrivate *priv = ALBUMART_GET_PRIVATE (object);
 
-	priv->mutex = g_mutex_new ();
+	g_mutex_init (&priv->mutex);
 
 	/* We could increase the amount of threads to add some parallelism */
 
